@@ -26,5 +26,9 @@
     "@babel/core": "^7.2.2",
     "@babel/preset-react": "^7.0.0",
     "parcel-bundler": "^1.11.0"
+  },
+  "dependencies": {
+    "react": "^16.8.1",
+    "react-dom": "^16.8.1"
   }
 }
