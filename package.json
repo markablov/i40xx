@@ -1,0 +1,23 @@
+{
+  "name": "js-4004",
+  "version": "1.0.0",
+  "description": "Javascript emulator and assembly for intel 4004",
+  "main": "src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/markablov/js-4004.git"
+  },
+  "keywords": [
+    "intel 4004",
+    "emulator",
+    "assembly",
+    "i4004",
+    "4004"
+  ],
+  "author": "Mark Ablovatskii <mark.ablov@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/markablov/js-4004/issues"
+  },
+  "homepage": "https://github.com/markablov/js-4004#readme"
+}
