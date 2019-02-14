@@ -4,7 +4,7 @@ import Container from 'react-bulma-components/lib/components/container';
 import Columns from 'react-bulma-components/lib/components/columns';
 
 import Editor from '../components/Editor/Editor.js';
-import Debugger from '../components/Debugger.js';
+import Debugger from '../components/Debugger/Debugger.js';
 
 const Root = () => (
   <Section>
