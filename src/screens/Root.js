@@ -6,26 +6,30 @@ import Box from 'react-bulma-components/lib/components/box';
 
 import Editor from '../components/Editor/Editor.js';
 import Debugger from '../components/Debugger/Debugger.js';
+import Footer from '../components/Footer.js';
 
 import './Root.css';
 
 const Root = () => (
-  <Section>
-    <Container>
-      <Columns>
-        <Columns.Column>
-          <Box>
-            <Editor />
-          </Box>
-        </Columns.Column>
-        <Columns.Column>
-          <Box>
-            <Debugger />
-          </Box>
-        </Columns.Column>
-      </Columns>
-    </Container>
-  </Section>
+  <>
+    <Section>
+      <Container>
+        <Columns>
+          <Columns.Column>
+            <Box>
+              <Editor />
+            </Box>
+          </Columns.Column>
+          <Columns.Column>
+            <Box>
+              <Debugger />
+            </Box>
+          </Columns.Column>
+        </Columns>
+      </Container>
+    </Section>
+    <Footer />
+  </>
 );
 
 export default Root;
