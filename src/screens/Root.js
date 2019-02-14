@@ -3,10 +3,10 @@ import Section from 'react-bulma-components/lib/components/section';
 import Container from 'react-bulma-components/lib/components/container';
 import Columns from 'react-bulma-components/lib/components/columns';
 
-import Editor from './Editor.js';
-import Debugger from './Debugger.js';
+import Editor from '../components/Editor.js';
+import Debugger from '../components/Debugger.js';
 
-const App = () => (
+const Root = () => (
   <Section>
     <Container>
       <Columns>
@@ -21,4 +21,4 @@ const App = () => (
   </Section>
 );
 
-export default App;
+export default Root;
