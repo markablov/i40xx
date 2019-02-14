@@ -3,7 +3,7 @@ import Section from 'react-bulma-components/lib/components/section';
 import Container from 'react-bulma-components/lib/components/container';
 import Columns from 'react-bulma-components/lib/components/columns';
 
-import Editor from '../components/Editor.js';
+import Editor from '../components/Editor/Editor.js';
 import Debugger from '../components/Debugger.js';
 
 const Root = () => (
