@@ -6,6 +6,8 @@ import Columns from 'react-bulma-components/lib/components/columns';
 import Editor from '../components/Editor/Editor.js';
 import Debugger from '../components/Debugger/Debugger.js';
 
+import './Root.css';
+
 const Root = () => (
   <Section>
     <Container>
