@@ -4,16 +4,18 @@ import 'brace/mode/javascript';
 import 'brace/theme/monokai';
 
 import GutterRenderer from './GutterRenderer.js';
+import OffsetCalculator from './OffsetCalculator.js';
 
 class Editor extends Component {
   editorRef = React.createRef();
+  offsetCalculator = new OffsetCalculator();
 
   get editor(){
     return this.editorRef.current.editor;
   }
 
   componentDidMount() {
-    const editor = this.editor;
+    const editor = this.editor, session = editor.getSession();
 
     // we want to show ROM offset for instructions, so need to change
     // gutter with line numbers to custom renderer
@@ -21,6 +23,10 @@ class Editor extends Component {
     editor.renderer.$gutterLayer.$renderer = GutterRenderer;
     editor.on('changeSelection', GutterRenderer.update);
     GutterRenderer.update(null, editor);
+
+    session.on('change', delta => {
+      this.offsetCalculator.update(delta);
+    });
   }
 
   render(){
