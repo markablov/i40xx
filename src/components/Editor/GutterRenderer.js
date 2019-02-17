@@ -1,4 +1,8 @@
 class GutterRenderer {
+  constructor(editor) {
+    this.editor = editor;
+  }
+
   getText() {
     return 'X';
   }
@@ -7,8 +11,8 @@ class GutterRenderer {
     return 2 * config.characterWidth;
   }
 
-  update(e, { renderer }) {
-    renderer.$loop.schedule(renderer.CHANGE_GUTTER);
+  update() {
+    this.editor.renderer.$loop.schedule(this.editor.renderer.CHANGE_GUTTER);
   }
 }
 
