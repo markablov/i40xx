@@ -28,6 +28,8 @@ class Editor extends Component {
 
     session.on('change', delta => {
       this.offsetCalculator.update(delta);
+      if (this.offsetCalculator.updated)
+        gutterRenderer.update();
     });
   }
 
