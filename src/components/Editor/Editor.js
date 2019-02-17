@@ -17,12 +17,14 @@ class Editor extends Component {
   componentDidMount() {
     const editor = this.editor, session = editor.getSession();
 
+    const gutterRenderer = new GutterRenderer();
+
     // we want to show ROM offset for instructions, so need to change
     // gutter with line numbers to custom renderer
     // (gutter annotations / decorations adds just css class, but don't change text)
-    editor.renderer.$gutterLayer.$renderer = GutterRenderer;
-    editor.on('changeSelection', GutterRenderer.update);
-    GutterRenderer.update(null, editor);
+    editor.renderer.$gutterLayer.$renderer = gutterRenderer;
+    editor.on('changeSelection', ev => gutterRenderer.update(ev, editor));
+    gutterRenderer.update(null, editor);
 
     session.on('change', delta => {
       this.offsetCalculator.update(delta);

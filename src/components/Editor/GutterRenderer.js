@@ -1,13 +1,13 @@
 class GutterRenderer {
-  static getText() {
+  getText() {
     return 'X';
   }
 
-  static getWidth(session, lastLineNumber, config) {
+  getWidth(session, lastLineNumber, config) {
     return 2 * config.characterWidth;
   }
 
-  static update(e, { renderer }) {
+  update(e, { renderer }) {
     renderer.$loop.schedule(renderer.CHANGE_GUTTER);
   }
 }
