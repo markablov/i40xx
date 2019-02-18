@@ -10,7 +10,6 @@ import SampleCode from './SampleCode.js';
 
 class Editor extends Component {
   editorRef = React.createRef();
-  offsetCalculator = new OffsetCalculator();
 
   get editor(){
     return this.editorRef.current.editor;
@@ -21,6 +20,7 @@ class Editor extends Component {
 
     session.setMode(new AssemblyMode());
 
+    const offsetCalculator = new OffsetCalculator(editor);
     const gutterRenderer = new GutterRenderer(editor);
 
     // we want to show ROM offset for instructions, so need to change
@@ -31,7 +31,7 @@ class Editor extends Component {
     gutterRenderer.update();
 
     session.on('change', delta => {
-      if (this.offsetCalculator.update(delta))
+      if (offsetCalculator.update(delta))
         gutterRenderer.update();
     });
 
