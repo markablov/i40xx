@@ -1,4 +1,4 @@
-import instructionLength from './OffsetCalculator/InstructionLength.js';
+import instructionLength from './InstructionLength.js';
 
 class OffsetCalculator {
   _instructions = [{ len: 0, offset: 0 }];

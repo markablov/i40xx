@@ -4,7 +4,7 @@ import 'brace/mode/javascript';
 import 'brace/theme/monokai';
 
 import GutterRenderer from './GutterRenderer.js';
-import OffsetCalculator from './OffsetCalculator.js';
+import OffsetCalculator from './OffsetCalculator/OffsetCalculator.js';
 import AssemblyMode from './AssemblyMode/AssemblyMode.js';
 import SampleCode from './SampleCode.js';
 
