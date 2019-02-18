@@ -11,6 +11,10 @@ class OffsetCalculator {
     return this._instructions[row].offset;
   }
 
+  instr(row) {
+    return this._instructions[row];
+  }
+
   update({ action, lines, start: { row: startRow }, end: { row: endRow } }){
     const doc = this.editor.getSession().getDocument();
     let changed = false;
