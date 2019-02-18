@@ -6,11 +6,8 @@ class OffsetCalculator {
     return this._offsets;
   }
 
-  get updated() {
-    return this._changedFromLastUpdate;
-  }
-
   update(){
+    return false;
   }
 }
 
