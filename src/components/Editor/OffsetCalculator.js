@@ -5,8 +5,8 @@ class OffsetCalculator {
     this.editor = editor;
   }
 
-  get offsets() {
-    return this._instructions.map(({ offset }) => offset);
+  offset(row) {
+    return this._instructions[row].offset;
   }
 
   update({ action, lines, start: { row: startRow }, end: { row: endRow } }){
@@ -41,5 +41,13 @@ class OffsetCalculator {
     return changed;
   }
 }
+
+/*
+// const doc = this.editor.getSession().getDocument();
+
+    this.getLine = function(row) {
+        return this.$lines[row] || "";
+    };
+ */
 
 export default OffsetCalculator;

@@ -21,7 +21,7 @@ class Editor extends Component {
     session.setMode(new AssemblyMode());
 
     const offsetCalculator = new OffsetCalculator(editor);
-    const gutterRenderer = new GutterRenderer(editor);
+    const gutterRenderer = new GutterRenderer(editor, offsetCalculator);
 
     // we want to show ROM offset for instructions, so need to change
     // gutter with line numbers to custom renderer

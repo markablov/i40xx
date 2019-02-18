@@ -1,14 +1,15 @@
 class GutterRenderer {
-  constructor(editor) {
+  constructor(editor, offsetCalculator) {
     this.editor = editor;
+    this.offsetCalculator = offsetCalculator;
   }
 
-  getText() {
-    return 'X';
+  getText(session, row) {
+    return this.offsetCalculator.offset(row).toString();
   }
 
   getWidth(session, lastLineNumber, config) {
-    return 2 * config.characterWidth;
+    return 4 * config.characterWidth;
   }
 
   update() {
