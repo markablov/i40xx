@@ -5,6 +5,7 @@ import 'brace/theme/monokai';
 
 import GutterRenderer from './GutterRenderer.js';
 import OffsetCalculator from './OffsetCalculator.js';
+import AssemblyMode from './AssemblyMode/AssemblyMode.js';
 
 class Editor extends Component {
   editorRef = React.createRef();
@@ -16,6 +17,8 @@ class Editor extends Component {
 
   componentDidMount() {
     const editor = this.editor, session = editor.getSession();
+
+    session.setMode(new AssemblyMode());
 
     const gutterRenderer = new GutterRenderer(editor);
 
