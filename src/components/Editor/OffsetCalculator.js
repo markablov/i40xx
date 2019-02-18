@@ -1,3 +1,5 @@
+import instructionLength from './OffsetCalculator/InstructionLength.js';
+
 class OffsetCalculator {
   _instructions = [{ len: 0, offset: 0 }];
 
@@ -10,11 +12,12 @@ class OffsetCalculator {
   }
 
   update({ action, lines, start: { row: startRow }, end: { row: endRow } }){
+    const doc = this.editor.getSession().getDocument();
     let changed = false;
 
     // calculate length of updated instructions
     if (startRow === endRow) {
-      const newInstrLen = 1;
+      const newInstrLen = instructionLength(doc.getLine(startRow));
       if (newInstrLen !== this._instructions[startRow].len) {
         changed = true;
         this._instructions[startRow].len = newInstrLen;
@@ -24,10 +27,10 @@ class OffsetCalculator {
       if (action === 'insert') {
         this._instructions.splice(startRow + 1, 0, ...Array.from(Array(lines.length - 1), () => ({})));
         for (let i = startRow, end = startRow + lines.length; i < end; i++)
-          this._instructions[i].len = 1;
+          this._instructions[i].len = instructionLength(doc.getLine(i));
       } else if (action === 'remove') {
         this._instructions.splice(startRow + 1, endRow - startRow);
-        this._instructions[startRow].len = 1;
+        this._instructions[startRow].len = instructionLength(doc.getLine(startRow));
       }
     }
 
@@ -41,13 +44,5 @@ class OffsetCalculator {
     return changed;
   }
 }
-
-/*
-// const doc = this.editor.getSession().getDocument();
-
-    this.getLine = function(row) {
-        return this.$lines[row] || "";
-    };
- */
 
 export default OffsetCalculator;
