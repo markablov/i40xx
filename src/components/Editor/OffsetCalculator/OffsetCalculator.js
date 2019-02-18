@@ -11,8 +11,8 @@ class OffsetCalculator {
     return this._instructions[row].offset;
   }
 
-  instr(row) {
-    return this._instructions[row];
+  all() {
+    return this._instructions;
   }
 
   update({ action, lines, start: { row: startRow }, end: { row: endRow } }){

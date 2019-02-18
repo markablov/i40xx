@@ -6,6 +6,7 @@ import 'brace/theme/monokai';
 import GutterRenderer from './GutterRenderer.js';
 import OffsetCalculator from './OffsetCalculator/OffsetCalculator.js';
 import AssemblyMode from './AssemblyMode/AssemblyMode.js';
+import BankSeparatorRenderer from './BankSeparatorRenderer.js';
 import SampleCode from './SampleCode.js';
 
 import './Editor.css';
@@ -22,8 +23,9 @@ class Editor extends Component {
 
     const offsetCalculator = new OffsetCalculator(editor);
     const gutterRenderer = new GutterRenderer(editor, offsetCalculator);
+    const bankSeparatorRenderer = new BankSeparatorRenderer(editor, offsetCalculator);
 
-    session.setMode(new AssemblyMode(offsetCalculator));
+    session.setMode(new AssemblyMode());
 
     // we want to show ROM offset for instructions, so need to change
     // gutter with line numbers to custom renderer
@@ -33,8 +35,10 @@ class Editor extends Component {
     gutterRenderer.update();
 
     session.on('change', delta => {
-      if (offsetCalculator.update(delta))
+      if (offsetCalculator.update(delta)) {
+        bankSeparatorRenderer.update();
         gutterRenderer.update();
+      }
     });
 
     editor.setValue(SampleCode);
