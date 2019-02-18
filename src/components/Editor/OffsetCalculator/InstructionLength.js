@@ -47,6 +47,6 @@ const instructionLengths = {
 };
 
 export default function (mnemonic){
-  const m = mnemonic.match(/^(?:\w+:)?\s*([A-Za-z]+)(?:\s+|$)/);
+  const m = mnemonic.match(/^(?:\w+:)?\s*(\w+)(?:\s+|$)/);
   return m ? (instructionLengths[m[1].toLowerCase()] || 0) : 0;
 }
