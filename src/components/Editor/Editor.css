@@ -1,0 +1,6 @@
+.ace_bank_separator {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  border-top: 1px red dashed;
+}

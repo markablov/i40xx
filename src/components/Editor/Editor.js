@@ -8,6 +8,8 @@ import OffsetCalculator from './OffsetCalculator/OffsetCalculator.js';
 import AssemblyMode from './AssemblyMode/AssemblyMode.js';
 import SampleCode from './SampleCode.js';
 
+import './Editor.css';
+
 class Editor extends Component {
   editorRef = React.createRef();
 
@@ -41,7 +43,7 @@ class Editor extends Component {
   render(){
     return (
       <>
-        <AceEditor mode="javascript" theme="monokai" name="editor" width="auto" ref={this.editorRef} />
+        <AceEditor mode="text" theme="monokai" name="editor" width="auto" ref={this.editorRef} />
       </>
     );
   }
