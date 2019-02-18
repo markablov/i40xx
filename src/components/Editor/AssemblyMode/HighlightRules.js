@@ -21,7 +21,16 @@ class HighlightRules extends window.ace.acequire('ace/mode/text_highlight_rules'
           token: 'variable',
           regex: '\\b(?:r\\d|rr\\d|n?(?:z|c|t|zc|zt|ct|zct))\\b',
           caseInsensitive: true
-        }
+        },
+        {
+          token: 'constant.character.decimal',
+          regex: '\\b[0-9]+\\b'
+        },
+        {
+          token: 'constant.character.hexadecimal',
+          regex: '\\b0x[A-F0-9]+\\b',
+          caseInsensitive: true
+        },
       ]
     };
 
