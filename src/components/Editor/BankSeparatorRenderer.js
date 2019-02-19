@@ -12,7 +12,7 @@ class BankSeparatorRenderer {
     const offsets = this.offsetCalculator.all();
     for (let i = 0, len = offsets.length; i < len; i++) {
       const { offset, len } = offsets[i];
-      if ((offset & 0xF) > ((offset + len) & 0xF))
+      if ((offset & 0xFF) > ((offset + len) & 0xFF))
         separators[i + 1] = true;
     }
 
