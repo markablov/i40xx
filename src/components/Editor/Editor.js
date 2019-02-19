@@ -43,7 +43,7 @@ class Editor extends Component {
       bankSeparatorRenderer.updateOnEditorChange(delta);
     });
 
-    editor.setValue(SampleCode);
+    editor.setValue(SampleCode, -1);
   }
 
   render(){
