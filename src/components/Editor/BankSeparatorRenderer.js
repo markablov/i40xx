@@ -2,29 +2,30 @@ class BankSeparatorRenderer {
   constructor(editor, offsetCalculator) {
     this.editor = editor;
     this.offsetCalculator = offsetCalculator;
+    this.prevSeparators = {};
   }
 
-  getSeparators() {
-    let separators = [];
+  getSeparatorsFromCode() {
+    let separators = {};
 
     const offsets = this.offsetCalculator.all();
     for (let i = 0, len = offsets.length; i < len; i++) {
       const { offset, len } = offsets[i];
       if ((offset & 0xF) > ((offset + len) & 0xF))
-        separators.push(i + 1);
+        separators[i + 1] = true;
     }
 
     return separators;
   }
 
   // based on renderer.addToken(), we need to implement it by own, because we also want to remove token
-  update() {
+  toggleSeparatorAtEditor(row, show) {
     const { session, renderer } = this.editor;
+    // clear token cache
+    session.bgTokenizer.lines[row] = null;
+    let tokens = session.getTokens(row);
 
-    for (const row of this.getSeparators()) {
-      // clear token cache
-      session.bgTokenizer.lines[row] = null;
-      let tokens = session.getTokens(row);
+    if (show) {
       // modify token cache for row
       tokens.push({ type: 'bank_separator', value: '' });
 
@@ -34,9 +35,23 @@ class BankSeparatorRenderer {
       // it's pretty safe to set state to 'start' for any row because we have no other states for our mode
       if (!session.bgTokenizer.states[row - 1])
         session.bgTokenizer.states[row - 1] = 'start';
-
-      renderer.updateLines(row, row);
     }
+
+    renderer.updateLines(row, row);
+  }
+
+  update() {
+    const newSeparators = this.getSeparatorsFromCode();
+
+    for (const oldSeparator of Object.keys(this.prevSeparators))
+      if (!newSeparators[oldSeparator])
+        this.toggleSeparatorAtEditor(oldSeparator, false);
+
+    for (const newSeparator of Object.keys(newSeparators))
+      if (!this.prevSeparators[newSeparator])
+        this.toggleSeparatorAtEditor(newSeparator, true);
+
+    this.prevSeparators = newSeparators;
   }
 }
 
