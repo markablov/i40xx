@@ -44,6 +44,7 @@ class Editor extends Component {
     });
 
     editor.setValue(SampleCode, -1);
+    session.setTabSize(2);
   }
 
   render(){
