@@ -27,8 +27,9 @@ class BankSeparatorRenderer {
     let tokens = session.getTokens(row);
 
     if (show) {
-      // modify token cache for row
-      tokens.push({ type: 'bank_separator', value: '' });
+      // modify token cache for row, it's important to set value to something, because if first token is empty
+      // ace editor does not render it, and it could be situation when bank separator is single token for row
+      tokens.push({ type: 'bank_separator', value: ' ' });
 
       // need to set state of previous row to 'start' to prevent unnecessary updating cached tokens for target row
       // if state for row has changed between renders (for example we typed curvy bracket in C syntax mode)
