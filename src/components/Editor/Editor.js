@@ -36,9 +36,11 @@ class Editor extends Component {
 
     session.on('change', delta => {
       if (offsetCalculator.update(delta)) {
-        bankSeparatorRenderer.update();
+        bankSeparatorRenderer.updateSeparatorPositions();
         gutterRenderer.update();
       }
+
+      bankSeparatorRenderer.updateOnEditorChange(delta);
     });
 
     editor.setValue(SampleCode);

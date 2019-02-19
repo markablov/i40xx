@@ -3,6 +3,7 @@ class BankSeparatorRenderer {
     this.editor = editor;
     this.offsetCalculator = offsetCalculator;
     this.prevSeparators = {};
+    this.currentSeparators = {};
   }
 
   getSeparatorsFromCode() {
@@ -40,18 +41,41 @@ class BankSeparatorRenderer {
     renderer.updateLines(row, row);
   }
 
-  update() {
-    const newSeparators = this.getSeparatorsFromCode();
+  updateSeparatorPositions() {
+    this.prevSeparators = this.currentSeparators;
+    this.currentSeparators = this.getSeparatorsFromCode();
+  }
 
-    for (const oldSeparator of Object.keys(this.prevSeparators))
-      if (!newSeparators[oldSeparator])
-        this.toggleSeparatorAtEditor(oldSeparator, false);
+  updateOnEditorChange({ action, start: { row: startRow }, end: { row: endRow } }) {
+    // if user modifies text with separator keeps it shown
+    if (startRow === endRow) {
+      if (this.currentSeparators[startRow])
+        this.toggleSeparatorAtEditor(startRow, true);
+      if (this.prevSeparators === this.currentSeparators)
+        return;
+    }
 
-    for (const newSeparator of Object.keys(newSeparators))
-      if (!this.prevSeparators[newSeparator])
-        this.toggleSeparatorAtEditor(newSeparator, true);
+    // we want to clear previous separators
+    for (const separator of Object.keys(this.prevSeparators).map(x => +x)) {
+      if (separator < startRow)
+        continue;
+      if (action === 'remove') {
+        if (separator >= startRow && separator <= endRow)
+          continue;
+        this.toggleSeparatorAtEditor(separator - (endRow - startRow), false);
+      } else {
+        this.toggleSeparatorAtEditor(separator + (endRow - startRow), false);
+      }
+    }
 
-    this.prevSeparators = newSeparators;
+    // re-draw current separators
+    for (const separator of Object.keys(this.currentSeparators).map(x => +x)) {
+      if (separator < startRow)
+        continue;
+      this.toggleSeparatorAtEditor(separator, true);
+    }
+
+    this.prevSeparators = this.currentSeparators;
   }
 }
 
