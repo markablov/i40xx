@@ -18,14 +18,10 @@ class Editor extends Component {
     return this.editorRef.current.editor;
   }
 
-  componentDidMount() {
-    const editor = this.editor, session = editor.getSession();
-
+  setupROMOffsets(editor, session) {
     const offsetCalculator = new OffsetCalculator(editor);
     const gutterRenderer = new GutterRenderer(editor, offsetCalculator);
     const bankSeparatorRenderer = new BankSeparatorRenderer(editor, offsetCalculator);
-
-    session.setMode(new AssemblyMode());
 
     // we want to show ROM offset for instructions, so need to change
     // gutter with line numbers to custom renderer
@@ -39,9 +35,16 @@ class Editor extends Component {
         bankSeparatorRenderer.updateSeparatorPositions();
         gutterRenderer.update();
       }
-
       bankSeparatorRenderer.updateOnEditorChange(delta);
     });
+  }
+
+  componentDidMount() {
+    const editor = this.editor, session = editor.getSession();
+
+    session.setMode(new AssemblyMode());
+
+    this.setupROMOffsets(editor, session);
 
     editor.setValue(SampleCode, -1);
     session.setTabSize(2);
