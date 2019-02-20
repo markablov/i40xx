@@ -42,6 +42,8 @@ class Editor extends Component {
   setupEditor() {
     const editor = this.editor, session = editor.getSession();
 
+    editor.$blockScrolling = Infinity;
+
     session.setMode(new AssemblyMode());
     session.setTabSize(2);
 
