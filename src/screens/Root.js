@@ -7,13 +7,14 @@ import Box from 'react-bulma-components/lib/components/box';
 import Editor from '../components/Editor/Editor.js';
 import Debugger from '../components/Debugger/Debugger.js';
 import Footer from '../components/Footer.js';
+import CompilingOverlay from '../components/CompilingOverlay.js';
 
 import './Root.css';
 
 import '../services/compiler.js';
 
 const Root = () => (
-  <>
+  <CompilingOverlay>
     <Section>
       <Container>
         <Columns>
@@ -31,7 +32,7 @@ const Root = () => (
       </Container>
     </Section>
     <Footer />
-  </>
+  </CompilingOverlay>
 );
 
 export default Root;

@@ -41,6 +41,7 @@
     "react-ace": "^6.4.0",
     "react-bulma-components": "^2.3.0",
     "react-dom": "^16.8.1",
+    "react-loading-overlay": "^1.0.1",
     "react-redux": "^6.0.1",
     "redux": "^4.0.1"
   },
