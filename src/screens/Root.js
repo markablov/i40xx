@@ -11,8 +11,6 @@ import CompilingOverlay from '../components/CompilingOverlay.js';
 
 import './Root.css';
 
-import '../services/compiler.js';
-
 const Root = () => (
   <CompilingOverlay>
     <Section>
