@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import Button from 'react-bulma-components/lib/components/button';
 
 class General extends Component {
@@ -8,10 +9,10 @@ class General extends Component {
   render() {
     return (
       <>
-        <Button color="warning" onClick={this.handleBuild}>Build</Button>
+        <Button color="warning" onClick={this.handleBuild} disabled={!this.props.editor}>Build</Button>
       </>
     );
   }
 }
 
-export default General;
+export default connect(state => ({ editor: state.editor }))(General);
