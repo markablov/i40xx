@@ -10,6 +10,8 @@ import Footer from '../components/Footer.js';
 
 import './Root.css';
 
+import '../services/compiler.js';
+
 const Root = () => (
   <>
     <Section>
