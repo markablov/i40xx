@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import AceEditor from 'react-ace';
 import 'brace/mode/javascript';
 import 'brace/theme/monokai';
@@ -8,6 +9,7 @@ import OffsetCalculator from './OffsetCalculator/OffsetCalculator.js';
 import AssemblyMode from './AssemblyMode/AssemblyMode.js';
 import BankSeparatorRenderer from './BankSeparatorRenderer.js';
 import SampleCode from './SampleCode.js';
+import setEditorRef from '../../redux/actions/setEditorRef.js';
 
 import './Editor.css';
 
@@ -60,6 +62,7 @@ class Editor extends Component {
   }
 
   componentDidMount() {
+    this.props.setEditorRef(this.editor);
     this.setupEditor();
     this.editor.setValue(SampleCode, -1);
   }
@@ -73,4 +76,4 @@ class Editor extends Component {
   }
 }
 
-export default Editor;
+export default connect(null, { setEditorRef })(Editor);
