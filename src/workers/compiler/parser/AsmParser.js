@@ -6,21 +6,23 @@ class AsmParser extends Parser {
   constructor() {
     super(Object.values(Tokens));
 
-    this.RULE('program', () => {
-      this.AT_LEAST_ONE_SEP({
+    const $ = this;
+
+    $.RULE('program', () => {
+      $.AT_LEAST_ONE_SEP({
         SEP: Tokens.NewLine,
         DEF: () => {
-          this.OR([
-            { ALT: () => this.SUBRULE(this.instruction) },
+          $.OR([
+            { ALT: () => $.SUBRULE($.instruction) },
             { ALT: EMPTY_ALT() }
           ]);
         }
       });
     });
 
-    this.RULE('instruction', () => this.CONSUME(Tokens.Text));
+    $.RULE('instruction', () => $.CONSUME(Tokens.Text));
 
-    this.performSelfAnalysis();
+    $.performSelfAnalysis();
   }
 }
 
