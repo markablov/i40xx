@@ -1,8 +1,4 @@
-import { Lexer }  from 'chevrotain';
-
-import * as Tokens from './tokens.js';
-
-const AsmLexer = new Lexer(Object.values(Tokens));
+import AsmLexer from './AsmLexer.js';
 
 const parse = sourceCode => {
   const { tokens } = AsmLexer.tokenize(sourceCode);
