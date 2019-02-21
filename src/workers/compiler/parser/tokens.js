@@ -1,8 +1,8 @@
 import { Lexer, createToken }  from 'chevrotain';
 
-let tokens = {};
+let tokensArr = [], tokensMap = {};
 
-const addToken = (name, options) => tokens[name] = createToken({ name, ...options });
+const addToken = (name, options) => tokensArr.push(tokensMap[name] = createToken({ name, ...options }));
 
 addToken('NewLine', { pattern: /\r?\n/ });
 addToken('Comment', { pattern: /(?:#|(?:\/\/))[^\n\r]*/, group: Lexer.SKIPPED });
@@ -16,4 +16,4 @@ const instructions0 = [
 
 instructions0.forEach(name => addToken(`Instruction${name}`, { pattern: new RegExp(name, 'i') }));
 
-export default tokens;
+export { tokensArr as allTokens, tokensMap as Tokens };

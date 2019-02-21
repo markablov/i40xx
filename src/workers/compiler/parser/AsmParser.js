@@ -1,10 +1,10 @@
 import { Parser, EMPTY_ALT }  from 'chevrotain';
 
-import Tokens from './tokens.js';
+import { Tokens, allTokens } from './tokens.js';
 
 class AsmParser extends Parser {
   constructor() {
-    super(Object.values(Tokens));
+    super(allTokens);
 
     const $ = this;
 
