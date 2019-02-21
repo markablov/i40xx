@@ -2,9 +2,10 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Button from 'react-bulma-components/lib/components/button';
 
+import { compile } from '../../services/compiler.js';
+
 class General extends Component {
-  handleBuild = () => {
-  };
+  handleBuild = () => compile(this.props.editor.getValue());
 
   render() {
     return (
