@@ -1,4 +1,4 @@
-import { Parser, EMPTY_ALT }  from 'chevrotain';
+import { Parser }  from 'chevrotain';
 
 import { Tokens, allTokens } from './tokens.js';
 
@@ -11,13 +11,18 @@ class AsmParser extends Parser {
     $.RULE('program', () => {
       $.AT_LEAST_ONE_SEP({
         SEP: Tokens.NewLine,
-        DEF: () => {
-          $.OR([
-            { ALT: () => $.SUBRULE($.instruction) },
-            { ALT: EMPTY_ALT() }
-          ]);
-        }
+        DEF: () => $.SUBRULE($.instructionWithLabel)
       });
+    });
+
+    $.RULE('instructionWithLabel', () => {
+      $.OPTION(() => $.SUBRULE($.label));
+      $.OPTION2(() => $.SUBRULE($.instruction));
+    });
+
+    $.RULE('label', () => {
+      $.CONSUME(Tokens.Label);
+      $.CONSUME(Tokens.Colon);
     });
 
     $.RULE('instruction', () => {
