@@ -1,2 +1,2 @@
-export const SET_EDITOR_REF = Symbol('SET_EDITOR_REF');
-export const START_COMPILATION = Symbol('START_COMPILATION');
+export const SET_EDITOR_REF = Symbol('i4004/SET_EDITOR_REF');
+export const START_COMPILATION = Symbol('i4004/START_COMPILATION');
