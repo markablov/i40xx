@@ -1,6 +1,12 @@
 import { Lexer, createToken }  from 'chevrotain';
 
-export const NewLine = createToken({ name: 'NewLine', pattern: /\r?\n/ });
-export const Comment = createToken({ name: 'Comment', pattern: /(?:#|(?:\/\/))[^\n\r]*/, group: Lexer.SKIPPED });
-export const WhiteSpace = createToken({ name: 'WhiteSpace', pattern: /\s+/, group: Lexer.SKIPPED });
-export const Text = createToken({ name: 'Text', pattern: /[^\r\n]+/ });
+let tokens = {};
+
+const addToken = (name, options) => tokens[name] = createToken({ name, ...options });
+
+addToken('NewLine', { pattern: /\r?\n/ });
+addToken('Comment', { pattern: /(?:#|(?:\/\/))[^\n\r]*/, group: Lexer.SKIPPED });
+addToken('WhiteSpace', { pattern: /\s+/, group: Lexer.SKIPPED });
+addToken('Text', { pattern: /[^\r\n]+/ });
+
+export default tokens;

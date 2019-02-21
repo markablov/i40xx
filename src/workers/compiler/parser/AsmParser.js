@@ -1,6 +1,6 @@
 import { Parser, EMPTY_ALT }  from 'chevrotain';
 
-import * as Tokens from './tokens.js';
+import Tokens from './tokens.js';
 
 class AsmParser extends Parser {
   constructor() {
