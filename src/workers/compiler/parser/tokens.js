@@ -23,6 +23,8 @@ addToken('Register', { pattern: /rr(?:(?:1[0-5])|(?:0?\d))/ });
 
 addToken('RegisterPair', { pattern: /r[0-7]/ });
 
+addToken('Cond', { pattern: /n?(?:z|c|t|zc|zt|ct|zct)/ });
+
 // Bank address format is 00:0xFF, two parts - bank number and address inside bank
 // bank number: [0..9] OR [10..15]
 // address inside bank: [100..199] OR [200..249] OR [250..255] OR [0x00..0xFF] OR [00..99]
