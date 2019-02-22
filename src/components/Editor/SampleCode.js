@@ -15,7 +15,7 @@ export default `  NOP
   JMS 00:0xFF
   JCN NZ, label2 // test comment 2
   ISZ r9, 123
-  FIM rr7, label3
+  FIM rr7, 0xF0
 label1:
   RDM
   RD0
@@ -40,7 +40,7 @@ label2: WR3
   IAC
   DAC
   RAL
-label3:  
+label3:
   RAR
   TCC
   DAA
