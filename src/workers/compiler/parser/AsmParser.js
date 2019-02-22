@@ -110,28 +110,28 @@ class AsmParser extends Parser {
       $.CONSUME(Tokens.Data);
     });
 
-    $.RULE('instructionWithAddr12', () => {
+    $.RULE('address', () => {
       $.OR([
-        { ALT: () => $.CONSUME(Tokens.InstructionJUN) },
-        { ALT: () => $.CONSUME(Tokens.InstructionJMS) }
-      ]);
-
-      $.OR2([
         { ALT: () => $.CONSUME(Tokens.Label) },
         { ALT: () => $.CONSUME(Tokens.Data) },
         { ALT: () => $.CONSUME(Tokens.BankAddress) }
       ]);
     });
 
+    $.RULE('instructionWithAddr12', () => {
+      $.OR([
+        { ALT: () => $.CONSUME(Tokens.InstructionJUN) },
+        { ALT: () => $.CONSUME(Tokens.InstructionJMS) }
+      ]);
+
+      $.SUBRULE($.address);
+    });
+
     $.RULE('instructionISZ', () => {
       $.CONSUME(Tokens.InstructionISZ);
       $.CONSUME(Tokens.Register);
       $.CONSUME(Tokens.Comma);
-      $.OR([
-        { ALT: () => $.CONSUME(Tokens.Label) },
-        { ALT: () => $.CONSUME(Tokens.Data) },
-        { ALT: () => $.CONSUME(Tokens.BankAddress) }
-      ]);
+      $.SUBRULE($.address);
     });
 
     $.performSelfAnalysis();
