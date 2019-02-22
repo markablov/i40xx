@@ -10,16 +10,16 @@ addToken('Comment', { pattern: /(?:#|(?:\/\/))[^\n\r]*/, group: Lexer.SKIPPED })
 addToken('WhiteSpace', { pattern: /\s+/, group: Lexer.SKIPPED });
 
 const instructions = [
-  'NOP', 'RDM', 'RD0', 'RD1', 'RD2', 'RD3', 'RDR', 'WRM', 'WR0', 'WR1', 'WR2',
-  'WR3', 'WRR', 'WMP', 'ADM', 'SBM', 'CLB', 'CLC', 'CMC', 'STC', 'CMA', 'IAC',
-  'DAC', 'RAL', 'RAR', 'TCC', 'DAA', 'TCS', 'KBP', 'DCL', 'LDM', 'LD', 'XCH',
-  'ADD', 'SUB', 'INC', 'BBL', 'JIN', 'SRC', 'FIN', 'JUN', 'JMS', 'JCN', 'ISZ',
-  'FIM'
+  'nop', 'rdm', 'rd0', 'rd1', 'rd2', 'rd3', 'rdr', 'wrm', 'wr0', 'wr1', 'wr2',
+  'wr3', 'wrr', 'wmp', 'adm', 'sbm', 'clb', 'clc', 'cmc', 'stc', 'cma', 'iac',
+  'dac', 'ral', 'rar', 'tcc', 'daa', 'tcs', 'kbp', 'dcl', 'ldm', 'ld', 'xch',
+  'add', 'sub', 'inc', 'bbl', 'jin', 'src', 'fin', 'jun', 'jms', 'jcn', 'isz',
+  'fim'
 ];
-instructions.forEach(name => addToken(`Instruction${name}`, { pattern: new RegExp(name, 'i') }));
+instructions.forEach(name => addToken(`Instruction${name}`, { pattern: new RegExp(name) }));
 
 // important to define label name after keywords, because lexer tries to match first rule from array
 // and it could match label first because patterns of instruction names and labels are intersected
-addToken('Label', { pattern: /[a-zA-Z]\w*/ });
+addToken('Label', { pattern: /[a-z]\w*/ });
 
 export { tokensArr as allTokens, tokensMap as Tokens };
