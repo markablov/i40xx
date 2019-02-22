@@ -32,7 +32,8 @@ class AsmParser extends Parser {
         { ALT: () => $.SUBRULE($.instructionWithRegPair) },
         { ALT: () => $.SUBRULE($.instructionWithData4) },
         { ALT: () => $.SUBRULE($.instructionFIM) },
-        { ALT: () => $.SUBRULE($.instructionWithAddr12) }
+        { ALT: () => $.SUBRULE($.instructionWithAddr12) },
+        { ALT: () => $.SUBRULE($.instructionISZ) }
       ]);
     });
 
@@ -116,6 +117,17 @@ class AsmParser extends Parser {
       ]);
 
       $.OR2([
+        { ALT: () => $.CONSUME(Tokens.Label) },
+        { ALT: () => $.CONSUME(Tokens.Data) },
+        { ALT: () => $.CONSUME(Tokens.BankAddress) }
+      ]);
+    });
+
+    $.RULE('instructionISZ', () => {
+      $.CONSUME(Tokens.InstructionISZ);
+      $.CONSUME(Tokens.Register);
+      $.CONSUME(Tokens.Comma);
+      $.OR([
         { ALT: () => $.CONSUME(Tokens.Label) },
         { ALT: () => $.CONSUME(Tokens.Data) },
         { ALT: () => $.CONSUME(Tokens.BankAddress) }
