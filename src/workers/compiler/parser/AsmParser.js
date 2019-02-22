@@ -97,7 +97,7 @@ class AsmParser extends Parser {
         { ALT: () => $.CONSUME(Tokens.InstructionLDM) }
       ]);
 
-      $.CONSUME(Tokens.Data4);
+      $.CONSUME(Tokens.Data);
     });
 
     $.performSelfAnalysis();
