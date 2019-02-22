@@ -19,7 +19,7 @@ class HighlightRules extends window.ace.acequire('ace/mode/text_highlight_rules'
         },
         {
           token: 'variable',
-          regex: '\\b(?:r\\d|rr\\d|n?(?:z|c|t|zc|zt|ct|zct))\\b',
+          regex: '\\b(?:r\\d|rr\\d{1,2}|n?(?:z|c|t|zc|zt|ct|zct))\\b',
           caseInsensitive: true
         },
         {
