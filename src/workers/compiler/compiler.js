@@ -1,8 +1,8 @@
 import parse from './parser/parser.js';
+import CodeGenerator from './CodeGenerator.js';
 
 onmessage = ({ data: sourceCode }) => {
-  setTimeout(() => {
-    parse(sourceCode);
-    postMessage({});
-  }, 1000);
+  const codeGenerator = new CodeGenerator();
+  parse(sourceCode, codeGenerator);
+  postMessage({});
 };
