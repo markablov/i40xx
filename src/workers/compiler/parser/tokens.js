@@ -16,7 +16,7 @@ const instructions = [
   'add', 'sub', 'inc', 'bbl', 'jin', 'src', 'fin', 'jun', 'jms', 'jcn', 'isz',
   'fim'
 ];
-instructions.forEach(name => addToken(`Instruction${name}`, { pattern: new RegExp(name) }));
+instructions.forEach(name => addToken(`Instruction${name.toUpperCase()}`, { pattern: new RegExp(name) }));
 
 // important to define label name after keywords, because lexer tries to match first rule from array
 // and it could match label first because patterns of instruction names and labels are intersected
