@@ -6,6 +6,7 @@ const addToken = (name, options) => tokensArr.push(tokensMap[name] = createToken
 
 addToken('NewLine', { pattern: /\r?\n/ });
 addToken('Colon', { pattern: ':' });
+addToken('Comma', { pattern: ',' });
 addToken('Comment', { pattern: /(?:#|(?:\/\/))[^\n\r]*/, group: Lexer.SKIPPED });
 addToken('WhiteSpace', { pattern: /\s+/, group: Lexer.SKIPPED });
 
