@@ -18,7 +18,9 @@ const instructions = [
 ];
 instructions.forEach(name => addToken(`Instruction${name.toUpperCase()}`, { pattern: new RegExp(name) }));
 
-addToken('Register', { pattern: /rr(?:(?:[01][012345])|\d)/ });
+addToken('Register', { pattern: /rr(?:(?:[01][0-5])|\d)/ });
+
+addToken('RegisterPair', { pattern: /r[0-7]/ });
 
 // important to define label name after keywords, because lexer tries to match first rule from array
 // and it could match label first because patterns of instruction names and labels are intersected
