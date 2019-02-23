@@ -54,6 +54,7 @@ class AsmParser extends Parser {
         { ALT: () => $.CONSUME(Tokens.InstructionWR3) },
         { ALT: () => $.CONSUME(Tokens.InstructionWRR) },
         { ALT: () => $.CONSUME(Tokens.InstructionWMP) },
+        { ALT: () => $.CONSUME(Tokens.InstructionWPM) },
         { ALT: () => $.CONSUME(Tokens.InstructionADM) },
         { ALT: () => $.CONSUME(Tokens.InstructionSBM) },
         { ALT: () => $.CONSUME(Tokens.InstructionCLB) },

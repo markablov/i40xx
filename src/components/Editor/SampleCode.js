@@ -30,6 +30,7 @@ label1:
 label2: WR3
   WRR
   WMP
+  WPM
   ADM
   SBM
   CLB
