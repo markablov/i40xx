@@ -1,18 +1,23 @@
 import { Parser }  from 'chevrotain';
 
 import { Tokens, allTokens } from './tokens.js';
+import CodeGenerator from '../CodeGenerator.js';
 
 class AsmParser extends Parser {
   constructor() {
-    super(allTokens);
+    super(allTokens, { outputCst: false });
 
     const $ = this;
+
+    const codeGenerator = new CodeGenerator();
 
     $.RULE('program', () => {
       $.AT_LEAST_ONE_SEP({
         SEP: Tokens.NewLine,
         DEF: () => $.SUBRULE($.instructionWithLabel)
       });
+
+      return codeGenerator.generate();
     });
 
     $.RULE('instructionWithLabel', () => {
@@ -73,7 +78,7 @@ class AsmParser extends Parser {
         { ALT: () => $.CONSUME(Tokens.InstructionDCL) }
       ]);
 
-      this.codeGenerator.pushInstructionWithoutArg(instruction.image);
+      codeGenerator.pushInstructionWithoutArg(instruction.image);
     });
 
     $.RULE('instructionWithReg', () => {
@@ -87,7 +92,7 @@ class AsmParser extends Parser {
 
       const reg = $.CONSUME(Tokens.Register);
 
-      this.codeGenerator.pushInstructionWithReg(instruction.image, reg.image);
+      codeGenerator.pushInstructionWithReg(instruction.image, reg.image);
     });
 
     $.RULE('instructionWithRegPair', () => {
@@ -99,7 +104,7 @@ class AsmParser extends Parser {
 
       const regPair = $.CONSUME(Tokens.RegisterPair);
 
-      this.codeGenerator.pushInstructionWithRegPair(instruction.image, regPair.image);
+      codeGenerator.pushInstructionWithRegPair(instruction.image, regPair.image);
     });
 
     $.RULE('instructionWithData4', () => {
@@ -150,10 +155,6 @@ class AsmParser extends Parser {
     });
 
     $.performSelfAnalysis();
-  }
-
-  setCodeGenerator(codeGenerator) {
-    this.codeGenerator = codeGenerator;
   }
 }
 
