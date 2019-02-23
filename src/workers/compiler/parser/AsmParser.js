@@ -1,4 +1,4 @@
-import { Parser }  from 'chevrotain';
+import { Parser, MismatchedTokenException }  from 'chevrotain';
 
 import { Tokens, allTokens } from './tokens.js';
 import CodeGenerator from '../CodeGenerator.js';
@@ -108,12 +108,17 @@ class AsmParser extends Parser {
     });
 
     $.RULE('instructionWithData4', () => {
-      $.OR([
+      const instruction = $.OR([
         { ALT: () => $.CONSUME(Tokens.InstructionBBL) },
         { ALT: () => $.CONSUME(Tokens.InstructionLDM) }
       ]);
 
-      $.CONSUME(Tokens.Data);
+      const dataToken = $.CONSUME(Tokens.Data);
+      const data = +dataToken.image;
+      if (data > 15)
+        throw $.SAVE_ERROR(new MismatchedTokenException('Argument is too big, should be 0xF or less', dataToken, instruction));
+
+      codeGenerator.pushInstructionWithData4(instruction.image, data);
     });
 
     $.RULE('instructionFIM', () => {

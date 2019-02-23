@@ -5,9 +5,11 @@ const InstructionsWithoutArgCodes = {
   dcl: 0xFD
 };
 
+// opcodes in this tables are already with placeholder 0 bits to keep encoded argument
+// it allows to skip bitwise AND before bitwise OR with encoded argument on instruction generation
 const InstructionsWithReg = { ld: 0xA0, xch: 0xB0, add: 0x80, sub: 0x90, inc: 0x60 };
-
 const InstructionsWithRegPair = { src: 0x21, fin: 0x30, jin: 0x31 };
+const InstructionsWithData4 = { bbl: 0xC0, ldm: 0xD0 };
 
 const ROM_SIZE = 4096;
 
@@ -24,17 +26,24 @@ class CodeGenerator {
     this.current++;
   }
 
+  // reg is "rrX" string, where 0 <= X <= 15
   pushInstructionWithReg(instruction, reg) {
     // format is [O O O O R R R R], where OOOO is opcode, and RRRR is reg index
-    // opcode from table is already with nullified bits [0..3], so don't need to perform bitwise AND
     this.bin[this.current] = InstructionsWithReg[instruction] | this.getRegCode(reg);
     this.current++;
   }
 
+  // regPair is "rX" string, where 0 <= X <= 7
   pushInstructionWithRegPair(instruction, regPair) {
     // format is [O O O O R R R O], where OOOOO is opcode, and RRR is reg pair index
-    // opcode from table is already with nullified bits [1..3], so don't need to perform bitwise AND
     this.bin[this.current] = InstructionsWithRegPair[instruction] | (this.getRegPairCode(regPair) << 1);
+    this.current++;
+  }
+
+  // data is 4-bit number, 0 <= data <= 15
+  pushInstructionWithData4(instruction, data) {
+    // format is [O O O O D D D D], where OOOO is opcode, and DDDD is 4-bit number
+    this.bin[this.current] = InstructionsWithData4[instruction] | data;
     this.current++;
   }
 
