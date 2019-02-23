@@ -6,8 +6,7 @@ const parse = sourceCode => {
   if (lexerErrors.length)
     return { errors: lexerErrors };
 
-  AsmParser.input = tokens;
-  const data = AsmParser.program();
+  const data = AsmParser.parse(tokens);
   return { data, errors: AsmParser.errors };
 };
 

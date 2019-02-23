@@ -50,6 +50,11 @@ class CodeGenerator {
   generate() {
     return this.bin;
   }
+
+  clear() {
+    this.bin = new Uint8Array(ROM_SIZE);
+    this.current = 0;
+  }
 }
 
 export default CodeGenerator;

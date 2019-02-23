@@ -9,7 +9,7 @@ class AsmParser extends Parser {
 
     const $ = this;
 
-    const codeGenerator = new CodeGenerator();
+    const codeGenerator = this.codeGenerator = new CodeGenerator();
 
     $.RULE('program', () => {
       $.AT_LEAST_ONE_SEP({
@@ -160,6 +160,12 @@ class AsmParser extends Parser {
     });
 
     $.performSelfAnalysis();
+  }
+
+  parse(input){
+    this.input = input;
+    this.codeGenerator.clear();
+    return this.program();
   }
 }
 
