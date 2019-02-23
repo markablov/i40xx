@@ -33,7 +33,7 @@ const InstructionsWithoutArgCodes = {
 };
 
 class CodeGenerator {
-  // we limited by 4k ram, so array is performant enough in comparison with buffer
+  // we limited by 4k ram, so array is performant enough in comparison with typed arrays
   bin = [];
 
   pushInstructionWithoutArg(instruction){
@@ -41,6 +41,7 @@ class CodeGenerator {
   }
 
   generate() {
+    return this.bin;
   }
 }
 
