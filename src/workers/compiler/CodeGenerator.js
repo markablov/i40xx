@@ -5,14 +5,23 @@ const InstructionsWithoutArgCodes = {
   dcl: 0xFD
 };
 
+const InstructionsWithReg = { ld: 0xA0, xch: 0xB0, add: 0x80, sub: 0x90, inc: 0x60 };
+
 const ROM_SIZE = 4096;
 
 class CodeGenerator {
   bin = new Uint8Array(ROM_SIZE);
   current = 0;
 
+  getRegCode = reg => +reg.substr(2);
+
   pushInstructionWithoutArg(instruction){
     this.bin[this.current] = InstructionsWithoutArgCodes[instruction];
+    this.current++;
+  }
+
+  pushInstructionWithReg(instruction, reg) {
+    this.bin[this.current] = InstructionsWithReg[instruction] | this.getRegCode(reg);
     this.current++;
   }
 

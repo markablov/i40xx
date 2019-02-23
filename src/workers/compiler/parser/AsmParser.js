@@ -39,7 +39,7 @@ class AsmParser extends Parser {
     });
 
     $.RULE('instructionWithoutArg', () => {
-      const token = $.OR([
+      const instruction = $.OR([
         { ALT: () => $.CONSUME(Tokens.InstructionNOP) },
         { ALT: () => $.CONSUME(Tokens.InstructionRDM) },
         { ALT: () => $.CONSUME(Tokens.InstructionRD0) },
@@ -73,11 +73,11 @@ class AsmParser extends Parser {
         { ALT: () => $.CONSUME(Tokens.InstructionDCL) }
       ]);
 
-      this.codeGenerator.pushInstructionWithoutArg(token.image);
+      this.codeGenerator.pushInstructionWithoutArg(instruction.image);
     });
 
     $.RULE('instructionWithReg', () => {
-      $.OR([
+      const instruction = $.OR([
         { ALT: () => $.CONSUME(Tokens.InstructionLD) },
         { ALT: () => $.CONSUME(Tokens.InstructionXCH) },
         { ALT: () => $.CONSUME(Tokens.InstructionADD) },
@@ -85,7 +85,9 @@ class AsmParser extends Parser {
         { ALT: () => $.CONSUME(Tokens.InstructionINC) }
       ]);
 
-      $.CONSUME(Tokens.Register);
+      const reg = $.CONSUME(Tokens.Register);
+
+      this.codeGenerator.pushInstructionWithReg(instruction.image, reg.image);
     });
 
     $.RULE('instructionWithRegPair', () => {
