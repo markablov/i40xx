@@ -10,6 +10,7 @@ const InstructionsWithoutArgCodes = {
 const InstructionsWithReg = { ld: 0xA0, xch: 0xB0, add: 0x80, sub: 0x90, inc: 0x60 };
 const InstructionsWithRegPair = { src: 0x21, fin: 0x30, jin: 0x31 };
 const InstructionsWithData4 = { bbl: 0xC0, ldm: 0xD0 };
+const InstructionsWithRegPairAndData8 = { fim: 0x20 };
 
 const ROM_SIZE = 4096;
 
@@ -40,8 +41,15 @@ class CodeGenerator {
   // data is 4-bit number, 0 <= data <= 15
   pushInstructionWithData4(instruction, data) {
     // format is [O O O O D D D D], where OOOO is opcode, and DDDD is 4-bit number
-    this.bin[this.current] = InstructionsWithData4[instruction] | data;
-    this.current++;
+    this.bin[this.current++] = InstructionsWithData4[instruction] | data;
+  }
+
+  // data is 8-bit number, 0 <= data <= 255, regPair is "rX" string, where 0 <= X <= 7
+  pushInstructionWithRegPairAndData8(instruction, regPair, data) {
+    // format is [O O O O R R R O] [D D D D D D D D], where OOOOO is opcode,
+    // RRR is reg pair index, and DDDDDDDD is 8-bit number
+    this.bin[this.current++] = InstructionsWithRegPairAndData8[instruction] | (this.getRegPairCode(regPair) << 1);
+    this.bin[this.current++] = data;
   }
 
   generate() {

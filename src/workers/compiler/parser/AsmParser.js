@@ -115,17 +115,22 @@ class AsmParser extends Parser {
 
       const dataToken = $.CONSUME(Tokens.Data);
       const data = +dataToken.image;
-      if (data > 15)
+      if (data > 0xF)
         throw $.SAVE_ERROR(new MismatchedTokenException('Argument is too big, should be 0xF or less', dataToken, instruction));
 
       codeGenerator.pushInstructionWithData4(instruction.image, data);
     });
 
     $.RULE('instructionFIM', () => {
-      $.CONSUME(Tokens.InstructionFIM);
-      $.CONSUME(Tokens.RegisterPair);
-      $.CONSUME(Tokens.Comma);
-      $.CONSUME(Tokens.Data);
+      const instruction = $.CONSUME(Tokens.InstructionFIM);
+      const regPair = $.CONSUME(Tokens.RegisterPair);
+      const prevToken = $.CONSUME(Tokens.Comma);
+      const dataToken = $.CONSUME(Tokens.Data);
+      const data = +dataToken.image;
+      if (data > 0xFF)
+        throw $.SAVE_ERROR(new MismatchedTokenException('Argument is too big, should be 0xFF or less', dataToken, prevToken));
+
+      codeGenerator.pushInstructionWithRegPairAndData8(instruction.image, regPair.image, data);
     });
 
     $.RULE('address', () => {
