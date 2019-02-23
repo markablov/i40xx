@@ -4,5 +4,6 @@ import CodeGenerator from './CodeGenerator.js';
 onmessage = ({ data: sourceCode }) => {
   const codeGenerator = new CodeGenerator();
   parse(sourceCode, codeGenerator);
-  postMessage({});
+  const dump = codeGenerator.generate();
+  postMessage({ dump });
 };
