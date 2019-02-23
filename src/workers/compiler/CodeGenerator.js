@@ -32,12 +32,15 @@ const InstructionsWithoutArgCodes = {
   dcl: 0xFD
 };
 
+const ROM_SIZE = 4096;
+
 class CodeGenerator {
-  // we limited by 4k ram, so array is performant enough in comparison with typed arrays
-  bin = [];
+  bin = new Uint8Array(ROM_SIZE);
+  current = 0;
 
   pushInstructionWithoutArg(instruction){
-    this.bin.push(InstructionsWithoutArgCodes[instruction]);
+    this.bin[this.current] = InstructionsWithoutArgCodes[instruction];
+    this.current++;
   }
 
   generate() {
