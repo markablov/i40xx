@@ -145,6 +145,10 @@ class AsmParser extends Parser {
 
     $.performSelfAnalysis();
   }
+
+  setCodeGenerator(codeGenerator) {
+    this.codeGenerator = codeGenerator;
+  }
 }
 
 export default new AsmParser([]);
