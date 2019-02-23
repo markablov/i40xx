@@ -22,22 +22,19 @@ class CodeGenerator {
   getRegPairCode = regPair => +regPair.substr(1);
 
   pushInstructionWithoutArg(instruction){
-    this.bin[this.current] = InstructionsWithoutArgCodes[instruction];
-    this.current++;
+    this.bin[this.current++] = InstructionsWithoutArgCodes[instruction];
   }
 
   // reg is "rrX" string, where 0 <= X <= 15
   pushInstructionWithReg(instruction, reg) {
     // format is [O O O O R R R R], where OOOO is opcode, and RRRR is reg index
-    this.bin[this.current] = InstructionsWithReg[instruction] | this.getRegCode(reg);
-    this.current++;
+    this.bin[this.current++] = InstructionsWithReg[instruction] | this.getRegCode(reg);
   }
 
   // regPair is "rX" string, where 0 <= X <= 7
   pushInstructionWithRegPair(instruction, regPair) {
     // format is [O O O O R R R O], where OOOOO is opcode, and RRR is reg pair index
-    this.bin[this.current] = InstructionsWithRegPair[instruction] | (this.getRegPairCode(regPair) << 1);
-    this.current++;
+    this.bin[this.current++] = InstructionsWithRegPair[instruction] | (this.getRegPairCode(regPair) << 1);
   }
 
   // data is 4-bit number, 0 <= data <= 15
