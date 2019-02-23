@@ -91,13 +91,15 @@ class AsmParser extends Parser {
     });
 
     $.RULE('instructionWithRegPair', () => {
-      $.OR([
+      const instruction = $.OR([
         { ALT: () => $.CONSUME(Tokens.InstructionJIN) },
         { ALT: () => $.CONSUME(Tokens.InstructionSRC) },
         { ALT: () => $.CONSUME(Tokens.InstructionFIN) }
       ]);
 
-      $.CONSUME(Tokens.RegisterPair);
+      const regPair = $.CONSUME(Tokens.RegisterPair);
+
+      this.codeGenerator.pushInstructionWithRegPair(instruction.image, regPair.image);
     });
 
     $.RULE('instructionWithData4', () => {
