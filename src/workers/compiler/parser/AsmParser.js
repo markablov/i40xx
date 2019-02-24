@@ -1,7 +1,7 @@
 import { Parser, MismatchedTokenException }  from 'chevrotain';
 
 import { Tokens, allTokens } from './tokens.js';
-import CodeGenerator from '../CodeGenerator.js';
+import CodeGenerator, { AddrType } from '../CodeGenerator.js';
 
 class AsmParser extends Parser {
   constructor() {
@@ -17,7 +17,11 @@ class AsmParser extends Parser {
         DEF: () => $.SUBRULE($.instructionWithLabel)
       });
 
-      return codeGenerator.generate();
+      try {
+        return codeGenerator.generate();
+      } catch (err) {
+        throw $.SAVE_ERROR(new MismatchedTokenException(err.toString()));
+      }
     });
 
     $.RULE('instructionWithLabel', () => {
@@ -139,20 +143,26 @@ class AsmParser extends Parser {
     });
 
     $.RULE('address', () => {
-      $.OR([
-        { ALT: () => $.CONSUME(Tokens.Label) },
-        { ALT: () => $.CONSUME(Tokens.Data) },
-        { ALT: () => $.CONSUME(Tokens.BankAddress) }
+      return $.OR([
+        { ALT: () => ({ token: $.CONSUME(Tokens.Label), type: AddrType.Label }) },
+        { ALT: () => ({ token: $.CONSUME(Tokens.Data), type: AddrType.FlatAddress }) },
+        { ALT: () => ({ token: $.CONSUME(Tokens.BankAddress), type: AddrType.BankAddress }) }
       ]);
     });
 
     $.RULE('instructionWithAddr12', () => {
-      $.OR([
+      const instruction = $.OR([
         { ALT: () => $.CONSUME(Tokens.InstructionJUN) },
         { ALT: () => $.CONSUME(Tokens.InstructionJMS) }
       ]);
 
-      $.SUBRULE($.address);
+      const { token: addr, type } = $.SUBRULE($.address);
+
+      try {
+        codeGenerator.pushInstructionWithAddr12(instruction.image, addr.image, type);
+      } catch (err) {
+        throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), addr, instruction));
+      }
     });
 
     $.RULE('instructionISZ', () => {
