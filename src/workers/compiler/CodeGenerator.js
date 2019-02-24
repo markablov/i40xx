@@ -16,11 +16,20 @@ const ROM_SIZE = 4096;
 
 class CodeGenerator {
   bin = new Uint8Array(ROM_SIZE);
+  labels = {};
   current = 0;
 
   getRegCode = reg => +reg.substr(2);
 
   getRegPairCode = regPair => +regPair.substr(1);
+
+  addLabel(label){
+    if (this.labels[label])
+      return false;
+
+    this.labels[label] = this.current;
+    return true;
+  }
 
   pushInstructionWithoutArg(instruction){
     this.bin[this.current++] = InstructionsWithoutArgCodes[instruction];
@@ -59,6 +68,7 @@ class CodeGenerator {
   clear() {
     this.bin = new Uint8Array(ROM_SIZE);
     this.current = 0;
+    this.labels = {};
   }
 }
 

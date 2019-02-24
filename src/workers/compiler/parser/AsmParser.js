@@ -26,8 +26,11 @@ class AsmParser extends Parser {
     });
 
     $.RULE('label', () => {
-      $.CONSUME(Tokens.Label);
+      const label = $.CONSUME(Tokens.Label);
       $.CONSUME(Tokens.Colon);
+
+      if (!codeGenerator.addLabel(label.image))
+        throw $.SAVE_ERROR(new MismatchedTokenException('Duplicated definition for label', label));
     });
 
     $.RULE('instruction', () => {
