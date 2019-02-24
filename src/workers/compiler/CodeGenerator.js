@@ -18,6 +18,7 @@ const InstructionsWithRegPair = { src: 0x21, fin: 0x30, jin: 0x31 };
 const InstructionsWithData4 = { bbl: 0xC0, ldm: 0xD0 };
 const InstructionsWithRegPairAndData8 = { fim: 0x20 };
 const InstructionsWithAddr12 = { jms: 0x40, jun: 0x50 };
+const InstructionsWithRegAndAddr8 = { isz: 0x70 };
 
 const ROM_SIZE = 4096;
 
@@ -33,14 +34,17 @@ class CodeGenerator {
 
   getDataCode = data => data.startsWith('0x') ? parseInt(data.substr(2), 16) : +data;
 
-  getAddrCode = (addr, type) => {
+  getAddrCode = (addr, type, short) => {
     let addrValue = 0;
+    const currentBank = this.current >> 8;
 
     switch (type) {
       case AddrType.FlatAddress:
         addrValue = this.getDataCode(addr);
         if (addrValue > 0xFFF)
           throw new Error('Argument is too big, should be 0xFFF or less');
+        if (short && (addrValue >> 8) !== currentBank)
+          throw new Error('For short jumps, address should be in the same bank as instruction');
         break;
       case AddrType.BankAddress: {
         const [bank, offset] = addr.split(':');
@@ -48,11 +52,13 @@ class CodeGenerator {
           throw new Error('Bank number is too big, should be 0xF or less');
         if (offset > 0xFF)
           throw new Error('Bank offset is too big, should be 0xFF or less');
+        if (short && bank != currentBank)
+          throw new Error('For short jumps, address should be in the same bank as instruction');
         addrValue = (bank << 8) | offset;
         break;
       }
       case AddrType.Label:
-        this.offsetsToLabel[this.current] = addr;
+        this.offsetsToLabel[this.current] = { label: addr, short };
         break;
     }
 
@@ -108,21 +114,34 @@ class CodeGenerator {
   // addr could be label name or 12-bit number (0 <= addr <= 4095) or "bank:offset" string,
   // where "bank" is 4-bit bank number and "offset" is 8-bit offset for specific bank
   pushInstructionWithAddr12(instruction, addr, type) {
-    const addrValue = this.getAddrCode(addr, type);
+    const addrValue = this.getAddrCode(addr, type, false);
     // format is [O O O O A A A A] [A A A A A A A A], where OOOOO is opcode, AAAAAAAAAAAA is 12-bit address
     this.bin[this.current++] = InstructionsWithAddr12[instruction] | (addrValue >> 8);
     this.bin[this.current++] = addrValue & 0xFF;
   }
 
+  pushInstructionWithRegAndAddr8(instruction, reg, addr, type) {
+    const addrValue = this.getAddrCode(addr, type, true);
+    // format is [O O O O R R R R] [A A A A A A A A], where OOOOO is opcode
+    // RRRR is reg index, and AAAAAAAA is 8-bit address
+    this.bin[this.current++] = InstructionsWithRegAndAddr8[instruction] | (this.getRegCode(reg));
+    this.bin[this.current++] = addrValue & 0xFF;
+  }
+
   generate() {
     // on this stage we have information about all labels, so we can fill all offsets
-    for (const [offset, label] of Object.entries(this.offsetsToLabel)) {
+    for (const [offset, { label, short }] of Object.entries(this.offsetsToLabel).map(([k, v]) => ([+k, v]))) {
       const addr = this.labels[label];
       if (addr === undefined)
         throw new Error(`Unknown label ${label}`);
-      // offset is string key, need to convert to integer
-      this.bin[+offset] |= addr >> 8;
-      this.bin[+offset + 1] = addr & 0xFF;
+      if (short) {
+        if ((addr >> 8) !== (offset >> 8))
+          throw new Error('For short jumps, address should be in the same bank as instruction');
+        this.bin[offset + 1] = addr & 0xFF;
+      } else {
+        this.bin[offset] |= addr >> 8;
+        this.bin[offset + 1] = addr & 0xFF;
+      }
     }
     return this.bin;
   }
