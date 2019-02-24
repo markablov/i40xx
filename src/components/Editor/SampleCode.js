@@ -1,21 +1,21 @@
 export default `  NOP
   LDM 9
   // test comment
-  LD r0
-  XCH r1
-  ADD r2
-  SUB r3
-  INC r4
+  LD rr0
+  XCH rr1
+  ADD rr2
+  SUB rr3
+  INC rr4
   # test comment 1
   BBL 0xF
-  JIN rr0
-  SRC rr1
-  FIN rr2
+  JIN r0
+  SRC r1
+  FIN r2
   JUN label1
   JMS 00:0xFF
   JCN NZ, label2 // test comment 2
-  ISZ r9, 123
-  FIM rr7, 0xF0
+  ISZ rr9, 123
+  FIM r7, 0xF0
 label1:
   RDM
   RD0
