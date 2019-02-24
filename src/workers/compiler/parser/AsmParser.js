@@ -117,8 +117,12 @@ class AsmParser extends Parser {
       ]);
 
       const data = $.CONSUME(Tokens.Data);
-      if (!codeGenerator.pushInstructionWithData4(instruction.image, data.image))
-        throw $.SAVE_ERROR(new MismatchedTokenException('Argument is too big, should be 0xF or less', data, instruction));
+
+      try {
+        codeGenerator.pushInstructionWithData4(instruction.image, data.image);
+      } catch (err) {
+        throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), data, instruction));
+      }
     });
 
     $.RULE('instructionFIM', () => {
@@ -126,8 +130,12 @@ class AsmParser extends Parser {
       const regPair = $.CONSUME(Tokens.RegisterPair);
       const prevToken = $.CONSUME(Tokens.Comma);
       const data = $.CONSUME(Tokens.Data);
-      if (!codeGenerator.pushInstructionWithRegPairAndData8(instruction.image, regPair.image, data.image))
-        throw $.SAVE_ERROR(new MismatchedTokenException('Argument is too big, should be 0xFF or less', data, prevToken));
+
+      try {
+        codeGenerator.pushInstructionWithRegPairAndData8(instruction.image, regPair.image, data.image);
+      } catch (err) {
+        throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), data, prevToken));
+      }
     });
 
     $.RULE('address', () => {

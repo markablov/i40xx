@@ -35,45 +35,40 @@ class CodeGenerator {
 
   pushInstructionWithoutArg(instruction){
     this.bin[this.current++] = InstructionsWithoutArgCodes[instruction];
-    return true;
   }
 
   // reg is "rrX" string, where 0 <= X <= 15
   pushInstructionWithReg(instruction, reg) {
     // format is [O O O O R R R R], where OOOO is opcode, and RRRR is reg index
     this.bin[this.current++] = InstructionsWithReg[instruction] | this.getRegCode(reg);
-    return true;
   }
 
   // regPair is "rX" string, where 0 <= X <= 7
   pushInstructionWithRegPair(instruction, regPair) {
     // format is [O O O O R R R O], where OOOOO is opcode, and RRR is reg pair index
     this.bin[this.current++] = InstructionsWithRegPair[instruction] | (this.getRegPairCode(regPair) << 1);
-    return true;
   }
 
   // data is 4-bit number, 0 <= data <= 15
   pushInstructionWithData4(instruction, data) {
     const dataValue = this.gatDataCode(data);
     if (dataValue > 0xF)
-      return false;
+      throw new Error('Argument is too big, should be 0xF or less');
 
     // format is [O O O O D D D D], where OOOO is opcode, and DDDD is 4-bit number
     this.bin[this.current++] = InstructionsWithData4[instruction] | dataValue;
-    return true;
   }
 
   // data is 8-bit number, 0 <= data <= 255, regPair is "rX" string, where 0 <= X <= 7
   pushInstructionWithRegPairAndData8(instruction, regPair, data) {
     const dataValue = this.gatDataCode(data);
     if (dataValue > 0xFF)
-      return false;
+      throw new Error('Argument is too big, should be 0xFF or less');
 
     // format is [O O O O R R R O] [D D D D D D D D], where OOOOO is opcode,
     // RRR is reg pair index, and DDDDDDDD is 8-bit number
     this.bin[this.current++] = InstructionsWithRegPairAndData8[instruction] | (this.getRegPairCode(regPair) << 1);
     this.bin[this.current++] = dataValue;
-    return true;
   }
 
   generate() {
