@@ -28,6 +28,7 @@ const instructionLengths = {
   wr3: 1,
   wrr: 1,
   wmp: 1,
+  wpm: 1,
   adm: 1,
   sbm: 1,
   clb: 1,
