@@ -116,24 +116,18 @@ class AsmParser extends Parser {
         { ALT: () => $.CONSUME(Tokens.InstructionLDM) }
       ]);
 
-      const dataToken = $.CONSUME(Tokens.Data);
-      const data = +dataToken.image;
-      if (data > 0xF)
-        throw $.SAVE_ERROR(new MismatchedTokenException('Argument is too big, should be 0xF or less', dataToken, instruction));
-
-      codeGenerator.pushInstructionWithData4(instruction.image, data);
+      const data = $.CONSUME(Tokens.Data);
+      if (!codeGenerator.pushInstructionWithData4(instruction.image, data.image))
+        throw $.SAVE_ERROR(new MismatchedTokenException('Argument is too big, should be 0xF or less', data, instruction));
     });
 
     $.RULE('instructionFIM', () => {
       const instruction = $.CONSUME(Tokens.InstructionFIM);
       const regPair = $.CONSUME(Tokens.RegisterPair);
       const prevToken = $.CONSUME(Tokens.Comma);
-      const dataToken = $.CONSUME(Tokens.Data);
-      const data = +dataToken.image;
-      if (data > 0xFF)
-        throw $.SAVE_ERROR(new MismatchedTokenException('Argument is too big, should be 0xFF or less', dataToken, prevToken));
-
-      codeGenerator.pushInstructionWithRegPairAndData8(instruction.image, regPair.image, data);
+      const data = $.CONSUME(Tokens.Data);
+      if (!codeGenerator.pushInstructionWithRegPairAndData8(instruction.image, regPair.image, data.image))
+        throw $.SAVE_ERROR(new MismatchedTokenException('Argument is too big, should be 0xFF or less', data, prevToken));
     });
 
     $.RULE('address', () => {
