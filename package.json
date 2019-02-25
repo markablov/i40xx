@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "parcel ./src/index.html",
+    "test": "tap src/**/*.spec.js",
     "lint": "eslint ./src"
   },
   "keywords": [
@@ -33,7 +34,8 @@
     "eslint-plugin-react": "^7.12.4",
     "husky": "^1.3.1",
     "lint-staged": "^8.1.3",
-    "parcel-bundler": "^1.11.0"
+    "parcel-bundler": "^1.11.0",
+    "tap": "^12.5.3"
   },
   "dependencies": {
     "brace": "^0.11.1",
