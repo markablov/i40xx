@@ -9,6 +9,16 @@ const matchParseResults = (source, data, error) => {
     : expect(parseData).toEqual(new Uint8Array(data));
 };
 
-test('RDM instruction', () => {
-  matchParseResults('rdm', [0xE9]);
+describe('One-byte instructions without arguments', () => {
+  const OPCODE_BASE = 0xE0;
+
+  const instructions = [
+    'wrm', 'wmp', 'wrr', 'wpm', 'wr0', 'wr1', 'wr2', 'wr3', 'sbm', 'rdm', 'rdr', 'adm', 'rd0', 'rd1', 'rd2', 'rd3',
+    'clb', 'clc', 'iac', 'cmc', 'cma', 'ral', 'rar', 'tcc', 'dac', 'tcs', 'stc', 'daa', 'kbp', 'dcl'
+  ];
+
+  test('NOP instruction', () => matchParseResults('nop', [0x00]));
+
+  instructions.forEach((mnemonic, idx) =>
+    test(`${mnemonic.toUpperCase()} instruction`, () => matchParseResults(mnemonic, [OPCODE_BASE + idx])));
 });
