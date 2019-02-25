@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "parcel ./src/index.html",
     "test": "jest",
+    "coverage": "jest --coverage",
     "lint": "eslint ./src"
   },
   "keywords": [
