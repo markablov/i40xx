@@ -5,7 +5,7 @@ import parse from '../parser/parser.js';
 const matchParseResults = (source, data, error) => {
   const { errors: parseErrors, data: parseData } = parse(source);
   return error
-    ? (expect(parseErrors).toHaveLength(1) && expect(parseErrors[0]).toMatch(error))
+    ? (expect(parseErrors).toHaveLength(1) && expect(parseErrors[0]).toEqual(error))
     : expect(parseData).toEqual(new Uint8Array(data));
 };
 
@@ -22,3 +22,5 @@ describe('One-byte instructions without arguments', () => {
   instructions.forEach((mnemonic, idx) =>
     test(`${mnemonic.toUpperCase()} instruction`, () => matchParseResults(mnemonic, [OPCODE_BASE + idx])));
 });
+
+test('Use unknown label', () => matchParseResults('jun unknown_label', null, 'Error: Unknown label unknown_label'));
