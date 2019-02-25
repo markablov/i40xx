@@ -14,7 +14,7 @@ export default `  NOP
   JUN label1
   JMS 00:0xFF
   JCN NZ, label2 // test comment 2
-  ISZ rr9, 123
+  ISZ rr9, 66
   FIM r7, 0xF0
 label1:
   RDM
