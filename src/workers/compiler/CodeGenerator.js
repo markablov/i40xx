@@ -19,6 +19,7 @@ const InstructionsWithData4 = { bbl: 0xC0, ldm: 0xD0 };
 const InstructionsWithRegPairAndData8 = { fim: 0x20 };
 const InstructionsWithAddr12 = { jms: 0x40, jun: 0x50 };
 const InstructionsWithRegAndAddr8 = { isz: 0x70 };
+const InstructionsWithCondAndAddr8 = { jcn: 0x10 };
 
 const ROM_SIZE = 4096;
 
@@ -34,6 +35,8 @@ class CodeGenerator {
 
   getDataCode = data => data.startsWith('0x') ? parseInt(data.substr(2), 16) : +data;
 
+  // addr could be label name or 12-bit number (0 <= addr <= 4095) or "bank:offset" string,
+  // where "bank" is 4-bit bank number and "offset" is 8-bit offset for specific bank
   getAddrCode = (addr, type, short) => {
     let addrValue = 0;
     const currentBank = this.current >> 8;
@@ -63,6 +66,11 @@ class CodeGenerator {
     }
 
     return addrValue;
+  };
+
+  getCondCode = cond => {
+    cond = cond.split('');
+    return (cond.includes('n') ? 8 : 0) | (cond.includes('z') ? 4 : 0) | (cond.includes('c') ? 2 : 0) | (cond.includes('t') ? 1 : 0);
   };
 
   addLabel(label){
@@ -111,8 +119,6 @@ class CodeGenerator {
     this.bin[this.current++] = dataValue;
   }
 
-  // addr could be label name or 12-bit number (0 <= addr <= 4095) or "bank:offset" string,
-  // where "bank" is 4-bit bank number and "offset" is 8-bit offset for specific bank
   pushInstructionWithAddr12(instruction, addr, type) {
     const addrValue = this.getAddrCode(addr, type, false);
     // format is [O O O O A A A A] [A A A A A A A A], where OOOOO is opcode, AAAAAAAAAAAA is 12-bit address
@@ -125,6 +131,14 @@ class CodeGenerator {
     // format is [O O O O R R R R] [A A A A A A A A], where OOOOO is opcode
     // RRRR is reg index, and AAAAAAAA is 8-bit address
     this.bin[this.current++] = InstructionsWithRegAndAddr8[instruction] | (this.getRegCode(reg));
+    this.bin[this.current++] = addrValue & 0xFF;
+  }
+
+  pushInstructionWithCondAndAddr8(instruction, cond, addr, type) {
+    const addrValue = this.getAddrCode(addr, type, true);
+    // format is [O O O O C C C C] [A A A A A A A A], where OOOOO is opcode
+    // CCCC is condition, and AAAAAAAA is 8-bit address
+    this.bin[this.current++] = InstructionsWithCondAndAddr8[instruction] | (this.getCondCode(cond));
     this.bin[this.current++] = addrValue & 0xFF;
   }
 

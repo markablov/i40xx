@@ -179,10 +179,16 @@ class AsmParser extends Parser {
     });
 
     $.RULE('instructionJCN', () => {
-      $.CONSUME(Tokens.InstructionJCN);
-      $.CONSUME(Tokens.Cond);
+      const instruction = $.CONSUME(Tokens.InstructionJCN);
+      const cond = $.CONSUME(Tokens.Cond);
       $.CONSUME(Tokens.Comma);
-      $.SUBRULE($.address);
+      const { token: addr, type } = $.SUBRULE($.address);
+
+      try {
+        codeGenerator.pushInstructionWithCondAndAddr8(instruction.image, cond.image, addr.image, type);
+      } catch (err) {
+        throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), addr, cond));
+      }
     });
 
     $.performSelfAnalysis();
