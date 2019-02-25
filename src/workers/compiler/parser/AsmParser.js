@@ -1,7 +1,7 @@
 import { Parser, MismatchedTokenException }  from 'chevrotain';
 
 import { Tokens, allTokens } from './tokens.js';
-import CodeGenerator, { AddrType } from '../CodeGenerator.js';
+import CodeGenerator, { AddrType } from './CodeGenerator.js';
 
 class AsmParser extends Parser {
   constructor() {
