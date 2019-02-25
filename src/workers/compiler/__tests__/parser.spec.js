@@ -23,4 +23,6 @@ describe('One-byte instructions without arguments', () => {
     test(`${mnemonic.toUpperCase()} instruction`, () => matchParseResults(mnemonic, [OPCODE_BASE + idx])));
 });
 
-test('Use unknown label', () => matchParseResults('jun unknown_label', null, 'Error: Unknown label unknown_label'));
+test('Undefined label', () => matchParseResults('jun unknown_label', null, 'Error: Unknown label unknown_label'));
+
+test('Duplicated label definition', () => matchParseResults('label: nop\nlabel: nop', null, 'Error: Unknown label unknown_label'));
