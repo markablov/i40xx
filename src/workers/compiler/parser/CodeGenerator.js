@@ -157,7 +157,7 @@ class CodeGenerator {
         this.bin[offset + 1] = addr & 0xFF;
       }
     }
-    return this.bin;
+    return this.bin.subarray(0, this.current);
   }
 
   clear() {
