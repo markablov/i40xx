@@ -74,7 +74,7 @@ class CodeGenerator {
   };
 
   addLabel(label){
-    if (this.labels[label])
+    if (this.labels[label] !== undefined)
       return false;
 
     this.labels[label] = this.current;
