@@ -2,6 +2,7 @@ import * as Actions from '../constants.js';
 
 const defaultState = {
   compiling: false,
+  compilerErrors: [],
   dump: null,
   editor: null
 };
@@ -13,7 +14,7 @@ export default (state = defaultState, { type, payload }) => {
     case Actions.START_COMPILATION:
       return { ...state, compiling: true };
     case Actions.FINISH_COMPILATION:
-      return { ...state, compiling: false, dump: payload.dump };
+      return { ...state, compiling: false, dump: payload.dump, compilerErrors: payload.errors };
     default:
       return state;
   }
