@@ -76,4 +76,5 @@ describe('ISZ instruction', () => {
   test('incorrect bank', () => matchParseResults('isz rr0, 0x1AA', null, 'Error: For short jumps, address should be in the same bank as instruction'));
   test('incorrect bank 2', () => matchParseResults('nop\n'.repeat(256) + 'isz rr0, 0xAA', null, 'Error: For short jumps, address should be in the same bank as instruction'));
   test('incorrect bank 3', () => matchParseResults('isz rr0, label\n' + 'nop\n'.repeat(256) + 'label: nop', [], 'Error: For short jumps, address should be in the same bank as instruction'));
+  test('incorrect bank 4', () => matchParseResults('isz rr0, 02:0xAA', null, 'Error: For short jumps, address should be in the same bank as instruction'));
 });
