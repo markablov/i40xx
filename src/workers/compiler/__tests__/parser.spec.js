@@ -46,3 +46,9 @@ describe('Instructions with register pair as argument', () => {
   test('FIN instruction', () => matchParseResults('fin r3', [0x36]));
   test('incorrect register', () => matchParseResults('src r9', null, 'MismatchedTokenException: Expecting token of type --> RegisterPair <-- but found --> \'r9\' <--'));
 });
+
+describe('Instructions with 4-bit data as argument', () => {
+  test('BBL instruction', () => matchParseResults('bbl 10', [0xCA]));
+  test('LDM instruction', () => matchParseResults('ldm 0xF', [0xDF]));
+  test('too big value', () => matchParseResults('ldm 17', null, 'MismatchedTokenException: Error: Argument is too big, should be 0xF or less'));
+});
