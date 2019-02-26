@@ -39,3 +39,10 @@ describe('Instructions with register as argument', () => {
   test('incorrect argument', () => matchParseResults('add 2', null, 'MismatchedTokenException: Expecting token of type --> Register <-- but found --> \'2\' <--'));
   test('missing argument', () => matchParseResults('ld', null, 'MismatchedTokenException: Expecting token of type --> Register <-- but found --> \'\' <--'));
 });
+
+describe('Instructions with register pair as argument', () => {
+  test('JIN instruction', () => matchParseResults('jin r1', [0x33]));
+  test('SRC instruction', () => matchParseResults('src r2', [0x25]));
+  test('FIN instruction', () => matchParseResults('fin r3', [0x36]));
+  test('incorrect register', () => matchParseResults('src r9', null, 'MismatchedTokenException: Expecting token of type --> RegisterPair <-- but found --> \'r9\' <--'));
+});
