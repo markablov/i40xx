@@ -4,8 +4,8 @@ import finishCompilation from '../redux/actions/finishCompilation.js';
 
 const worker = new Worker('../workers/compiler/compiler.js');
 
-worker.onmessage = ({ data: { dump } }) => {
-  store.dispatch(finishCompilation(dump));
+worker.onmessage = ({ data: { dump, errors } }) => {
+  store.dispatch(finishCompilation(dump, errors));
 };
 
 const compile = sourceCode => {

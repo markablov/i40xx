@@ -1,6 +1,6 @@
 import { FINISH_COMPILATION } from '../constants.js';
 
-export default dump => ({
+export default (dump, errors) => ({
   type: FINISH_COMPILATION,
-  payload: { dump }
+  payload: { dump, errors }
 });

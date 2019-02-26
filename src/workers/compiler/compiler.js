@@ -5,6 +5,6 @@ onmessage = ({ data: sourceCode }) => {
 
   postMessage({
     dump: data,
-    errors: errors.map(({ message, token, line }) => ({ message, row: token ? token.startLine : line }))
+    errors: errors.map(({ message, token, line, column }) => ({ message, row: token ? token.startLine : line, column: token ? token.startColumn : column }))
   });
 };
