@@ -67,3 +67,13 @@ describe('Instructions with 12-bit address as argument', () => {
   test('too big value', () => matchParseResults('jun 4096', null, 'Redundant input, expecting EOF but found: 6'));
   test('too big value with bank address', () => matchParseResults('jun 17:0x00', null, 'Redundant input, expecting EOF but found: :'));
 });
+
+describe('ISZ instruction', () => {
+  test('valid', () => matchParseResults('isz rr0, 0xAA', [0x70, 0xAA]));
+  test('valid with bank address', () => matchParseResults('isz rr0, 00:0xAA', [0x70, 0xAA]));
+  test('valid with label', () => matchParseResults('isz rr0, label\nlabel: nop', [0x70, 0x02, 0x00]));
+  test('valid at 1st bank', () => matchParseResults('nop\n'.repeat(256) + 'isz rr0, 0x1AA', [...(new Array(256).fill(0x00)), 0x70, 0xAA]));
+  test('incorrect bank', () => matchParseResults('isz rr0, 0x1AA', null, 'Error: For short jumps, address should be in the same bank as instruction'));
+  test('incorrect bank 2', () => matchParseResults('nop\n'.repeat(256) + 'isz rr0, 0xAA', null, 'Error: For short jumps, address should be in the same bank as instruction'));
+  test('incorrect bank 3', () => matchParseResults('isz rr0, label\n' + 'nop\n'.repeat(256) + 'label: nop', [], 'Error: For short jumps, address should be in the same bank as instruction'));
+});
