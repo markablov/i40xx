@@ -57,3 +57,11 @@ describe('FIM instruction', () => {
   test('valid', () => matchParseResults('fim r0, 0xAA', [0x20, 0xAA]));
   test('too big value', () => matchParseResults('fim r0, 260', null, 'MismatchedTokenException: Error: Argument is too big, should be 0xFF or less'));
 });
+
+describe('Instructions with 12-bit address as argument', () => {
+  test('JUN instruction', () => matchParseResults('jun 0xABC', [0x4A, 0xBC]));
+  test('JMS instruction', () => matchParseResults('jms 09:0xFA', [0x59, 0xFA]));
+  test('JMS instruction with label', () => matchParseResults('jms label\nlabel: nop', [0x50, 0x02, 0x00]));
+  test('too big value', () => matchParseResults('jun 4096', null, 'NotAllInputParsedException: Redundant input, expecting EOF but found: 6'));
+  test('too big value with bank address', () => matchParseResults('jun 17:0x00', null, 'NotAllInputParsedException: Redundant input, expecting EOF but found: :'));
+});
