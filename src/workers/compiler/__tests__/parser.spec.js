@@ -52,3 +52,8 @@ describe('Instructions with 4-bit data as argument', () => {
   test('LDM instruction', () => matchParseResults('ldm 0xF', [0xDF]));
   test('too big value', () => matchParseResults('ldm 17', null, 'MismatchedTokenException: Error: Argument is too big, should be 0xF or less'));
 });
+
+describe('FIM instruction', () => {
+  test('valid', () => matchParseResults('fim r0, 0xAA', [0x20, 0xAA]));
+  test('too big value', () => matchParseResults('fim r0, 260', null, 'MismatchedTokenException: Error: Argument is too big, should be 0xFF or less'));
+});
