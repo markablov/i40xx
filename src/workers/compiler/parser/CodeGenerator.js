@@ -17,7 +17,7 @@ const InstructionsWithReg = { ld: 0xA0, xch: 0xB0, add: 0x80, sub: 0x90, inc: 0x
 const InstructionsWithRegPair = { src: 0x21, fin: 0x30, jin: 0x31 };
 const InstructionsWithData4 = { bbl: 0xC0, ldm: 0xD0 };
 const InstructionsWithRegPairAndData8 = { fim: 0x20 };
-const InstructionsWithAddr12 = { jms: 0x40, jun: 0x50 };
+const InstructionsWithAddr12 = { jms: 0x50, jun: 0x40 };
 const InstructionsWithRegAndAddr8 = { isz: 0x70 };
 const InstructionsWithCondAndAddr8 = { jcn: 0x10 };
 
