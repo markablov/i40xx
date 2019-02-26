@@ -49,10 +49,6 @@ class CodeGenerator {
         break;
       case AddrType.BankAddress: {
         const [bank, offset] = addr.split(':');
-        if (bank > 0xF)
-          throw new Error('Bank number is too big, should be 0xF or less');
-        if (offset > 0xFF)
-          throw new Error('Bank offset is too big, should be 0xFF or less');
         if (short && bank != currentBank)
           throw new Error('For short jumps, address should be in the same bank as instruction');
         addrValue = (bank << 8) | offset;
