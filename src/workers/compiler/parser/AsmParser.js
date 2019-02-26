@@ -18,7 +18,9 @@ class AsmParser extends Parser {
       });
 
       try {
-        return codeGenerator.generate();
+        // we expect that program rule should cover whole source code
+        if (this.isAtEndOfInput())
+          return codeGenerator.generate();
       } catch (err) {
         throw $.SAVE_ERROR(new MismatchedTokenException(err.toString()));
       }
