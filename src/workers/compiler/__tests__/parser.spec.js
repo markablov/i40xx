@@ -27,4 +27,15 @@ describe('One-byte instructions without arguments', () => {
 
 test('Undefined label', () => matchParseResults('jun unknown_label', null, 'MismatchedTokenException: Error: Unknown label unknown_label'));
 
-test('Duplicated label definition', () => matchParseResults('label: nop\nlabel: nop', null, 'Error: Unknown label unknown_label'));
+test('Duplicated label definition', () => matchParseResults('label: nop\nlabel: nop', null, 'MismatchedTokenException: Duplicated definition for label'));
+
+describe('Instructions with register as argument', () => {
+  test('LD instruction', () => matchParseResults('ld rr1', [0xA1]));
+  test('XCH instruction', () => matchParseResults('xch rr2', [0xB2]));
+  test('ADD instruction', () => matchParseResults('add rr3', [0x83]));
+  test('SUB instruction', () => matchParseResults('sub rr4', [0x94]));
+  test('INC instruction', () => matchParseResults('inc rr15', [0x6F]));
+  test('incorrect register', () => matchParseResults('inc rr16', null, 'NotAllInputParsedException: Redundant input, expecting EOF but found: 6'));
+  test('incorrect argument', () => matchParseResults('add 2', null, 'MismatchedTokenException: Expecting token of type --> Register <-- but found --> \'2\' <--'));
+  test('missing argument', () => matchParseResults('ld', null, 'MismatchedTokenException: Expecting token of type --> Register <-- but found --> \'\' <--'));
+});
