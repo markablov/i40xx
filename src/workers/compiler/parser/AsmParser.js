@@ -158,11 +158,7 @@ class AsmParser extends Parser {
 
       const { token: addr, type } = $.SUBRULE($.address);
 
-      try {
-        codeGenerator.pushInstructionWithAddr12(instruction.image, addr.image, type);
-      } catch (err) {
-        throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), addr, instruction));
-      }
+      codeGenerator.pushInstructionWithAddr12(instruction.image, addr.image, type);
     });
 
     $.RULE('instructionISZ', () => {
