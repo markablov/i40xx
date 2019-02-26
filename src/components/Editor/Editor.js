@@ -61,6 +61,15 @@ class Editor extends Component {
     this.setupROMOffsets(editor, session);
   }
 
+  shouldComponentUpdate({ compilerErrors }) {
+    if (compilerErrors && compilerErrors.length && this.editor)
+      this.editor.getSession().setAnnotations(compilerErrors.map(error => ({ ...error, type: 'error' })));
+
+    // Editor have no props or state, except external compilerErrors
+    // so we don't want ever to re-render component
+    return false;
+  }
+
   componentDidMount() {
     this.props.setEditorRef(this.editor);
     this.setupEditor();
@@ -76,4 +85,4 @@ class Editor extends Component {
   }
 }
 
-export default connect(null, { setEditorRef })(Editor);
+export default connect(state => ({ compilerErrors: state.compilerErrors }), { setEditorRef })(Editor);
