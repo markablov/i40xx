@@ -44,8 +44,6 @@ class CodeGenerator {
     switch (type) {
       case AddrType.FlatAddress:
         addrValue = this.getDataCode(addr);
-        if (addrValue > 0xFFF)
-          throw new Error('Argument is too big, should be 0xFFF or less');
         if (short && (addrValue >> 8) !== currentBank)
           throw new Error('For short jumps, address should be in the same bank as instruction');
         break;
