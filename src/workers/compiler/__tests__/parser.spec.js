@@ -25,7 +25,7 @@ describe('One-byte instructions without arguments', () => {
     test(`${mnemonic.toUpperCase()} instruction`, () => matchParseResults(mnemonic, [OPCODE_BASE + idx])));
 });
 
-test('Undefined label', () => matchParseResults('jun unknown_label', null, 'MismatchedTokenException: Error: Unknown label unknown_label'));
+test('Invalid label name', () => matchParseResults('jun some-label', null, 'unexpected character: ->-<- at offset: 8, skipped 1 characters.'));
 
 test('Undefined label', () => matchParseResults('jun unknown_label', null, 'Error: Unknown label unknown_label'));
 
