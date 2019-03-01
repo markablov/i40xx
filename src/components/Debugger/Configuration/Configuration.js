@@ -38,6 +38,7 @@ const Configuration = () => (
         </Card>
       </Columns.Column>
     </Columns>
+    <Button color="success">Reconfigure</Button>
   </>
 );
 
