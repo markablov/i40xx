@@ -3,7 +3,7 @@ import Tabs from 'react-bulma-components/lib/components/tabs';
 
 import Memory from './Memory.js';
 import General from './General.js';
-import Configuration from './Configuration.js';
+import Configuration from './Configuration/Configuration.js';
 
 class Debugger extends Component {
   state = {
