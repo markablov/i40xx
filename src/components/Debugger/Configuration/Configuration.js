@@ -1,8 +1,9 @@
 import React from 'react';
-
 import Card from 'react-bulma-components/lib/components/card';
 import Image from 'react-bulma-components/lib/components/image';
 import Columns from 'react-bulma-components/lib/components/columns';
+
+import CPU4004 from './CPU4004.svg';
 
 const Configuration = () => (
   <>
@@ -14,7 +15,7 @@ const Configuration = () => (
           </Card.Header>
           <Card.Content>
             <Image
-              src="https://vignette.wikia.nocookie.net/project-pokemon/images/4/47/Placeholder.png/revision/latest?cb=20170330235552&format=original"
+              src={CPU4004}
               size={128}
             />
           </Card.Content>
