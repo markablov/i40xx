@@ -4,6 +4,7 @@ import Image from 'react-bulma-components/lib/components/image';
 import Columns from 'react-bulma-components/lib/components/columns';
 
 import CPU4004 from './CPU4004.svg';
+import ROM4001 from './ROM4001.svg';
 
 const Configuration = () => (
   <>
@@ -14,10 +15,17 @@ const Configuration = () => (
             <Card.Header.Title>CPU</Card.Header.Title>
           </Card.Header>
           <Card.Content>
-            <Image
-              src={CPU4004}
-              size={128}
-            />
+            <Image src={CPU4004} size={128} />
+          </Card.Content>
+        </Card>
+      </Columns.Column>
+      <Columns.Column>
+        <Card>
+          <Card.Header>
+            <Card.Header.Title>ROM</Card.Header.Title>
+          </Card.Header>
+          <Card.Content>
+            <Image src={ROM4001} size={128} />
           </Card.Content>
         </Card>
       </Columns.Column>
