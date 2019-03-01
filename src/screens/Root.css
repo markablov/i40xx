@@ -5,4 +5,9 @@ ul {
 
 body {
   background: rgb(219, 235, 233);
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: inherit;
 }
