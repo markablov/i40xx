@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import Card from 'react-bulma-components/lib/components/card';
 import Image from 'react-bulma-components/lib/components/image';
 import Columns from 'react-bulma-components/lib/components/columns';
 import Button from 'react-bulma-components/lib/components/button';
+import Notification from 'react-bulma-components/lib/components/notification';
 import { Field, Control, Input } from 'react-bulma-components/lib/components/form';
 
 import CPU4004 from './CPU4004.svg';
@@ -10,8 +12,12 @@ import ROM4001 from './ROM4001.svg';
 
 class Configuration extends Component {
   render(){
+    const { configurationError } = this.props;
+
     return (
       <>
+        {configurationError && <Notification color="danger">{configurationError}</Notification>}
+
         <Columns>
           <Columns.Column>
             <Card>
@@ -52,4 +58,4 @@ class Configuration extends Component {
   }
 }
 
-export default Configuration;
+export default connect(({ configurationError }) => ({ configurationError }))(Configuration);
