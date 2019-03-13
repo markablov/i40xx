@@ -7,6 +7,8 @@ import Button from 'react-bulma-components/lib/components/button';
 import Notification from 'react-bulma-components/lib/components/notification';
 import { Field, Control, Input } from 'react-bulma-components/lib/components/form';
 
+import { configure } from '../../../services/emulator.js';
+
 import CPU4004 from './CPU4004.svg';
 import ROM4001 from './ROM4001.svg';
 
@@ -15,6 +17,8 @@ class Configuration extends Component {
     cpu: { chip: '4004' },
     rom: { chip: '4001', amount: 1 }
   };
+
+  handleReconfigure = () => configure(this.state);
 
   handleROMAmountChange = ({ target: { value } }) => this.setState({ rom: Object.assign({}, this.state.rom, { amount: +value }) });
 
@@ -60,7 +64,7 @@ class Configuration extends Component {
             </Card>
           </Columns.Column>
         </Columns>
-        <Button color="success">Reconfigure</Button>
+        <Button color="success" onClick={this.handleReconfigure}>Reconfigure</Button>
       </>
     );
   }
