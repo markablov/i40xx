@@ -16,6 +16,8 @@ class Configuration extends Component {
     rom: { chip: '4001', amount: 1 }
   };
 
+  handleROMAmountChange = ({ target: { value } }) => this.setState({ rom: Object.assign({}, this.state.rom, { amount: +value }) });
+
   render(){
     const { configurationError } = this.props;
     const { rom } = this.state;
@@ -51,7 +53,7 @@ class Configuration extends Component {
                 <Image src={ROM4001} size={128} />
                 <Field>
                   <Control>
-                    <Input placeholder="Amount of ROMs" onChange={() => 0} size="small" value={rom.amount} />
+                    <Input placeholder="Amount of ROMs" onChange={this.handleROMAmountChange} size="small" value={rom.amount} />
                   </Control>
                 </Field>
               </Card.Content>
