@@ -11,6 +11,11 @@ import CPU4004 from './CPU4004.svg';
 import ROM4001 from './ROM4001.svg';
 
 class Configuration extends Component {
+  state = {
+    cpu: { chip: '4004' },
+    rom: { chip: '4001', amount: 1 }
+  };
+
   render(){
     const { configurationError } = this.props;
 
