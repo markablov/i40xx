@@ -57,7 +57,7 @@ class Configuration extends Component {
                 <Image src={ROM4001} size={128} />
                 <Field>
                   <Control>
-                    <Input placeholder="Amount of ROMs" onChange={this.handleROMAmountChange} size="small" value={rom.amount} />
+                    <Input placeholder="Amount of ROMs" onChange={this.handleROMAmountChange} size="small" value={rom.amount.toString()} />
                   </Control>
                 </Field>
               </Card.Content>
