@@ -4,8 +4,9 @@ import finishConfiguration from '../redux/actions/finishCompilation.js';
 
 const worker = new Worker('../workers/emulator/emulator.js');
 
-worker.onmessage = ({ data: { error } }) => {
-  store.dispatch(finishConfiguration(error));
+worker.onmessage = ({ data: { command, error } }) => {
+  if (command === 'configure')
+    store.dispatch(finishConfiguration(error));
 };
 
 const configure = configuration => {

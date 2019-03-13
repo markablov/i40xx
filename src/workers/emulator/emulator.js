@@ -6,12 +6,12 @@ const commands = {
 onmessage = ({ data: { command, ...args } }) => {
   try {
     if (!commands[command])
-      return postMessage({ error: 'Unknown command' });
+      return postMessage({ command, error: 'Unknown command' });
 
     commands[command](...args);
 
-    postMessage({});
+    postMessage({ command });
   } catch (err) {
-    postMessage({ error: err.toString() });
+    postMessage({ command, error: err.toString() });
   }
 };
