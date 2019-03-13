@@ -18,6 +18,7 @@ class Configuration extends Component {
 
   render(){
     const { configurationError } = this.props;
+    const { rom } = this.state;
 
     return (
       <>
@@ -50,7 +51,7 @@ class Configuration extends Component {
                 <Image src={ROM4001} size={128} />
                 <Field>
                   <Control>
-                    <Input placeholder="Amount of ROMs" onChange={() => 0} size="small"/>
+                    <Input placeholder="Amount of ROMs" onChange={() => 0} size="small" value={rom.amount} />
                   </Control>
                 </Field>
               </Card.Content>
