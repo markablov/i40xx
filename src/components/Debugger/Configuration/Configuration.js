@@ -8,23 +8,20 @@ import Notification from 'react-bulma-components/lib/components/notification';
 import { Field, Control, Input } from 'react-bulma-components/lib/components/form';
 
 import { configure } from '../../../services/emulator.js';
+import setConfiguration from '../../../redux/actions/setConfiguration.js';
 
 import CPU4004 from './CPU4004.svg';
 import ROM4001 from './ROM4001.svg';
 
 class Configuration extends Component {
-  state = {
-    cpu: { chip: '4004' },
-    rom: { chip: '4001', amount: 1 }
-  };
+  handleReconfigure = () => configure(this.props.configuration);
 
-  handleReconfigure = () => configure(this.state);
-
-  handleROMAmountChange = ({ target: { value } }) => this.setState({ rom: Object.assign({}, this.state.rom, { amount: +value }) });
+  handleROMAmountChange = ({ target: { value } }) =>
+    this.props.setConfiguration({ rom: Object.assign({}, this.props.configuration.rom, { amount: +value }) });
 
   render(){
-    const { configurationError } = this.props;
-    const { rom } = this.state;
+    const { configurationError, configuration } = this.props;
+    const { rom } = configuration;
 
     return (
       <>
@@ -70,4 +67,6 @@ class Configuration extends Component {
   }
 }
 
-export default connect(({ configurationError }) => ({ configurationError }))(Configuration);
+const mapStateToProps = ({ configurationError, configuration }) => ({ configurationError, configuration });
+
+export default connect(mapStateToProps, { setConfiguration })(Configuration);
