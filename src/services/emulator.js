@@ -1,6 +1,6 @@
 import store from '../redux/store.js';
 import startConfiguration from '../redux/actions/startConfiguration.js';
-import finishConfiguration from '../redux/actions/finishCompilation.js';
+import finishConfiguration from '../redux/actions/finishConfiguration.js';
 
 const worker = new Worker('../workers/emulator/emulator.js');
 
