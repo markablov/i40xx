@@ -8,7 +8,7 @@ const ROM_CLASS_MAP = { 4001: i4001 };
 let bus, components = [];
 
 const commands = {
-  configure: ({ cpu, rom }) => {
+  configure: ({ configuration: { cpu, rom } }) => {
     const cpuClass = CPU_CLASS_MAP[cpu.chip], romClass = ROM_CLASS_MAP[rom.chip];
     bus = new Bus();
     components = [];
@@ -22,7 +22,7 @@ onmessage = ({ data: { command, ...args } }) => {
     if (!commands[command])
       return postMessage({ command, error: 'Unknown command' });
 
-    commands[command](...args);
+    commands[command](args);
 
     postMessage({ command });
   } catch (err) {
