@@ -21,7 +21,7 @@ export default (state = defaultState, { type, payload }) => {
     case Actions.FINISH_COMPILATION:
       return { ...state, compiling: false, dump: payload.dump, compilerErrors: payload.errors };
     case Actions.UPDATE_EMULATOR_STATE:
-      return { ...state, emulator: { ...state.emulator, payload } };
+      return { ...state, emulator: { ...state.emulator, ...payload } };
     default:
       return state;
   }
