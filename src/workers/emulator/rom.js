@@ -1,6 +1,7 @@
 class ROM {
   constructor(cpuPins) {
     this.cpu = cpuPins;
+    this.data = new Uint8Array(0);
   }
 
   /*
@@ -12,7 +13,8 @@ class ROM {
   /*
    * Load dump to ROM
    */
-  loadDump() {
+  loadDump(dump) {
+    this.data = dump;
   }
 
   /*
