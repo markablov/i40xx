@@ -1,7 +1,7 @@
 class CPUPins {
   _pins = {
     [SYNC]: 0,
-    [CM]: 0,
+    [CM_ROM]: 1,
     [D0]: 0,
     [D1]: 0,
     [D2]: 0,
@@ -42,7 +42,7 @@ class CPUPins {
 export default CPUPins;
 
 export const SYNC = Symbol('cpu/pins/SYNC');
-export const CM = Symbol('cpu/pins/CM');
+export const CM_ROM = Symbol('cpu/pins/CM_ROM');
 export const D0 = Symbol('cpu/pins/D0');
 export const D1 = Symbol('cpu/pins/D1');
 export const D2 = Symbol('cpu/pins/D2');
