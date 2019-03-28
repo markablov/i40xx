@@ -1,5 +1,4 @@
-class CPUPins {
-}
+import CPUPins from './pins.js';
 
 class CPU {
   registers = {

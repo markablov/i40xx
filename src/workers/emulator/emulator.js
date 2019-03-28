@@ -1,5 +1,5 @@
 import ROM from './rom.js';
-import CPU from './cpu.js';
+import CPU from './cpu/cpu.js';
 
 const commands = {
   run: ({ mode, dump }) => {
