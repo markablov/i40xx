@@ -13,6 +13,12 @@ class CPU {
   get pins() {
     return this._pins;
   }
+
+  /*
+   * Main function, that is called every machine cycle
+   */
+  tick() {
+  }
 }
 
 export default CPU;
