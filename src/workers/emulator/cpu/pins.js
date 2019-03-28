@@ -20,8 +20,22 @@ class CPUPins {
    *
    * For example put 0xA to [D0, D1, D2, D3] pins, and you would got D0 = 0, D1 = 1, D2 = 0, D3 = 1
    */
-  setDataPins(pins, value) {
+  setPinsData(pins, value) {
     pins.forEach((pin, idx) => this._pins[pin] = value & (1 << idx));
+  }
+
+  /*
+   * Get value of specified pin
+   */
+  getPin(pin) {
+    return this._pins[pin];
+  }
+
+  /*
+   * Get numeric value for set of pins
+   */
+  getPinsData(pins) {
+    return pins.reduce((acc, pin, idx) => this._pins[pin] ? (acc | (1 << idx)) : acc, 0);
   }
 }
 
