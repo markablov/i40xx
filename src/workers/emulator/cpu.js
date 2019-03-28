@@ -2,6 +2,10 @@ class CPUPins {
 }
 
 class CPU {
+  registers = {
+    pc: 0
+  };
+
   constructor() {
     this._pins = new CPUPins();
   }
