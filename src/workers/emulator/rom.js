@@ -1,23 +1,25 @@
-/*
- * Attach ROM to CPU interface
- */
-export const attachToCpu = () => {
-};
+class ROM {
+  constructor(cpuPins) {
+    this.cpu = cpuPins;
+  }
 
-/*
- * Check if provided address is in range for ROM
- */
-export const isAddressValid = () => {
-};
+  /*
+   * Check if provided address is in range for ROM
+   */
+  isAddressValid() {
+  }
 
-/*
- * Load dump to ROM
- */
-export const loadDump = () => {
-};
+  /*
+   * Load dump to ROM
+   */
+  loadDump() {
+  }
 
-/*
- * Main function, that is called every machine cycle and works with internal state and CPU pins
- */
-export const tick = () => {
-};
+  /*
+   * Main function, that is called every machine cycle and works with internal state and CPU pins
+   */
+  tick() {
+  }
+}
+
+export default ROM;
