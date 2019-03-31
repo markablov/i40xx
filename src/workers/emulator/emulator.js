@@ -14,8 +14,9 @@ const commands = {
     postMessage({ command: 'state', registers: cpu.registers });
 
     while (rom.isAddressValid(cpu.registers.pc)) {
+      cpu.tick1();
       rom.tick();
-      cpu.tick();
+      cpu.tick2();
     }
 
     postMessage({ command: 'state', registers: cpu.registers });
