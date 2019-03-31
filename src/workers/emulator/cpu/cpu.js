@@ -11,6 +11,19 @@ class CPU {
     this.syncStep = 0;
   }
 
+  _execute(opr, opa) {
+    switch (opr) {
+      // LDM
+      case 0xD:
+        this.registers.acc = opa;
+        break;
+      default:
+        throw 'Unknown instruction';
+    }
+
+    return this.registers.pc + 1;
+  }
+
   get pins() {
     return this._pins;
   }
@@ -24,9 +37,8 @@ class CPU {
       // X3 stage
       case 0:
         if (this.opr !== undefined) {
-          console.log(this.opr.toString(16) + this.opa.toString(16));
           // decode and execute instruction
-          this.registers.pc++;
+          this.registers.pc = this._execute(this.opr, this.opa);
         }
         this._pins.setPin(SYNC, 1);
         break;
