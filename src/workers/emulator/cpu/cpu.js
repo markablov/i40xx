@@ -15,9 +15,9 @@ class CPU {
   }
 
   /*
-   * Main function, that is called every machine cycle, by phi1 clock
+   * Main function, that is called every machine cycle
    */
-  tick1() {
+  tick() {
     // generate SYNC signal every 8 cycles
     switch (this.syncStep) {
       case 0:
@@ -32,12 +32,6 @@ class CPU {
     }
 
     this.syncStep++;
-  }
-
-  /*
-   * Main function, that is called every machine cycle, by phi2 clock
-   */
-  tick2() {
   }
 }
 
