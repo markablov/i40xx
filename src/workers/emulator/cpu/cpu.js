@@ -13,7 +13,11 @@ class CPU {
 
   _execute(opr, opa) {
     switch (opr) {
-      // LDM
+      /*
+       * LDM instruction
+       *
+       * Rewrite accumulator register with new value, carry flag is unaffected
+       */
       case 0xD:
         this.registers.acc = opa;
         break;
