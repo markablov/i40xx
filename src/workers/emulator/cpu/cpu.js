@@ -42,10 +42,12 @@ class CPU {
         break;
       // M1 stage
       case 4:
+        // highest 4bit of instruction
         this.opr = this._pins.getPinsData([D0, D1, D2, D3]);
         break;
       // M2 stage
       case 5:
+        // lowest 4bit of instruction
         this.opa = this._pins.getPinsData([D0, D1, D2, D3]);
         break;
       // X1 stage
