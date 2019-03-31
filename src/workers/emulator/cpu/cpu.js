@@ -24,6 +24,7 @@ class CPU {
       case 0:
         if (this.opr !== undefined) {
           // decode and execute instruction
+          this.registers.pc++;
         }
         this._pins.setPin(SYNC, 1);
         break;
