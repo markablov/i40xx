@@ -12,7 +12,7 @@ class ROM {
    * Check if provided address is in range for ROM
    */
   isAddressValid(address) {
-    return address > 0 && address < this.data.length;
+    return address >= 0 && address < this.data.length;
   }
 
   /*

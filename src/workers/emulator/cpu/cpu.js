@@ -23,6 +23,7 @@ class CPU {
       // X3 stage
       case 0:
         if (this.opr !== undefined) {
+          console.log(this.opr.toString(16) + this.opa.toString(16));
           // decode and execute instruction
           this.registers.pc++;
         }
