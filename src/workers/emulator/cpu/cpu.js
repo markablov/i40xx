@@ -22,6 +22,18 @@ class CPU {
       case 0xD:
         this.registers.acc = opa;
         break;
+
+      /*
+       * XCH instruction
+       *
+       * Exchange accumulator register and index register, carry flag is unaffected
+       */
+      case 0xB: {
+        const t = this.registers.acc;
+        this.registers.acc = this.registers.index[opa];
+        this.registers.index[opa] = t;
+        break;
+      }
       default:
         throw 'Unknown instruction';
     }
