@@ -3,7 +3,8 @@ import CPUPins, { SYNC, D0, D1, D2, D3 } from './pins.js';
 class CPU {
   registers = {
     pc: 0,
-    acc: 0
+    acc: 0,
+    index: Array.from(Array(16), () => 0)
   };
 
   constructor() {
