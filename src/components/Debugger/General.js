@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Button from 'react-bulma-components/lib/components/button';
+import Notification from 'react-bulma-components/lib/components/notification';
 
 import { compile } from '../../services/compiler.js';
 import { run } from '../../services/emulator.js';
@@ -14,10 +15,13 @@ class General extends Component {
     const { editor, dump, emulator } = this.props;
 
     return (
-      <div className="buttons">
-        <Button color="warning" onClick={this.handleBuild} disabled={!editor}>Build</Button>
-        <Button color="success" onClick={this.handleRun} disabled={!dump || emulator.running}>Run</Button>
-      </div>
+      <>
+        { emulator.error && <Notification color="danger">{emulator.error}</Notification> }
+        <div className="buttons">
+          <Button color="warning" onClick={this.handleBuild} disabled={!editor}>Build</Button>
+          <Button color="success" onClick={this.handleRun} disabled={!dump || emulator.running}>Run</Button>
+        </div>
+      </>
     );
   }
 }
