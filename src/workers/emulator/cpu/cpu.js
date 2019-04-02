@@ -15,13 +15,13 @@ class CPU {
   _execute(opr, opa) {
     switch (opr) {
       /*
-       * NOP instruction
+       * NOP instruction (No Operation)
        */
       case 0x0:
         break;
 
       /*
-       * LDM instruction
+       * LDM instruction (Load Data to Accumulator)
        *
        * Rewrite accumulator register with new value, carry flag is unaffected
        */
@@ -30,7 +30,16 @@ class CPU {
         break;
 
       /*
-       * XCH instruction
+       * LD instruction (Load index register to Accumulator)
+       *
+       * Rewrite accumulator register with index register value, carry flag is unaffected
+       */
+      case 0xA:
+        this.registers.acc = this.registers.index[opa];
+        break;
+
+      /*
+       * XCH instruction (Exchange index register and accumulator)
        *
        * Exchange accumulator register and index register, carry flag is unaffected
        */
