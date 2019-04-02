@@ -30,8 +30,8 @@ class General extends Component {
             <Box>
               <Table striped={false} bordered={false}>
                 <tbody>
-                  <tr><td>{ registers.pc || 0 }</td><td><Tag>PC</Tag></td></tr>
-                  <tr><td>{ registers.acc || 0 }</td><td><Tag>ACC</Tag></td></tr>
+                  <tr><td>{pad(registers.pc || 0, 3) }</td><td><Tag>PC</Tag></td></tr>
+                  <tr><td>{pad(registers.acc || 0, 2) }</td><td><Tag>AC</Tag></td></tr>
                 </tbody>
               </Table>
             </Box>
