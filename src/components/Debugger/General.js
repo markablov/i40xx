@@ -7,7 +7,7 @@ import Box from 'react-bulma-components/lib/components/box';
 import Table from 'react-bulma-components/lib/components/table';
 import Tag from 'react-bulma-components/lib/components/tag';
 
-import { pad } from '../../utilities/string.js';
+import { pad, padHex } from '../../utilities/string.js';
 import buildAndRun from '../../redux/actions/buildAndRun.js';
 
 class General extends Component {
@@ -30,9 +30,9 @@ class General extends Component {
             <Box>
               <Table striped={false} bordered={false}>
                 <tbody>
-                  <tr><td>{pad(registers.pc || 0, 3) }</td><td><Tag>PC</Tag></td></tr>
-                  <tr><td>{pad(registers.acc || 0, 2) }</td><td><Tag>AC</Tag></td></tr>
-                  <tr><td>{pad(registers.carry || 0, 2) }</td><td><Tag>CY</Tag></td></tr>
+                  <tr><td>{padHex(registers.pc || 0, 3) }</td><td><Tag>PC</Tag></td></tr>
+                  <tr><td>{padHex(registers.acc || 0, 2) }</td><td><Tag>AC</Tag></td></tr>
+                  <tr><td>{padHex(registers.carry || 0, 2) }</td><td><Tag>CY</Tag></td></tr>
                 </tbody>
               </Table>
             </Box>
@@ -44,9 +44,9 @@ class General extends Component {
                   {
                     registerPairs.map(([reg1, reg2], idx) =>
                       <tr key={`reg-${idx}`}>
-                        <td>{pad(reg1.toString(16), 2)}</td>
+                        <td>{padHex(reg1, 2)}</td>
                         <td><Tag>{`RR${pad(idx * 2, 2)}`}</Tag></td>
-                        <td>{pad(reg2.toString(16), 2)}</td>
+                        <td>{padHex(reg2, 2)}</td>
                         <td><Tag>{`RR${pad(idx * 2 + 1, 2)}`}</Tag></td>
                       </tr>
                     )
@@ -61,7 +61,7 @@ class General extends Component {
                 <tbody>
                   {
                     registerPairs.map(([reg1, reg2], idx) =>
-                      <tr key={`regPair-${idx}`}><td>{pad(((reg1 << 4) | reg2).toString(16), 2)}</td><td><Tag>{`R${idx}`}</Tag></td></tr>
+                      <tr key={`regPair-${idx}`}><td>{padHex((reg1 << 4) | reg2, 2)}</td><td><Tag>{`R${idx}`}</Tag></td></tr>
                     )
                   }
                 </tbody>
