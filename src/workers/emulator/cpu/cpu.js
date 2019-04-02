@@ -15,6 +15,12 @@ class CPU {
   _execute(opr, opa) {
     switch (opr) {
       /*
+       * NOP instruction
+       */
+      case 0x0:
+        break;
+
+      /*
        * LDM instruction
        *
        * Rewrite accumulator register with new value, carry flag is unaffected
