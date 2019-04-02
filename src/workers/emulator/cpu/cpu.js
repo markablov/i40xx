@@ -3,6 +3,7 @@ import CPUPins, { SYNC, D0, D1, D2, D3 } from './pins.js';
 class CPU {
   registers = {
     pc: 0,
+    carry: 0,
     acc: 0,
     index: Array.from(Array(16), () => 0)
   };
@@ -22,8 +23,6 @@ class CPU {
 
       /*
        * LDM instruction (Load Data to Accumulator)
-       *
-       * Rewrite accumulator register with new value, carry flag is unaffected
        */
       case 0xD:
         this.registers.acc = opa;
@@ -31,8 +30,6 @@ class CPU {
 
       /*
        * LD instruction (Load index register to Accumulator)
-       *
-       * Rewrite accumulator register with index register value, carry flag is unaffected
        */
       case 0xA:
         this.registers.acc = this.registers.index[opa];
@@ -40,8 +37,6 @@ class CPU {
 
       /*
        * XCH instruction (Exchange index register and accumulator)
-       *
-       * Exchange accumulator register and index register, carry flag is unaffected
        */
       case 0xB: {
         const t = this.registers.acc;
@@ -49,6 +44,17 @@ class CPU {
         this.registers.index[opa] = t;
         break;
       }
+
+      /*
+       * ADD instruction (Add index register to accumulator with carry)
+       */
+      case 0x8: {
+        const sum = this.registers.acc + this.registers.index[opa] + this.registers.carry;
+        this.registers.acc = sum & 0xF;
+        this.registers.carry = +(sum > 0xF);
+        break;
+      }
+
       default:
         throw 'Unknown instruction';
     }
