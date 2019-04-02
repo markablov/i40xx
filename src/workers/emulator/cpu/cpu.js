@@ -67,6 +67,13 @@ class CPU {
         break;
       }
 
+      /*
+       * INC instruction (Increment index register)
+       */
+      case 0x6:
+        this.registers.index[opa] = (this.registers.index[opa] + 1) & 0xF;
+        break;
+
       default:
         throw 'Unknown instruction';
     }
