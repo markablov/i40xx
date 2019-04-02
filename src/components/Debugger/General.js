@@ -7,17 +7,14 @@ import Box from 'react-bulma-components/lib/components/box';
 import Table from 'react-bulma-components/lib/components/table';
 import Tag from 'react-bulma-components/lib/components/tag';
 
-import { compile } from '../../services/compiler.js';
-import { run } from '../../services/emulator.js';
 import { pad } from '../../utilities/string.js';
+import buildAndRun from '../../redux/actions/buildAndRun.js';
 
 class General extends Component {
-  handleBuild = () => compile(this.props.editor.getValue());
-
-  handleRun = () => run(this.props.dump);
+  handleBuildAndRun = () => this.props.buildAndRun(this.props.editor.getValue());
 
   render() {
-    const { editor, dump, emulator } = this.props;
+    const { emulator } = this.props;
     const { running, error, registers } = emulator;
     // amount is always even, so no need to take care for last element
     const registerPairs = (registers.index || []).reduce((acc, reg, idx, ar) => idx % 2 ? [...acc, [ar[idx - 1], reg]] : acc, []);
@@ -26,8 +23,7 @@ class General extends Component {
       <>
         { emulator.error && <Notification color="danger">{error}</Notification> }
         <div className="buttons">
-          <Button color="warning" onClick={this.handleBuild} disabled={!editor}>Build</Button>
-          <Button color="success" onClick={this.handleRun} disabled={!dump || running}>Run</Button>
+          <Button color="success" onClick={this.handleBuildAndRun} disabled={running}>Build & Run</Button>
         </div>
         <Columns>
           <Columns.Column size={3}>
@@ -77,4 +73,4 @@ class General extends Component {
   }
 }
 
-export default connect(state => ({ editor: state.editor, dump: state.dump, emulator: state.emulator }))(General);
+export default connect(state => ({ editor: state.editor, dump: state.dump, emulator: state.emulator }), { buildAndRun })(General);
