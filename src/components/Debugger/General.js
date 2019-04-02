@@ -32,6 +32,7 @@ class General extends Component {
                 <tbody>
                   <tr><td>{pad(registers.pc || 0, 3) }</td><td><Tag>PC</Tag></td></tr>
                   <tr><td>{pad(registers.acc || 0, 2) }</td><td><Tag>AC</Tag></td></tr>
+                  <tr><td>{pad(registers.carry || 0, 2) }</td><td><Tag>CY</Tag></td></tr>
                 </tbody>
               </Table>
             </Box>
