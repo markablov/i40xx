@@ -5,7 +5,9 @@ class CPU {
     pc: 0,
     carry: 0,
     acc: 0,
-    index: Array.from(Array(16), () => 0)
+    index: Array.from(Array(16), () => 0),
+    stack: [0, 0, 0],
+    sp: 0
   };
 
   constructor() {
