@@ -15,6 +15,18 @@ class CPU {
     this.syncStep = 0;
   }
 
+  // it's circular buffer
+  _push(value) {
+    this.registers.stack[this.registers.sp] = value;
+    this.registers.sp = (this.registers.sp + 1) % this.registers.stack.length;
+  }
+
+  _pop() {
+    const value = this.registers.stack[this.registers.sp];
+    this.registers.sp = (this.registers.sp - 1 + this.registers.stack.length) % this.registers.stack.length;
+    return value;
+  }
+
   _execute(opr, opa) {
     switch (opr) {
       /*
