@@ -49,9 +49,21 @@ class CPU {
        * ADD instruction (Add index register to accumulator with carry)
        */
       case 0x8: {
-        const sum = this.registers.acc + this.registers.index[opa] + this.registers.carry;
-        this.registers.acc = sum & 0xF;
-        this.registers.carry = +(sum > 0xF);
+        const result = this.registers.acc + this.registers.index[opa] + this.registers.carry;
+        this.registers.acc = result & 0xF;
+        this.registers.carry = +(result > 0xF);
+        break;
+      }
+
+      /*
+       * SUB instruction (Subtract index register to accumulator with borrow)
+       *
+       * acc = acc - reg - carry = acc + ~reg + ~carry, set carry = 1 if no borrow, 0 otherwise
+       */
+      case 0x9: {
+        const result = this.registers.acc + ((~this.registers.index[opa]) & 0xF) + (this.registers.carry ? 0 : 1);
+        this.registers.acc = result & 0xF;
+        this.registers.carry = +(result > 0xF);
         break;
       }
 
