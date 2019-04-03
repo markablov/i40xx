@@ -95,6 +95,19 @@ class CPU {
         this.registers.acc = opa;
         return this._pop();
 
+      case 0x3:
+        /*
+         * JIN instruction (Jump indirect)
+         *
+         * When JIN instruction is last instruction in page, high part of PC (highest 4bit) should be incremented
+         */
+        if (opa & 0x1 === 0x1) {
+          const reg = opa & 0xE;
+          const ph = this.registers.pc & 0xF00 + (this.registers.pc & 0xFF === 0xFF ? 0x100 : 0);
+          return ph | this.registers.index[reg] << 4 | this.registers.index[reg + 1];
+        }
+        break;
+
       default:
         throw 'Unknown instruction';
     }
