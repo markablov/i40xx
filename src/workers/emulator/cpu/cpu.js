@@ -88,6 +88,13 @@ class CPU {
         this.registers.index[opa] = (this.registers.index[opa] + 1) & 0xF;
         break;
 
+      /*
+       * BBL instruction (Branch back and load data to the accumulator)
+       */
+      case 0xC:
+        this.registers.acc = opa;
+        return this._pop();
+
       default:
         throw 'Unknown instruction';
     }
