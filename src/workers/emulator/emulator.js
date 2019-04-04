@@ -1,4 +1,5 @@
 import ROM from './rom.js';
+import RAM from './ram.js';
 import CPU from './cpu/cpu.js';
 
 const commands = {
@@ -8,6 +9,7 @@ const commands = {
 
     const cpu = new CPU();
     const rom = new ROM(cpu.pins);
+    const ram = new RAM(cpu.pins);
 
     rom.loadDump(dump);
 
@@ -16,6 +18,7 @@ const commands = {
     while (rom.isAddressValid(cpu.registers.pc)) {
       cpu.tick();
       rom.tick();
+      ram.tick();
     }
 
     postMessage({ command: 'state', registers: cpu.registers });
