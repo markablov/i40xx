@@ -54,6 +54,13 @@ class CPU {
        */
       case 0x4:
         return (previousOpa << 8) | (currentOpr << 4) | (currentOpa);
+
+      /*
+       * JMS instruction (Jump to Subroutine)
+       */
+      case 0x5:
+        this._push(this.registers.pc + 1);
+        return (previousOpa << 8) | (currentOpr << 4) | (currentOpa);
     }
   }
 
@@ -156,6 +163,14 @@ class CPU {
        * It's two-byte operator, wait 2nd byte to come before processing it
        */
       case 0x4:
+        break;
+
+      /*
+       * JMS instruction (Jump to Subroutine)
+       *
+       * It's two-byte operator, wait 2nd byte to come before processing it
+       */
+      case 0x5:
         break;
 
       default:
