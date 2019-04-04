@@ -48,6 +48,12 @@ class CPU {
         this.registers.index[previousOpa + 1] = currentOpa;
         return previousPC + 1;
       }
+
+      /*
+       * JUN instruction (Jump unconditional)
+       */
+      case 0x4:
+        return (previousOpa << 8) | (currentOpr << 4) | (currentOpa);
     }
   }
 
@@ -142,6 +148,14 @@ class CPU {
          */
         if ((opa & 0x1) === 0x1)
           this._pins.setPinsData([D0, D1, D2, D3], this.registers.index[(opa & 0xE) + 1]);
+        break;
+
+      /*
+       * JUN instruction (Jump unconditional)
+       *
+       * It's two-byte operator, wait 2nd byte to come before processing it
+       */
+      case 0x4:
         break;
 
       default:
