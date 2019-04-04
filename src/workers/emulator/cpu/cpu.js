@@ -27,7 +27,7 @@ class CPU {
     return value;
   }
 
-  _execute(opr, opa) {
+  _executeAtX3(opr, opa) {
     switch (opr) {
       /*
        * NOP instruction (No Operation)
@@ -115,6 +115,9 @@ class CPU {
     return this.registers.pc + 1;
   }
 
+  _executeAtX2() {
+  }
+
   get pins() {
     return this._pins;
   }
@@ -129,7 +132,7 @@ class CPU {
       case 0:
         if (this.opr !== undefined) {
           // decode and execute instruction
-          this.registers.pc = this._execute(this.opr, this.opa);
+          this.registers.pc = this._executeAtX3(this.opr, this.opa);
         }
         this._pins.setPin(SYNC, 1);
         break;
@@ -161,6 +164,7 @@ class CPU {
         break;
       // X2 stage
       case 7:
+        this._executeAtX2(this.opr, this.opa);
         this.syncStep = -1;
         break;
     }
