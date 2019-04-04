@@ -108,6 +108,16 @@ class CPU {
         }
         break;
 
+      case 0x2:
+        /*
+         * SRC instruction (Send register control)
+         *
+         * At X3 stage we need to send low 4bit of address
+         */
+        if (opa & 0x1 === 0x1)
+          this._pins.setPinsData([D0, D1, D2, D3], this.registers.index[opa & 0xE + 1]);
+        break;
+
       default:
         throw 'Unknown instruction';
     }
@@ -115,7 +125,18 @@ class CPU {
     return this.registers.pc + 1;
   }
 
-  _executeAtX2() {
+  _executeAtX2(opr, opa) {
+    switch (opr) {
+      case 0x2:
+        /*
+         * SRC instruction (Send register control)
+         *
+         * At X2 stage we need to send high 4bit of address
+         */
+        if (opa & 0x1 === 0x1)
+          this._pins.setPinsData([D0, D1, D2, D3], this.registers.index[opa & 0xE]);
+        break;
+    }
   }
 
   get pins() {
