@@ -27,6 +27,9 @@ class CPU {
     return value;
   }
 
+  /*
+   * Return new value for PC if it's 2nd cycle for two-cycle operation or "undefined" otherwise
+   */
   _executeTwoCycleOperation(currentOpr, currentOpa) {
     if (!this.previousOp)
       return;
