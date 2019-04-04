@@ -13,6 +13,7 @@ class CPU {
   constructor() {
     this._pins = new CPUPins();
     this.syncStep = 0;
+    this.pendingFIN = undefined;
   }
 
   // it's circular buffer
@@ -28,6 +29,15 @@ class CPU {
   }
 
   _executeAtX3(opr, opa) {
+    // it's 2-cycle FIN instruction, opr/opa is incoming data
+    if (this.pendingFIN) {
+      const { pc, reg } = this.pendingFIN;
+      this.registers.index[reg] = opr;
+      this.registers.index[reg + 1] = opa;
+      this.pendingFIN = undefined;
+      return pc + 1;
+    }
+
     switch (opr) {
       /*
        * NOP instruction (No Operation)
@@ -95,18 +105,24 @@ class CPU {
         this.registers.acc = opa;
         return this._pop();
 
-      case 0x3:
-        /*
-         * JIN instruction (Jump indirect)
-         *
-         * When JIN instruction is last instruction in page, high part of PC (highest 4bit) should be incremented
-         */
-        if (opa & 0x1 === 0x1) {
-          const reg = opa & 0xE;
-          const ph = this.registers.pc & 0xF00 + (this.registers.pc & 0xFF === 0xFF ? 0x100 : 0);
-          return ph | this.registers.index[reg] << 4 | this.registers.index[reg + 1];
-        }
-        break;
+      /*
+       * JIN instruction (Jump indirect) or FIN instruction (Fetch indirect from ROM)
+       */
+      case 0x3: {
+        const isFIN = (opa & 0x1) === 0x0;
+        const reg = opa & 0xE;
+        // for FIN we are using reg pair 0 for indirect addressing
+        const addrReg = isFIN ? 0 : reg;
+        // When JIN/FIN instruction is last instruction in page, high part of PC (highest 4bit) should be incremented
+        const ph = (this.registers.pc & 0xF00) + ((this.registers.pc & 0xFF) === 0xFF ? 0x100 : 0);
+        const addr = ph | this.registers.index[addrReg] << 4 | this.registers.index[addrReg + 1];
+
+        // if instruction is FIN we need to store information for next cycle
+        if (isFIN)
+          this.pendingFIN = { pc: this.registers.pc, reg };
+
+        return addr;
+      }
 
       case 0x2:
         /*
