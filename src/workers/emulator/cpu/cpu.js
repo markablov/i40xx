@@ -130,8 +130,8 @@ class CPU {
          *
          * At X3 stage we need to send low 4bit of address
          */
-        if (opa & 0x1 === 0x1)
-          this._pins.setPinsData([D0, D1, D2, D3], this.registers.index[opa & 0xE + 1]);
+        if ((opa & 0x1) === 0x1)
+          this._pins.setPinsData([D0, D1, D2, D3], this.registers.index[(opa & 0xE) + 1]);
         break;
 
       default:
@@ -149,7 +149,7 @@ class CPU {
          *
          * At X2 stage we need to send high 4bit of address
          */
-        if (opa & 0x1 === 0x1)
+        if ((opa & 0x1) === 0x1)
           this._pins.setPinsData([D0, D1, D2, D3], this.registers.index[opa & 0xE]);
         break;
     }
