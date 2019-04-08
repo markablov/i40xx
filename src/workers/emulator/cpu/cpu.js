@@ -61,6 +61,23 @@ class CPU {
       case 0x5:
         this._push(this.registers.pc + 1);
         return (previousOpa << 8) | (currentOpr << 4) | (currentOpa);
+
+
+      /*
+      * JCN instruction (Jump conditional)
+      */
+      case 0x1: {
+        const invert = (previousOpa & 0x8) === 0x8;
+        const accIsZero = (previousOpa & 0x4) === 0x4;
+        const cfIsSet = (previousOpa & 0x2) === 0x2;
+        const cond = (accIsZero && (this.registers.acc === 0)) || (cfIsSet && (this.registers.carry === 1));
+        const finalCond = invert ? !cond : cond;
+        if (!finalCond)
+          return this.registers.pc + 1;
+        // When JCN is last instruction in page, high part of PC (highest 4bit) should be incremented
+        const ph = (this.registers.pc & 0xF00) + ((this.registers.pc & 0xFF) === 0xFF ? 0x100 : 0);
+        return ph | (currentOpr << 4) | (currentOpa);
+      }
     }
   }
 
@@ -171,6 +188,14 @@ class CPU {
        * It's two-byte operator, wait 2nd byte to come before processing it
        */
       case 0x5:
+        break;
+
+      /*
+       * JCN instruction (Jump conditional)
+       *
+       * It's two-byte operator, wait 2nd byte to come before processing it
+       */
+      case 0x1:
         break;
 
       default:
