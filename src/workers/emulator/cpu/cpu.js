@@ -77,10 +77,15 @@ class CPU {
         const cfIsSet = (previousOpa & 0x2) === 0x2;
         const cond = (accIsZero && (this.registers.acc === 0)) || (cfIsSet && (this.registers.carry === 1));
         const finalCond = invert ? !cond : cond;
-        if (!finalCond)
-          return this.registers.pc + 1;
-        return this._getFullAddressFromShort(currentOpr, currentOpa);
+        return finalCond ? this._getFullAddressFromShort(currentOpr, currentOpa) : this.registers.pc + 1;
       }
+
+      /*
+       * ISZ instruction (Increment index register skip if zero)
+       */
+      case 0x7:
+        this.registers.index[previousOpa]++;
+        return this.registers.index[previousOpa] === 0 ? this.registers.pc + 1 : this._getFullAddressFromShort(currentOpr, currentOpa);
     }
   }
 
@@ -197,6 +202,14 @@ class CPU {
        * It's two-byte operator, wait 2nd byte to come before processing it
        */
       case 0x1:
+        break;
+
+      /*
+       * ISZ instruction (Increment index register skip if zero)
+       *
+       * It's two-byte operator, wait 2nd byte to come before processing it
+       */
+      case 0x7:
         break;
 
       default:
