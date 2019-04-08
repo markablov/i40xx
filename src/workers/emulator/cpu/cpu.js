@@ -27,6 +27,11 @@ class CPU {
     return value;
   }
 
+  _getFullAddressFromShort(pm, pl) {
+    const ph = (this.registers.pc & 0xF00) + ((this.registers.pc & 0xFF) === 0xFF ? 0x100 : 0);
+    return ph | (pm << 4) | (pl);
+  }
+
   /*
    * Return new value for PC if it's 2nd cycle for two-cycle operation or "undefined" otherwise
    */
@@ -74,9 +79,7 @@ class CPU {
         const finalCond = invert ? !cond : cond;
         if (!finalCond)
           return this.registers.pc + 1;
-        // When JCN is last instruction in page, high part of PC (highest 4bit) should be incremented
-        const ph = (this.registers.pc & 0xF00) + ((this.registers.pc & 0xFF) === 0xFF ? 0x100 : 0);
-        return ph | (currentOpr << 4) | (currentOpa);
+        return this._getFullAddressFromShort(currentOpr, currentOpa);
       }
     }
   }
@@ -159,9 +162,7 @@ class CPU {
       case 0x3: {
         // for FIN we are using reg pair 0 for indirect addressing
         const reg = (opa & 0x1) === 0x0 ? 0 : opa & 0xE;
-        // When JIN/FIN instruction is last instruction in page, high part of PC (highest 4bit) should be incremented
-        const ph = (this.registers.pc & 0xF00) + ((this.registers.pc & 0xFF) === 0xFF ? 0x100 : 0);
-        return ph | this.registers.index[reg] << 4 | this.registers.index[reg + 1];
+        return this._getFullAddressFromShort(this.registers.index[reg], this.registers.index[reg + 1]);
       }
 
       case 0x2:
