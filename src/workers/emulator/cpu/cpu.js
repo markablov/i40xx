@@ -86,6 +86,17 @@ class CPU {
       case 0x7:
         this.registers.index[previousOpa]++;
         return this.registers.index[previousOpa] === 0 ? this.registers.pc + 1 : this._getFullAddressFromShort(currentOpr, currentOpa);
+
+      /*
+       * FIM instruction (Fetched immediate from ROM)
+      */
+      case 0x2:
+        // check if it was SRC instruction, which is regular one-cycle operation
+        if ((previousOpa & 0x1) === 0x1)
+          return;
+        this.registers.index[previousOpa] = currentOpr;
+        this.registers.index[previousOpa + 1] = currentOpa;
+        return this.registers.pc + 1;
     }
   }
 
@@ -178,6 +189,12 @@ class CPU {
          */
         if ((opa & 0x1) === 0x1)
           this._pins.setPinsData([D0, D1, D2, D3], this.registers.index[(opa & 0xE) + 1]);
+
+        /*
+         * FIM instruction (Fetched immediate from ROM)
+         *
+         * It's two-byte operator, wait 2nd byte to come before processing it
+         */
         break;
 
       /*
