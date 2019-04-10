@@ -297,11 +297,17 @@ class CPU {
         break;
       // M2 stage
       case 5:
+        // if it's I/O or RAM instruction we need to trigger CM-RAMx lines
+        if (this.opr === 0xE)
+          this._pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], this.registers.ramControl);
         // lowest 4bit of instruction
         this.opa = this._pins.getPinsData([D0, D1, D2, D3]);
         break;
       // X1 stage
       case 6:
+        // reset CM-RAMx lines if they were set at M2 stage
+        if (this._pins.getPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3]))
+          this._pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], 0);
         break;
       // X2 stage
       case 7:
