@@ -2,7 +2,7 @@ class CPUPins {
   _pins = {
     [SYNC]: 0,
     [CM_ROM]: 1,
-    [CM_RAM0]: 1,
+    [CM_RAM0]: 0,
     [CM_RAM1]: 0,
     [CM_RAM2]: 0,
     [CM_RAM3]: 0,
