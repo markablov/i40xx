@@ -60,19 +60,19 @@ class RAM {
       case 5:
         break;
       // X2 stage
-      case 6: {
-        const selectedBank = this._selectedBank();
+      case 6:
+        this.bankToSetOffset = this._selectedBank();
         // check if SRC command is executing, in that case need to store highest 4-bit of bank offset
-        if (selectedBank)
-          selectedBank.selectedAddress = this.cpu.getPinsData([D0, D1, D2, D3]) << 4;
+        if (this.bankToSetOffset)
+          this.bankToSetOffset.selectedAddress = this.cpu.getPinsData([D0, D1, D2, D3]) << 4;
         break;
-      }
       // X3 stage
       case 7: {
-        const selectedBank = this._selectedBank();
         // check if SRC command is executing, in that case need to store lowest 4-bit of bank offset
-        if (selectedBank)
-          selectedBank.selectedAddress |= this.cpu.getPinsData([D0, D1, D2, D3]);
+        if (this.bankToSetOffset) {
+          this.bankToSetOffset.selectedAddress |= this.cpu.getPinsData([D0, D1, D2, D3]);
+          this.bankToSetOffset = null;
+        }
         break;
       }
     }
