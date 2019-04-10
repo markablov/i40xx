@@ -1,4 +1,4 @@
-import { SYNC, CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3 } from './cpu/pins.js';
+import { SYNC, CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3, D0, D1, D2, D3 } from './cpu/pins.js';
 
 class RAM {
   constructor(cpuPins) {
@@ -9,6 +9,7 @@ class RAM {
   }
 
   _selectedBank() {
+    // if CM_RAM0 is set, it's always bank #0
     if (this.cpu.getPin(CM_RAM0))
       return this.banks[0];
 
@@ -59,11 +60,21 @@ class RAM {
       case 5:
         break;
       // X2 stage
-      case 6:
+      case 6: {
+        const selectedBank = this._selectedBank();
+        // check if SRC command is executing, in that case need to store highest 4-bit of bank offset
+        if (selectedBank)
+          selectedBank.selectedAddress = this.cpu.getPinsData([D0, D1, D2, D3]) << 4;
         break;
+      }
       // X3 stage
-      case 7:
+      case 7: {
+        const selectedBank = this._selectedBank();
+        // check if SRC command is executing, in that case need to store lowest 4-bit of bank offset
+        if (selectedBank)
+          selectedBank.selectedAddress |= this.cpu.getPinsData([D0, D1, D2, D3]);
         break;
+      }
     }
 
     this.state++;
