@@ -7,7 +7,9 @@ class CPU {
     acc: 0,
     index: Array.from(Array(16), () => 0),
     stack: [0, 0, 0],
-    sp: 0
+    sp: 0,
+    // CM-RAM0 should be selected by default
+    ramControl: 0b0001
   };
 
   constructor() {
