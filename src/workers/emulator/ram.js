@@ -3,8 +3,13 @@ import { SYNC, CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3, D0, D1, D2, D3 } from './cpu/
 class RAM {
   constructor(cpuPins) {
     this.cpu = cpuPins;
-    // 8 banks, every bank contains 2^8 = 256 words
-    this.banks = Array.from(Array(8), () => ({ data: Array(256).fill(0), selectedAddress: 0 }));
+
+    this.banks = Array.from(Array(8), () => ({
+      data: Array(256).fill(0),
+      selectedRegister: 0,
+      selectedCharacter: 0
+    }));
+
     this.state = 0;
   }
 
@@ -69,10 +74,10 @@ class RAM {
       case 6: {
         const data = this.cpu.getPinsData([D0, D1, D2, D3]);
 
-        // check if SRC command is executing, in that case need to store highest 4-bit of bank offset
+        // check if SRC command is executing, in that case need to store chip index and register index in this chip
         this.bankToSetOffset = this._selectedBank();
         if (this.bankToSetOffset)
-          this.bankToSetOffset.selectedAddress = data << 4;
+          this.bankToSetOffset.selectedRegister = data;
 
         // at M2 we have received instruction to execute, so perform it now
         if (this.bankForExecution) {
@@ -84,9 +89,9 @@ class RAM {
       }
       // X3 stage
       case 7: {
-        // check if SRC command is executing, in that case need to store lowest 4-bit of bank offset
+        // check if SRC command is executing, in that case need to store character index in selected register
         if (this.bankToSetOffset) {
-          this.bankToSetOffset.selectedAddress |= this.cpu.getPinsData([D0, D1, D2, D3]);
+          this.bankToSetOffset.selectedCharacter = this.cpu.getPinsData([D0, D1, D2, D3]);
           this.bankToSetOffset = null;
         }
         break;
