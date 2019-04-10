@@ -31,6 +31,9 @@ class RAM {
     }
   }
 
+  _execute() {
+  }
+
   /*
    * Main function, that is called every machine cycle and works with internal state and CPU pins
    */
@@ -55,17 +58,30 @@ class RAM {
         break;
       // M2 stage
       case 4:
+        this.bankForExecution = this._selectedBank();
+        if (this.bankForExecution)
+          this.opa = this.cpu.getPinsData([D0, D1, D2, D3]);
         break;
       // X1 stage
       case 5:
         break;
       // X2 stage
-      case 6:
-        this.bankToSetOffset = this._selectedBank();
+      case 6: {
+        const data = this.cpu.getPinsData([D0, D1, D2, D3]);
+
         // check if SRC command is executing, in that case need to store highest 4-bit of bank offset
+        this.bankToSetOffset = this._selectedBank();
         if (this.bankToSetOffset)
-          this.bankToSetOffset.selectedAddress = this.cpu.getPinsData([D0, D1, D2, D3]) << 4;
+          this.bankToSetOffset.selectedAddress = data << 4;
+
+        // at M2 we have received instruction to execute, so perform it now
+        if (this.bankForExecution) {
+          this._execute(this.bankForExecution, this.opa, data);
+          this.bankForExecution = null;
+        }
+
         break;
+      }
       // X3 stage
       case 7: {
         // check if SRC command is executing, in that case need to store lowest 4-bit of bank offset
