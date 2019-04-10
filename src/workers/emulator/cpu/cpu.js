@@ -1,4 +1,4 @@
-import CPUPins, { SYNC, D0, D1, D2, D3 } from './pins.js';
+import CPUPins, { SYNC, D0, D1, D2, D3, CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3 } from './pins.js';
 
 class CPU {
   registers = {
@@ -189,8 +189,11 @@ class CPU {
          *
          * At X3 stage we need to send low 4bit of address
          */
-        if ((opa & 0x1) === 0x1)
+        if ((opa & 0x1) === 0x1) {
           this._pins.setPinsData([D0, D1, D2, D3], this.registers.index[(opa & 0xE) + 1]);
+          // need to reset CM_RAM lines
+          this._pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], 0);
+        }
 
         /*
          * FIM instruction (Fetched immediate from ROM)
@@ -246,8 +249,10 @@ class CPU {
          *
          * At X2 stage we need to send high 4bit of address
          */
-        if ((opa & 0x1) === 0x1)
+        if ((opa & 0x1) === 0x1) {
           this._pins.setPinsData([D0, D1, D2, D3], this.registers.index[opa & 0xE]);
+          this._pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], this.registers.ramControl);
+        }
         break;
     }
   }
