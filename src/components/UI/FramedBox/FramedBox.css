@@ -1,0 +1,36 @@
+.framedBox {
+  border: 2px groove threedface;
+  border-top: none;
+  padding: 0.5em;
+  margin: 1em 2px;
+  border-radius: 6px;
+}
+
+.framedBox > h1 {
+  font: 1em normal;
+  margin: -1em -0.5em 0;
+}
+
+.framedBox > h1 > span {
+  float: left;
+}
+
+.framedBox > h1:before {
+  border-top: 2px groove threedface;
+  content: ' ';
+  float: left;
+  margin: 0.5em 2px 0 1px;
+  width: 0.75em;
+}
+
+.framedBox > h1:after {
+  border-top: 2px groove threedface;
+  content: ' ';
+  display: block;
+  height: 1.5em;
+  left: 2px;
+  margin: 0 4px 0 0;
+  overflow: hidden;
+  position: relative;
+  top: 0.5em;
+}
