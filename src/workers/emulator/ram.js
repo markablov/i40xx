@@ -4,6 +4,7 @@ class RAM {
   constructor(cpuPins) {
     this.cpu = cpuPins;
 
+    // max memory is 8 banks * 16 registers * (16 main characters + 4 status characters) * 4 bit = 10240 bit = 1280 bytes
     this.banks = Array.from(Array(8), () => ({
       // every bank contains 4 chips with 4 registers (16 registers in total)
       // every register contains 16 4-bit main characters and 4 4-bit status characters
