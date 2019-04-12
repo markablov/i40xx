@@ -4,6 +4,7 @@
   padding: 0.5em;
   margin: 1em 2px;
   border-radius: 6px;
+  font-family: "Lucida Console", Monaco, monospace;
 }
 
 .framedBox.is-inline-block {
