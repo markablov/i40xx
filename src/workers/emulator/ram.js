@@ -110,6 +110,20 @@ class RAM {
       case 0x7:
         bank.registers[bank.selectedRegister].status[3] = data;
         break;
+
+      /*
+       * ADM instruction (Add from memory with carry)
+       */
+      case 0xB:
+        this.cpu.setPinsData([D0, D1, D2, D3], bank.registers[bank.selectedRegister].main[bank.selectedCharacter]);
+        break;
+
+      /*
+       * SBM instruction (Subtract from memory with borrow)
+       */
+      case 0x8:
+        this.cpu.setPinsData([D0, D1, D2, D3], bank.registers[bank.selectedRegister].main[bank.selectedCharacter]);
+        break;
     }
   }
 

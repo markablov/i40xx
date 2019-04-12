@@ -29,6 +29,18 @@ class CPU {
     return value;
   }
 
+  _add(value) {
+    const result = this.registers.acc + value + this.registers.carry;
+    this.registers.acc = result & 0xF;
+    this.registers.carry = +(result > 0xF);
+  }
+
+  // acc = acc - reg - carry = acc + ~reg + ~carry, set carry = 1 if no borrow, 0 otherwise
+  _sub(value) {
+    this.registers.carry = (~this.registers.carry) & 0x1;
+    this._add((~value) & 0xF);
+  }
+
   _getFullAddressFromShort(pm, pl) {
     const ph = (this.registers.pc & 0xF00) + ((this.registers.pc & 0xFF) === 0xFF ? 0x100 : 0);
     return ph | (pm << 4) | (pl);
@@ -141,24 +153,16 @@ class CPU {
       /*
        * ADD instruction (Add index register to accumulator with carry)
        */
-      case 0x8: {
-        const result = this.registers.acc + this.registers.index[opa] + this.registers.carry;
-        this.registers.acc = result & 0xF;
-        this.registers.carry = +(result > 0xF);
+      case 0x8:
+        this._add(this.registers.index[opa]);
         break;
-      }
 
       /*
        * SUB instruction (Subtract index register to accumulator with borrow)
-       *
-       * acc = acc - reg - carry = acc + ~reg + ~carry, set carry = 1 if no borrow, 0 otherwise
        */
-      case 0x9: {
-        const result = this.registers.acc + ((~this.registers.index[opa]) & 0xF) + (this.registers.carry ? 0 : 1);
-        this.registers.acc = result & 0xF;
-        this.registers.carry = +(result > 0xF);
+      case 0x9:
+        this._sub(this.registers.index[opa]);
         break;
-      }
 
       /*
        * INC instruction (Increment index register)
@@ -269,6 +273,20 @@ class CPU {
            */
           case 0xF:
             this.registers.acc = this._pins.getPinsData([D0, D1, D2, D3]);
+            break;
+
+          /*
+           * ADM instruction (Add from memory with carry)
+           */
+          case 0xB:
+            this._add(this._pins.getPinsData([D0, D1, D2, D3]));
+            break;
+
+          /*
+           * SBM instruction (Subtract from memory with borrow)
+           */
+          case 0x8:
+            this._sub(this._pins.getPinsData([D0, D1, D2, D3]));
             break;
         }
         break;
