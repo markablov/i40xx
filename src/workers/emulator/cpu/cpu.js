@@ -234,6 +234,17 @@ class CPU {
       case 0x7:
         break;
 
+      case 0xE:
+        switch (opa) {
+          /*
+           * RDM instruction (Read RAM character)
+           */
+          case 0x9:
+            this.registers.acc = this._pins.getPinsData([D0, D1, D2, D3]);
+            break;
+        }
+        break;
+
       default:
         throw 'Unknown instruction';
     }

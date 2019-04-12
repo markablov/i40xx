@@ -39,7 +39,15 @@ class RAM {
     }
   }
 
-  _execute() {
+  _execute(bank, opa) {
+    switch (opa) {
+      /*
+       * RDM instruction (Read RAM character)
+       */
+      case 0x9:
+        this.cpu.setPinsData([D0, D1, D2, D3], bank.registers[bank.selectedRegister].main[bank.selectedCharacter]);
+        break;
+    }
   }
 
   /*
