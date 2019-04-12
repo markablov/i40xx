@@ -242,6 +242,34 @@ class CPU {
           case 0x9:
             this.registers.acc = this._pins.getPinsData([D0, D1, D2, D3]);
             break;
+
+          /*
+           * RD0 instruction (Read RAM status character 0)
+           */
+          case 0xC:
+            this.registers.acc = this._pins.getPinsData([D0, D1, D2, D3]);
+            break;
+
+          /*
+           * RD1 instruction (Read RAM status character 1)
+           */
+          case 0xD:
+            this.registers.acc = this._pins.getPinsData([D0, D1, D2, D3]);
+            break;
+
+          /*
+           * RD2 instruction (Read RAM status character 2)
+           */
+          case 0xE:
+            this.registers.acc = this._pins.getPinsData([D0, D1, D2, D3]);
+            break;
+
+          /*
+           * RD3 instruction (Read RAM status character 3)
+           */
+          case 0xF:
+            this.registers.acc = this._pins.getPinsData([D0, D1, D2, D3]);
+            break;
         }
         break;
 

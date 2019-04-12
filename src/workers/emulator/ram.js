@@ -47,6 +47,34 @@ class RAM {
       case 0x9:
         this.cpu.setPinsData([D0, D1, D2, D3], bank.registers[bank.selectedRegister].main[bank.selectedCharacter]);
         break;
+
+      /*
+       * RD0 instruction (Read RAM status character 0)
+       */
+      case 0xC:
+        this.cpu.setPinsData([D0, D1, D2, D3], bank.registers[bank.selectedRegister].status[0]);
+        break;
+
+      /*
+       * RD1 instruction (Read RAM status character 1)
+       */
+      case 0xD:
+        this.cpu.setPinsData([D0, D1, D2, D3], bank.registers[bank.selectedRegister].status[1]);
+        break;
+
+      /*
+       * RD2 instruction (Read RAM status character 2)
+       */
+      case 0xE:
+        this.cpu.setPinsData([D0, D1, D2, D3], bank.registers[bank.selectedRegister].status[2]);
+        break;
+
+      /*
+      * RD3 instruction (Read RAM status character 3)
+      */
+      case 0xF:
+        this.cpu.setPinsData([D0, D1, D2, D3], bank.registers[bank.selectedRegister].status[3]);
+        break;
     }
   }
 
