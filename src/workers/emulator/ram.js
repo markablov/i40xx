@@ -39,7 +39,7 @@ class RAM {
     }
   }
 
-  _execute(bank, opa) {
+  _execute(bank, opa, data) {
     switch (opa) {
       /*
        * RDM instruction (Read RAM character)
@@ -74,6 +74,41 @@ class RAM {
       */
       case 0xF:
         this.cpu.setPinsData([D0, D1, D2, D3], bank.registers[bank.selectedRegister].status[3]);
+        break;
+
+      /*
+       * WRM instruction (Write accumulator into RAM character)
+       */
+      case 0x0:
+        bank.registers[bank.selectedRegister].main[bank.selectedCharacter] = data;
+        break;
+
+      /*
+       * WR0 instruction (Write accumulator into RAM status character 0)
+       */
+      case 0x4:
+        bank.registers[bank.selectedRegister].status[0] = data;
+        break;
+
+      /*
+       * WR1 instruction (Write accumulator into RAM status character 1)
+       */
+      case 0x5:
+        bank.registers[bank.selectedRegister].status[1] = data;
+        break;
+
+      /*
+       * WR2 instruction (Write accumulator into RAM status character 2)
+       */
+      case 0x6:
+        bank.registers[bank.selectedRegister].status[2] = data;
+        break;
+
+      /*
+       * WR3 instruction (Write accumulator into RAM status character 3)
+       */
+      case 0x7:
+        bank.registers[bank.selectedRegister].status[3] = data;
         break;
     }
   }

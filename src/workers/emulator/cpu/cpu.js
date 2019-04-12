@@ -296,6 +296,49 @@ class CPU {
     }
   }
 
+  _executeAtX1(opr, opa) {
+    switch (opr) {
+      case 0xE:
+        switch (opa) {
+          /*
+           * WRM instruction (Write accumulator into RAM character)
+           */
+          case 0x0:
+            this._pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
+            break;
+
+          /*
+           * WR0 instruction (Write accumulator into RAM status character 0)
+           */
+          case 0x4:
+            this._pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
+            break;
+
+          /*
+           * WR1 instruction (Write accumulator into RAM status character 1)
+           */
+          case 0x5:
+            this._pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
+            break;
+
+          /*
+           * WR2 instruction (Write accumulator into RAM status character 2)
+           */
+          case 0x6:
+            this._pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
+            break;
+
+          /*
+           * WR3 instruction (Write accumulator into RAM status character 3)
+           */
+          case 0x7:
+            this._pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
+            break;
+        }
+        break;
+    }
+  }
+
   get pins() {
     return this._pins;
   }
@@ -347,6 +390,7 @@ class CPU {
         // reset CM-RAMx lines if they were set at M2 stage
         if (this._pins.getPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3]))
           this._pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], 0);
+        this._executeAtX1(this.opr, this.opa);
         break;
       // X2 stage
       case 7:
