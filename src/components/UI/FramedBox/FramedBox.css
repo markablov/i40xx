@@ -6,6 +6,10 @@
   border-radius: 6px;
 }
 
+.framedBox.is-inline-block {
+  display: inline-block;
+}
+
 .framedBox > h1 {
   font: 1em normal;
   margin: -1em -0.5em 0;
