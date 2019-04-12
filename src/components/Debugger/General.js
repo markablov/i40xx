@@ -3,12 +3,12 @@ import { connect } from 'react-redux';
 import Button from 'react-bulma-components/lib/components/button';
 import Notification from 'react-bulma-components/lib/components/notification';
 import Columns from 'react-bulma-components/lib/components/columns';
-import Box from 'react-bulma-components/lib/components/box';
 import Table from 'react-bulma-components/lib/components/table';
 import Tag from 'react-bulma-components/lib/components/tag';
 
 import { pad, padHex } from '../../utilities/string.js';
 import buildAndRun from '../../redux/actions/buildAndRun.js';
+import FramedBox from '../UI/FramedBox/FramedBox.js';
 
 class General extends Component {
   handleBuildAndRun = () => this.props.buildAndRun(this.props.editor.getValue());
@@ -27,23 +27,8 @@ class General extends Component {
           <Button color="success" onClick={this.handleBuildAndRun} disabled={running}>Build & Run</Button>
         </div>
         <Columns>
-          <Columns.Column size={3}>
-            <Box>
-              <Table striped={false} bordered={false}>
-                <tbody>
-                  <tr><td>{padHex(registers.pc || 0, 3) }</td><td><Tag>PC</Tag></td></tr>
-                  <tr><td>{padHex(registers.acc || 0, 2) }</td><td><Tag>AC</Tag></td></tr>
-                  <tr><td>{padHex(registers.carry || 0, 2) }</td><td><Tag>CY</Tag></td></tr>
-                  <tr><td>{padHex(registers.sp || 0, 2) }</td><td><Tag>SP</Tag></td></tr>
-                  <tr><td>{padHex(stack[0] || 0, 3) }</td><td><Tag>S0</Tag></td></tr>
-                  <tr><td>{padHex(stack[1] || 0, 3) }</td><td><Tag>S1</Tag></td></tr>
-                  <tr><td>{padHex(stack[2] || 0, 3) }</td><td><Tag>S2</Tag></td></tr>
-                </tbody>
-              </Table>
-            </Box>
-          </Columns.Column>
           <Columns.Column size={6}>
-            <Box>
+            <FramedBox title='Registers'>
               <Table striped={false} bordered={false}>
                 <tbody>
                   {
@@ -58,10 +43,10 @@ class General extends Component {
                   }
                 </tbody>
               </Table>
-            </Box>
+            </FramedBox>
           </Columns.Column>
           <Columns.Column size={3}>
-            <Box>
+            <FramedBox title='Register pairs'>
               <Table striped={false} bordered={false}>
                 <tbody>
                   {
@@ -71,7 +56,22 @@ class General extends Component {
                   }
                 </tbody>
               </Table>
-            </Box>
+            </FramedBox>
+          </Columns.Column>
+          <Columns.Column size={3}>
+            <FramedBox title='Miscellaneous'>
+              <Table striped={false} bordered={false} size='narrow'>
+                <tbody>
+                  <tr><td>{padHex(registers.pc || 0, 3) }</td><td><Tag>PC</Tag></td></tr>
+                  <tr><td>{padHex(registers.acc || 0, 2) }</td><td><Tag>ACC</Tag></td></tr>
+                  <tr><td>{padHex(registers.carry || 0, 2) }</td><td><Tag>Carry</Tag></td></tr>
+                  <tr><td>{padHex(registers.sp || 0, 2) }</td><td><Tag>SP</Tag></td></tr>
+                  <tr><td>{padHex(stack[0] || 0, 3) }</td><td><Tag>Stack 0</Tag></td></tr>
+                  <tr><td>{padHex(stack[1] || 0, 3) }</td><td><Tag>Stack 1</Tag></td></tr>
+                  <tr><td>{padHex(stack[2] || 0, 3) }</td><td><Tag>Stack 2</Tag></td></tr>
+                </tbody>
+              </Table>
+            </FramedBox>
           </Columns.Column>
         </Columns>
       </>
