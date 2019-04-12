@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Tabs from 'react-bulma-components/lib/components/tabs';
 
-import Memory from './Memory.js';
+import Memory from './Memory/Memory.js';
 import General from './General.js';
 
 class Debugger extends Component {
