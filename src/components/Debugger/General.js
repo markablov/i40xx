@@ -64,11 +64,11 @@ class General extends Component {
                 <tbody>
                   <tr><td>{padHex(registers.pc || 0, 3) }</td><td><Tag>PC</Tag></td></tr>
                   <tr><td>{padHex(registers.acc || 0, 2) }</td><td><Tag>ACC</Tag></td></tr>
-                  <tr><td>{padHex(registers.carry || 0, 2) }</td><td><Tag>Carry</Tag></td></tr>
+                  <tr><td>{padHex(registers.carry || 0, 2) }</td><td><Tag>CY</Tag></td></tr>
                   <tr><td>{padHex(registers.sp || 0, 2) }</td><td><Tag>SP</Tag></td></tr>
-                  <tr><td>{padHex(stack[0] || 0, 3) }</td><td><Tag>Stack 0</Tag></td></tr>
-                  <tr><td>{padHex(stack[1] || 0, 3) }</td><td><Tag>Stack 1</Tag></td></tr>
-                  <tr><td>{padHex(stack[2] || 0, 3) }</td><td><Tag>Stack 2</Tag></td></tr>
+                  <tr><td>{padHex(stack[0] || 0, 3) }</td><td><Tag>S0</Tag></td></tr>
+                  <tr><td>{padHex(stack[1] || 0, 3) }</td><td><Tag>S1</Tag></td></tr>
+                  <tr><td>{padHex(stack[2] || 0, 3) }</td><td><Tag>S2</Tag></td></tr>
                 </tbody>
               </Table>
             </FramedBox>
