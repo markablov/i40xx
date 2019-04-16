@@ -31,9 +31,10 @@ const commands = {
 
   continue: () => {
     while (!system.isFinished()) {
+      system.instruction();
+
       if (breakpoints[system.registers.pc])
         return sendState();
-      system.instruction();
     }
 
     sendState();
