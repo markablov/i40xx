@@ -411,6 +411,15 @@ class CPU {
                 this.registers.acc = 0xF;
             }
             break;
+
+          /*
+           * DCL instruction (Designate command line)
+           */
+          case 0xD: {
+            const accBits = this.registers.acc & 0x7;
+            this.registers.ramControl = accBits === 0 ? 0b0001 : (accBits << 1);
+            break;
+          }
         }
         break;
 
