@@ -61,9 +61,23 @@ class Editor extends Component {
     this.setupROMOffsets(editor, session);
   }
 
-  shouldComponentUpdate({ compilerErrors }) {
-    if (compilerErrors && compilerErrors.length && this.editor)
-      this.editor.getSession().setAnnotations(compilerErrors.map(error => ({ ...error, type: 'error' })));
+  shouldComponentUpdate({ compilerErrors, emulator }) {
+    // synchronize ACE editor state with redux state
+    // because ACE editor is not react component we should avoid re-rendering and
+    // perform all changes via ACE Editor API
+    if (this.editor) {
+      // during debug editor should be on read-only state
+      const currentReadOnly = this.editor.getReadOnly();
+      const expectedReadOnly = emulator.running && emulator.mode === 'debug';
+      if (currentReadOnly !== expectedReadOnly)
+        this.editor.setReadOnly(expectedReadOnly);
+
+      // show compilation errors
+      if (compilerErrors && compilerErrors.length) {
+        this.editor.getSession().setAnnotations(compilerErrors.map(error => ({ ...error, type: 'error' })));
+        return false;
+      }
+    }
 
     // Editor have no props or state, except external compilerErrors
     // so we don't want ever to re-render component
@@ -85,4 +99,4 @@ class Editor extends Component {
   }
 }
 
-export default connect(state => ({ compilerErrors: state.compilerErrors }), { setEditorRef })(Editor);
+export default connect(({ compilerErrors, emulator }) => ({ compilerErrors, emulator }), { setEditorRef })(Editor);
