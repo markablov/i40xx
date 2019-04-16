@@ -11,7 +11,9 @@ import buildAndRun from '../../redux/actions/buildAndRun.js';
 import FramedBox from '../UI/FramedBox/FramedBox.js';
 
 class General extends Component {
-  handleBuildAndRun = () => this.props.buildAndRun(this.props.editor.getValue());
+  handleBuildAndRun = () => this.props.buildAndRun(this.props.editor.getValue(), 'run');
+
+  handleBuildAndDebug = () => this.props.buildAndRun(this.props.editor.getValue(), 'debug');
 
   render() {
     const { emulator } = this.props;
@@ -25,6 +27,7 @@ class General extends Component {
         { emulator.error && <Notification color="danger">{error}</Notification> }
         <div className="buttons">
           <Button color="success" onClick={this.handleBuildAndRun} disabled={running}>Build & Run</Button>
+          <Button color="info" onClick={this.handleBuildAndDebug} disabled={running}>Build & Debug</Button>
         </div>
         <Columns>
           <Columns.Column size={6}>
