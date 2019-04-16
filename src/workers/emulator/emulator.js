@@ -13,7 +13,7 @@ const commands = {
 
     rom.loadDump(dump);
 
-    postMessage({ command: 'state', registers: cpu.registers });
+    postMessage({ command: 'state', registers: cpu.registers, ram: ram.banks });
 
     while (rom.isAddressValid(cpu.registers.pc)) {
       cpu.tick();
