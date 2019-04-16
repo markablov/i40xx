@@ -12,7 +12,7 @@ import FramedBox from '../UI/FramedBox/FramedBox.js';
 import { stop } from '../../services/emulator.js';
 
 class General extends Component {
-  state = { showStopButton: false };
+  state = { showDebugButtons: false };
 
   handleBuildAndRun = () => this.props.buildAndRun(this.props.editor.getValue(), 'run');
 
@@ -21,13 +21,13 @@ class General extends Component {
   handleStop = () => stop();
 
   componentDidUpdate() {
-    if (!this.props.emulator.running && this.state.showStopButton)
-      this.setState({ showStopButton: false });
+    if (!this.props.emulator.running && this.state.showDebugButtons)
+      this.setState({ showDebugButtons: false });
   }
 
   render() {
     const { emulator } = this.props;
-    const { showStopButton } = this.state;
+    const { showDebugButtons } = this.state;
     const { running, error, registers } = emulator;
     // amount is always even, so no need to take care for last element
     const registerPairs = (registers.index || []).reduce((acc, reg, idx, ar) => idx % 2 ? [...acc, [ar[idx - 1], reg]] : acc, []);
@@ -37,7 +37,7 @@ class General extends Component {
     if (running) {
       setTimeout(() => {
         if (this.props.emulator.running)
-          this.setState({ showStopButton: true });
+          this.setState({ showDebugButtons: true });
       }, 500);
     }
 
@@ -47,7 +47,7 @@ class General extends Component {
         <div className="buttons">
           <Button color="success" onClick={this.handleBuildAndRun} disabled={running}>Build & Run</Button>
           <Button color="info" onClick={this.handleBuildAndDebug} disabled={running}>Build & Debug</Button>
-          { showStopButton && <Button color="danger" onClick={this.handleStop}>Stop</Button> }
+          { showDebugButtons && <Button color="danger" onClick={this.handleStop}>Stop</Button> }
         </div>
         <Columns>
           <Columns.Column size={6}>
