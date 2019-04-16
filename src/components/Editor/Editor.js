@@ -44,14 +44,7 @@ class Editor extends Component {
     });
   }
 
-  setupEditor() {
-    const editor = this.editor, session = editor.getSession();
-
-    editor.$blockScrolling = Infinity;
-
-    session.setMode(new AssemblyMode());
-    session.setTabSize(2);
-
+  setupShortcuts(editor) {
     // ACE editor already have Ctrl+D to remove line, but i prefer Ctrl+Y
     editor.commands.addCommand({
       name: 'removeline2',
@@ -73,7 +66,17 @@ class Editor extends Component {
       multiSelectAction: 'forEach',
       readOnly: true
     });
+  }
 
+  setupEditor() {
+    const editor = this.editor, session = editor.getSession();
+
+    editor.$blockScrolling = Infinity;
+
+    session.setMode(new AssemblyMode());
+    session.setTabSize(2);
+
+    this.setupShortcuts(editor);
     this.setupROMOffsets(editor, session);
   }
 
