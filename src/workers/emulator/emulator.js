@@ -23,6 +23,13 @@ const commands = {
   stop: () => {
     system = null;
     postMessage({ command: 'finish' });
+  },
+
+  step: () => {
+    if (!system.isFinished())
+      system.instruction();
+
+    postMessage({ command: 'state', registers: system.registers, ram: system.memory });
   }
 };
 
