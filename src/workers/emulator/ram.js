@@ -131,7 +131,14 @@ class RAM {
    * Main function, that is called every machine cycle and works with internal state and CPU pins
    */
   tick() {
-    if (this.cpu.getPin(SYNC)) {
+    // X3 stage
+    if (this.cpu.getPin(SYNC) || this.state === 7) {
+      // check if SRC command is executing, in that case need to store character index in selected register
+      if (this.bankToSetOffset) {
+        this.bankToSetOffset.selectedCharacter = this.cpu.getPinsData([D0, D1, D2, D3]);
+        this.bankToSetOffset = null;
+      }
+
       this.state = 0;
       return;
     }
@@ -173,15 +180,6 @@ class RAM {
           this.bankForExecution = null;
         }
 
-        break;
-      }
-      // X3 stage
-      case 7: {
-        // check if SRC command is executing, in that case need to store character index in selected register
-        if (this.bankToSetOffset) {
-          this.bankToSetOffset.selectedCharacter = this.cpu.getPinsData([D0, D1, D2, D3]);
-          this.bankToSetOffset = null;
-        }
         break;
       }
     }
