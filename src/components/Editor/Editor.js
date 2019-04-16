@@ -10,6 +10,7 @@ import AssemblyMode from './AssemblyMode/AssemblyMode.js';
 import BankSeparatorRenderer from './BankSeparatorRenderer.js';
 import SampleCode from './SampleCode.js';
 import setEditorRef from '../../redux/actions/setEditorRef.js';
+import { step } from '../../services/emulator.js';
 
 import './Editor.css';
 
@@ -58,6 +59,19 @@ class Editor extends Component {
       exec: editor => editor.removeLines(),
       scrollIntoView: 'cursor',
       multiSelectAction: 'forEachLine'
+    });
+
+    editor.commands.addCommand({
+      name: 'emulatorStep',
+      bindKey: { win: 'F10', mac: 'F10' },
+      exec: () => {
+        const emulator = this.props.emulator;
+        if (emulator && emulator.running && emulator.mode === 'debug')
+          step();
+      },
+      scrollIntoView: 'cursor',
+      multiSelectAction: 'forEach',
+      readOnly: true
     });
 
     this.setupROMOffsets(editor, session);
