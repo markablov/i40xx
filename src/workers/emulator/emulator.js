@@ -28,6 +28,14 @@ const commands = {
     postMessage({ command: 'finish' });
   },
 
+  continue: () => {
+    while (!system.isFinished())
+      system.instruction();
+
+    sendState();
+    postMessage({ command: 'finish' });
+  },
+
   step: () => {
     if (!system.isFinished()) {
       system.instruction();
