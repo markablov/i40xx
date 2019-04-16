@@ -358,6 +358,59 @@ class CPU {
             this.registers.acc = (this.registers.acc >> 1) | (oldCarry << 3);
             break;
           }
+
+          /*
+           * TCC (Transmit carry and clear)
+           */
+          case 0x7:
+            this.registers.acc = this.registers.carry;
+            this.registers.carry = 0;
+            break;
+
+          /*
+           * DAA (Decimal adjust accumulator)
+           */
+          case 0xB:
+            if (this.registers.carry === 1 || this.registers.acc > 9) {
+              const result = this.registers.acc + 6;
+              this.registers.acc = result & 0xF;
+              if (result > 0xF)
+                this.registers.carry = 1;
+            }
+            break;
+
+          /*
+           * TCS (Transfer carry subtract)
+           */
+          case 0x9:
+            this.registers.acc = this.registers.carry === 1 ? 10 : 9;
+            this.registers.carry = 0;
+            break;
+
+          /*
+           * KBP (Keyboard process)
+           */
+          case 0xC:
+            switch (this.registers.acc) {
+              case 0x0:
+                this.registers.acc = 0;
+                break;
+              case 0x1:
+                this.registers.acc = 1;
+                break;
+              case 0x2:
+                this.registers.acc = 2;
+                break;
+              case 0x4:
+                this.registers.acc = 3;
+                break;
+              case 0x8:
+                this.registers.acc = 4;
+                break;
+              default:
+                this.registers.acc = 0xF;
+            }
+            break;
         }
         break;
 
