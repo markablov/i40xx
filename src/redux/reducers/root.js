@@ -4,7 +4,7 @@ const defaultState = {
   emulator: {
     running: false,
     registers: {},
-    memory: []
+    ram: []
   },
   compiling: false,
   compilerErrors: [],
