@@ -9,7 +9,8 @@ const defaultState = {
   compiling: false,
   compilerErrors: [],
   dump: null,
-  editor: null
+  editor: null,
+  selectedMemoryBank: 0
 };
 
 export default (state = defaultState, { type, payload }) => {
@@ -22,6 +23,8 @@ export default (state = defaultState, { type, payload }) => {
       return { ...state, compiling: false, dump: payload.dump, compilerErrors: payload.errors };
     case Actions.UPDATE_EMULATOR_STATE:
       return { ...state, emulator: { ...state.emulator, ...payload } };
+    case Actions.SELECT_MEMORY_BANK:
+      return { ...state, selectedMemoryBank: payload };
     default:
       return state;
   }
