@@ -103,15 +103,16 @@ class Editor extends Component {
         this.editor.setReadOnly(expectedReadOnly);
 
       if (!debugMode && executingLine) {
-        session.removeMarker(executingLine);
+        session.removeMarker(executingLine.id);
         this.setState({ executingLine: null });
       }
 
       if (debugMode) {
         const row = this.offsetCalculator.row(emulator.registers.pc);
-        if (executingLine)
-          session.removeMarker(executingLine);
-        this.setState({ executingLine: session.highlightLines(row, row).id });
+        if (executingLine && executingLine.row !== row) {
+          session.removeMarker(executingLine.id);
+          this.setState({ executingLine: { row, id: session.highlightLines(row, row).id } });
+        }
       }
     }
 
