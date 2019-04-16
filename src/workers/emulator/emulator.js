@@ -2,6 +2,8 @@ import System from './system.js';
 
 let system;
 
+const sendState = () => postMessage({ command: 'state', registers: system.registers, ram: system.memory });
+
 const commands = {
   run: ({ mode, dump }) => {
     if (mode !== 'debug' && mode !== 'run')
@@ -9,13 +11,13 @@ const commands = {
 
     system = new System(dump);
 
-    postMessage({ command: 'state', registers: system.registers, ram: system.memory });
+    sendState();
 
     if (mode === 'run') {
       while (!system.isFinished())
         system.instruction();
 
-      postMessage({ command: 'state', registers: system.registers, ram: system.memory });
+      sendState();
       postMessage({ command: 'finish' });
     }
   },
@@ -28,7 +30,7 @@ const commands = {
   step: () => {
     if (!system.isFinished()) {
       system.instruction();
-      postMessage({ command: 'state', registers: system.registers, ram: system.memory });
+      sendState();
     } else
       postMessage({ command: 'finish' });
   }
