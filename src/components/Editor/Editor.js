@@ -10,6 +10,7 @@ import AssemblyMode from './AssemblyMode/AssemblyMode.js';
 import BankSeparatorRenderer from './BankSeparatorRenderer.js';
 import SampleCode from './SampleCode.js';
 import setEditorRef from '../../redux/actions/setEditorRef.js';
+import setBreakpoints from '../../redux/actions/setBreakpoints.js';
 import { step } from '../../services/emulator.js';
 
 import './Editor.css';
@@ -44,6 +45,10 @@ class Editor extends Component {
     });
   }
 
+  isDebugMode(emulator) {
+    return emulator && emulator.running && emulator.mode === 'debug';
+  }
+
   setupShortcuts(editor) {
     // ACE editor already have Ctrl+D to remove line, but i prefer Ctrl+Y
     editor.commands.addCommand({
@@ -58,8 +63,7 @@ class Editor extends Component {
       name: 'emulatorStep',
       bindKey: { win: 'F10', mac: 'F10' },
       exec: () => {
-        const emulator = this.props.emulator;
-        if (emulator && emulator.running && emulator.mode === 'debug')
+        if (this.isDebugMode(this.props.emulator))
           step();
       },
       scrollIntoView: 'cursor',
@@ -76,13 +80,30 @@ class Editor extends Component {
     session.setMode(new AssemblyMode());
     session.setTabSize(2);
 
+    editor.on('gutterclick', e => {
+      // allow to edit breakpoints only during debug
+      if (!this.isDebugMode(this.props.emulator))
+        return;
+
+      const row = e.getDocumentPosition().row;
+      const offset = this.offsetCalculator.offset(row);
+      if (session.getBreakpoints()[row]) {
+        session.clearBreakpoint(row);
+        delete this.props.breakpoints[offset];
+        this.props.setBreakpoints(this.props.breakpoints);
+      } else {
+        session.setBreakpoint(row);
+        this.props.setBreakpoints({ ...this.props.breakpoints, [offset]: true });
+      }
+    });
+
     this.setupShortcuts(editor);
     this.setupROMOffsets(editor, session);
   }
 
-  shouldComponentUpdate({ compilerErrors, emulator }, newState) {
-    // ignore all state updates, we are waiting only for props (comes from Redux)
-    if (newState !== this.state)
+  shouldComponentUpdate({ compilerErrors, emulator }) {
+    // ignore all updates, except emulator and compilerErrors
+    if (emulator === this.props.emulator && compilerErrors === this.props.compilerErrors)
       return false;
 
     // synchronize ACE editor state with redux state
@@ -95,7 +116,7 @@ class Editor extends Component {
         return false;
       }
 
-      const debugMode = emulator.running && emulator.mode === 'debug';
+      const debugMode = this.isDebugMode(emulator);
       const session = this.editor.getSession();
       const { executingLine } = this.state;
 
@@ -105,16 +126,19 @@ class Editor extends Component {
       if (currentReadOnly !== expectedReadOnly)
         this.editor.setReadOnly(expectedReadOnly);
 
-      if (!debugMode && executingLine) {
-        session.removeMarker(executingLine.id);
-        this.setState({ executingLine: null });
-      }
-
       if (debugMode) {
         const row = this.offsetCalculator.row(emulator.registers.pc);
-        if (executingLine && executingLine.row !== row) {
-          session.removeMarker(executingLine.id);
+        if (!executingLine || executingLine.row !== row) {
+          if (executingLine)
+            session.removeMarker(executingLine.id);
           this.setState({ executingLine: { row, id: session.highlightLines(row, row).id } });
+        }
+      } else {
+        session.clearBreakpoints();
+        this.props.setBreakpoints({});
+        if (executingLine) {
+          session.removeMarker(executingLine.id);
+          this.setState({ executingLine: null });
         }
       }
     }
@@ -139,4 +163,4 @@ class Editor extends Component {
   }
 }
 
-export default connect(({ compilerErrors, emulator }) => ({ compilerErrors, emulator }), { setEditorRef })(Editor);
+export default connect(({ compilerErrors, emulator, breakpoints }) => ({ compilerErrors, emulator, breakpoints }), { setEditorRef, setBreakpoints })(Editor);

@@ -7,7 +7,7 @@ const defaultState = {
     registers: {},
     ram: []
   },
-  breakpoints: [],
+  breakpoints: {},
   compiling: false,
   compilerErrors: [],
   dump: null,
