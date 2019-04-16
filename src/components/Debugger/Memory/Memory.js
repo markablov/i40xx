@@ -23,9 +23,13 @@ class Memory extends Component {
             </Select>
           </Control>
         </Field>
-        <FramedBox title={`Bank #${selectedMemoryBank}`} narrow={true}>
-          {ram[selectedMemoryBank].registers.map((register, idx) => <Register data={register} index={idx} key={`ram-register-${idx}`} />)}
-        </FramedBox>
+        {
+          ram.length ?
+            <FramedBox title={`Bank #${selectedMemoryBank}`} narrow={true}>
+              {ram[selectedMemoryBank].registers.map((register, idx) => <Register data={register} index={idx} key={`ram-register-${idx}`} />)}
+            </FramedBox>
+            : null
+        }
       </>
     );
   }
