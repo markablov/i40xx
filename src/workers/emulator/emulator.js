@@ -26,10 +26,11 @@ const commands = {
   },
 
   step: () => {
-    if (!system.isFinished())
+    if (!system.isFinished()) {
       system.instruction();
-
-    postMessage({ command: 'state', registers: system.registers, ram: system.memory });
+      postMessage({ command: 'state', registers: system.registers, ram: system.memory });
+    } else
+      postMessage({ command: 'finish' });
   }
 };
 
