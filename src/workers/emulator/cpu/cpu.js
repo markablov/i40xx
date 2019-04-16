@@ -312,35 +312,35 @@ class CPU {
             break;
 
           /*
-           * STC (Set carry)
+           * STC instruction (Set carry)
            */
           case 0xA:
             this.registers.carry = 1;
             break;
 
           /*
-           * CMA (Complement Accumulator)
+           * CMA instruction (Complement Accumulator)
            */
           case 0x4:
             this.registers.acc = (~this.registers.acc) & 0xF;
             break;
 
           /*
-           * IAC (Increment accumulator)
+           * IAC instruction (Increment accumulator)
            */
           case 0x2:
             this._add(1);
             break;
 
           /*
-           * DAC (decrement accumulator)
+           * DAC instruction (decrement accumulator)
            */
           case 0x8:
             this._sub(1);
             break;
 
           /*
-           * RAL (Rotate left)
+           * RAL instruction (Rotate left)
            */
           case 0x5: {
             const oldCarry = this.registers.carry;
@@ -350,7 +350,7 @@ class CPU {
           }
 
           /*
-           * RAR (Rotate right)
+           * RAR instruction (Rotate right)
            */
           case 0x6: {
             const oldCarry = this.registers.carry;
@@ -360,7 +360,7 @@ class CPU {
           }
 
           /*
-           * TCC (Transmit carry and clear)
+           * TCC instruction (Transmit carry and clear)
            */
           case 0x7:
             this.registers.acc = this.registers.carry;
@@ -368,7 +368,7 @@ class CPU {
             break;
 
           /*
-           * DAA (Decimal adjust accumulator)
+           * DAA instruction (Decimal adjust accumulator)
            */
           case 0xB:
             if (this.registers.carry === 1 || this.registers.acc > 9) {
@@ -380,7 +380,7 @@ class CPU {
             break;
 
           /*
-           * TCS (Transfer carry subtract)
+           * TCS instruction (Transfer carry subtract)
            */
           case 0x9:
             this.registers.acc = this.registers.carry === 1 ? 10 : 9;
@@ -388,7 +388,7 @@ class CPU {
             break;
 
           /*
-           * KBP (Keyboard process)
+           * KBP instruction (Keyboard process)
            */
           case 0xC:
             switch (this.registers.acc) {
