@@ -32,4 +32,8 @@ const setBreakpoints = breakpoints => {
   worker.postMessage({ command: 'breakpoints', breakpoints });
 };
 
-export { run, stop, step, setBreakpoints };
+const continueExec = () => {
+  worker.postMessage({ command: 'continue' });
+};
+
+export { run, stop, step, setBreakpoints, continueExec };
