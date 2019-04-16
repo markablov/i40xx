@@ -80,10 +80,10 @@ class Editor extends Component {
     session.setMode(new AssemblyMode());
     session.setTabSize(2);
 
-    editor.on('gutterclick', e => {
+    editor.on('guttermousedown', e => {
       // allow to edit breakpoints only during debug
       if (!this.isDebugMode(this.props.emulator))
-        return;
+        return e.preventDefault();
 
       const row = e.getDocumentPosition().row;
       const offset = this.offsetCalculator.offset(row);
@@ -95,6 +95,8 @@ class Editor extends Component {
         session.setBreakpoint(row);
         this.props.setBreakpoints({ ...this.props.breakpoints, [offset]: true });
       }
+
+      return e.preventDefault();
     });
 
     this.setupShortcuts(editor);
