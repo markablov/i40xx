@@ -115,10 +115,6 @@ class CPU {
   }
 
   _executeAtX3(opr, opa) {
-    const newPC = this._executeTwoCycleOperation(opr, opa);
-    if (newPC !== undefined)
-      return newPC;
-
     switch (opr) {
       /*
        * NOP instruction (No Operation)
@@ -372,8 +368,15 @@ class CPU {
         if (this.opr !== undefined) {
           // decode and execute instruction
           const oldPC = this.registers.pc;
-          this.registers.pc = this._executeAtX3(this.opr, this.opa);
-          this.previousOp = { opr: this.opr, opa: this.opa, pc: oldPC };
+          const newPC = this._executeTwoCycleOperation(this.opr, this.opa);
+
+          if (newPC !== undefined) {
+            this.registers.pc = newPC;
+            this.previousOp = null;
+          } else {
+            this.registers.pc = this._executeAtX3(this.opr, this.opa);
+            this.previousOp = { opr: this.opr, opa: this.opa, pc: oldPC };
+          }
         }
         this._pins.setPin(SYNC, 1);
         break;
