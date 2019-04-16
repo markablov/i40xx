@@ -7,11 +7,14 @@ class Memory extends Component {
   };
 
   render(){
+    const { emulator: { ram } } = this.props;
+
     return (
       <>
         <Field>
           <Control>
             <Select onChange={this.handleBankSelect}>
+              { Array.from(Array(ram.length), (_, idx) => <option value={idx} key={`ram-bank-${idx}`}>Bank #{idx}</option>) }
             </Select>
           </Control>
         </Field>
