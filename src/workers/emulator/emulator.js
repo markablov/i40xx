@@ -15,10 +15,19 @@ const commands = {
 
     postMessage({ command: 'state', registers: cpu.registers, ram: ram.banks });
 
-    while (rom.isAddressValid(cpu.registers.pc)) {
+    const tick = () => {
       cpu.tick();
       rom.tick();
       ram.tick();
+    };
+
+    // initial tick to set SYNC signal and on next tick it would be A1 stage and first machine cycle
+    tick();
+
+    while (rom.isAddressValid(cpu.registers.pc)) {
+      // every machine cycle has 8 stages
+      for (let stage = 0; stage < 8; stage++)
+        tick();
     }
 
     postMessage({ command: 'state', registers: cpu.registers, ram: ram.banks });
