@@ -24,4 +24,8 @@ const stop = () => {
   worker.postMessage({ command: 'stop' });
 };
 
-export { run, stop };
+const step = () => {
+  worker.postMessage({ command: 'step' });
+};
+
+export { run, stop, step };
