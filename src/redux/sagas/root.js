@@ -1,4 +1,4 @@
-import { takeLatest, take } from 'redux-saga/effects';
+import { takeLatest, take, select } from 'redux-saga/effects';
 
 import * as Actions from '../constants.js';
 import { compile } from '../../services/compiler.js';
@@ -12,6 +12,9 @@ function* buildAndRun({ payload: { sourceCode, mode } }) {
     return;
 
   run(dump, mode);
+
+  const { editor } = yield select();
+  editor.focus();
 }
 
 function* rootSaga() {
