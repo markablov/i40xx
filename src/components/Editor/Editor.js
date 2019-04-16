@@ -11,7 +11,7 @@ import BankSeparatorRenderer from './BankSeparatorRenderer.js';
 import SampleCode from './SampleCode.js';
 import setEditorRef from '../../redux/actions/setEditorRef.js';
 import setBreakpoints from '../../redux/actions/setBreakpoints.js';
-import { step } from '../../services/emulator.js';
+import { step, continueExec } from '../../services/emulator.js';
 
 import './Editor.css';
 
@@ -65,6 +65,18 @@ class Editor extends Component {
       exec: () => {
         if (this.isDebugMode(this.props.emulator))
           step();
+      },
+      scrollIntoView: 'cursor',
+      multiSelectAction: 'forEach',
+      readOnly: true
+    });
+
+    editor.commands.addCommand({
+      name: 'emulatorContinue',
+      bindKey: { win: 'F9', mac: 'F9' },
+      exec: () => {
+        if (this.isDebugMode(this.props.emulator))
+          continueExec();
       },
       scrollIntoView: 'cursor',
       multiSelectAction: 'forEach',
