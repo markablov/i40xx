@@ -61,7 +61,7 @@ class CPU {
        */
       case 0x3: {
         // check if it was JIN instruction, which is regular one-cycle operation
-        if ((previousOpa & 0x1) !== 0x0)
+        if ((previousOpa & 0x1) === 0x1)
           return;
         this.registers.index[previousOpa] = currentOpr;
         this.registers.index[previousOpa + 1] = currentOpa;
