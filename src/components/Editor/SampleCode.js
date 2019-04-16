@@ -1,4 +1,6 @@
 export default `  NOP
+  LDM 2
+  DCL // select bank #2
   FIM r1, 0x53
   SRC r1 // select register #5, character #3
   LDM 6
