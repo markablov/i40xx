@@ -18,10 +18,16 @@ class System {
     this.ram.tick();
   }
 
-  cycle() {
+  _cycle() {
     // every machine cycle has 8 stages
     for (let stage = 0; stage < 8; stage++)
       this._tick();
+  }
+
+  instruction() {
+    this._cycle();
+    if (this.cpu.isExecutingTwoCycleOperation() && !this.isFinished())
+      this._cycle();
   }
 
   isFinished() {

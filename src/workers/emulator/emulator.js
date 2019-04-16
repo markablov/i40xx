@@ -12,7 +12,7 @@ const commands = {
     postMessage({ command: 'state', registers: system.registers, ram: system.memory });
 
     while (!system.isFinished())
-      system.cycle();
+      system.instruction();
 
     postMessage({ command: 'state', registers: system.registers, ram: system.memory });
     postMessage({ command: 'finish' });
