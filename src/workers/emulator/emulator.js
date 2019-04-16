@@ -21,7 +21,7 @@ const commands = {
       ram.tick();
     }
 
-    postMessage({ command: 'state', registers: cpu.registers });
+    postMessage({ command: 'state', registers: cpu.registers, ram: ram.banks });
     postMessage({ command: 'finish' });
   }
 };
