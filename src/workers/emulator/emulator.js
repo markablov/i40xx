@@ -11,11 +11,13 @@ const commands = {
 
     postMessage({ command: 'state', registers: system.registers, ram: system.memory });
 
-    while (!system.isFinished())
-      system.instruction();
+    if (mode === 'run') {
+      while (!system.isFinished())
+        system.instruction();
 
-    postMessage({ command: 'state', registers: system.registers, ram: system.memory });
-    postMessage({ command: 'finish' });
+      postMessage({ command: 'state', registers: system.registers, ram: system.memory });
+      postMessage({ command: 'finish' });
+    }
   }
 };
 
