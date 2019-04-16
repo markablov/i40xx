@@ -20,4 +20,7 @@ const run = (dump, mode = 'run') => {
   worker.postMessage({ command: 'run', mode, dump });
 };
 
-export { run };
+const stop = () => {
+};
+
+export { run, stop };
