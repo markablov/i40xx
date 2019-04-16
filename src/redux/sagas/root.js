@@ -4,14 +4,14 @@ import * as Actions from '../constants.js';
 import { compile } from '../../services/compiler.js';
 import { run } from '../../services/emulator.js';
 
-function* buildAndRun({ payload: sourceCode }) {
+function* buildAndRun({ payload: { sourceCode, mode } }) {
   compile(sourceCode);
 
   const { payload: { dump, errors } } = yield take(Actions.FINISH_COMPILATION);
   if (errors && errors.length)
     return;
 
-  run(dump);
+  run(dump, mode);
 }
 
 function* rootSaga() {
