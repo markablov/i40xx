@@ -1,6 +1,7 @@
 import System from './system.js';
 
 let system;
+let breakpoints = {};
 
 const sendState = () =>
   postMessage({ command: 'state', registers: system.registers, ram: system.memory, selectedBank: system.selectedBank });
@@ -29,8 +30,11 @@ const commands = {
   },
 
   continue: () => {
-    while (!system.isFinished())
+    while (!system.isFinished()) {
+      if (breakpoints[system.registers.pc])
+        return sendState();
       system.instruction();
+    }
 
     sendState();
     postMessage({ command: 'finish' });
