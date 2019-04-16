@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import { Field, Control, Select } from 'react-bulma-components/lib/components/form';
 
 import selectMemoryBank from '../../../redux/actions/selectMemoryBank.js';
+import Register from './Register.js';
+import FramedBox from '../../UI/FramedBox/FramedBox.js';
 
 class Memory extends Component {
   handleBankSelect = ({ target: { value } }) => {
@@ -21,6 +23,9 @@ class Memory extends Component {
             </Select>
           </Control>
         </Field>
+        <FramedBox title={`Bank #${selectedMemoryBank}`} narrow={true}>
+          {ram[selectedMemoryBank].registers.map((register, idx) => <Register data={register} index={idx} key={`ram-register-${idx}`} />)}
+        </FramedBox>
       </>
     );
   }
