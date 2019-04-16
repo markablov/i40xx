@@ -14,6 +14,8 @@ import setEditorRef from '../../redux/actions/setEditorRef.js';
 import './Editor.css';
 
 class Editor extends Component {
+  state = { executingLine: undefined };
+
   editorRef = React.createRef();
 
   get editor(){
@@ -21,7 +23,7 @@ class Editor extends Component {
   }
 
   setupROMOffsets(editor, session) {
-    const offsetCalculator = new OffsetCalculator(editor);
+    const offsetCalculator = this.offsetCalculator = new OffsetCalculator(editor);
     const gutterRenderer = new GutterRenderer(editor, offsetCalculator);
     const bankSeparatorRenderer = new BankSeparatorRenderer(editor, offsetCalculator);
 
@@ -61,21 +63,41 @@ class Editor extends Component {
     this.setupROMOffsets(editor, session);
   }
 
-  shouldComponentUpdate({ compilerErrors, emulator }) {
+  shouldComponentUpdate({ compilerErrors, emulator }, newState) {
+    // ignore all state updates, we are waiting only for props (comes from Redux)
+    if (newState !== this.state)
+      return false;
+
     // synchronize ACE editor state with redux state
     // because ACE editor is not react component we should avoid re-rendering and
     // perform all changes via ACE Editor API
     if (this.editor) {
+      // show compilation errors
+      if (compilerErrors && compilerErrors.length) {
+        session.setAnnotations(compilerErrors.map(error => ({ ...error, type: 'error' })));
+        return false;
+      }
+
+      const debugMode = emulator.running && emulator.mode === 'debug';
+      const session = this.editor.getSession();
+      const { executingLine } = this.state;
+
       // during debug editor should be on read-only state
       const currentReadOnly = this.editor.getReadOnly();
-      const expectedReadOnly = emulator.running && emulator.mode === 'debug';
+      const expectedReadOnly = debugMode === true;
       if (currentReadOnly !== expectedReadOnly)
         this.editor.setReadOnly(expectedReadOnly);
 
-      // show compilation errors
-      if (compilerErrors && compilerErrors.length) {
-        this.editor.getSession().setAnnotations(compilerErrors.map(error => ({ ...error, type: 'error' })));
-        return false;
+      if (!debugMode && executingLine) {
+        session.removeMarker(executingLine);
+        this.setState({ executingLine: null });
+      }
+
+      if (debugMode) {
+        const row = this.offsetCalculator.row(emulator.registers.pc);
+        if (executingLine)
+          session.removeMarker(executingLine);
+        this.setState({ executingLine: session.highlightLines(row, row).id });
       }
     }
 
