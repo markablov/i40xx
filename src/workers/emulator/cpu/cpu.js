@@ -287,6 +287,80 @@ class CPU {
         }
         break;
 
+      case 0xF:
+        switch (opa) {
+          /*
+           * CLB instruction (Clear both)
+           */
+          case 0x0:
+            this.registers.acc = 0;
+            this.registers.carry = 0;
+            break;
+
+          /*
+           * CLC instruction (Clear carry)
+           */
+          case 0x1:
+            this.registers.carry = 0;
+            break;
+
+          /*
+           * CMC instruction (Complement carry)
+           */
+          case 0x3:
+            this.registers.carry = (~this.registers.carry) & 0x1;
+            break;
+
+          /*
+           * STC (Set carry)
+           */
+          case 0xA:
+            this.registers.carry = 1;
+            break;
+
+          /*
+           * CMA (Complement Accumulator)
+           */
+          case 0x4:
+            this.registers.acc = (~this.registers.acc) & 0xF;
+            break;
+
+          /*
+           * IAC (Increment accumulator)
+           */
+          case 0x2:
+            this._add(1);
+            break;
+
+          /*
+           * DAC (decrement accumulator)
+           */
+          case 0x8:
+            this._sub(1);
+            break;
+
+          /*
+           * RAL (Rotate left)
+           */
+          case 0x5: {
+            const oldCarry = this.registers.carry;
+            this.registers.carry = this.registers.acc >> 3;
+            this.registers.acc = ((this.registers.acc << 1) & 0xF) | oldCarry;
+            break;
+          }
+
+          /*
+           * RAR (Rotate right)
+           */
+          case 0x6: {
+            const oldCarry = this.registers.carry;
+            this.registers.carry = this.registers.acc & 0x1;
+            this.registers.acc = (this.registers.acc >> 1) | (oldCarry << 3);
+            break;
+          }
+        }
+        break;
+
       default:
         throw 'Unknown instruction';
     }
