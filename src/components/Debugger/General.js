@@ -30,7 +30,7 @@ class General extends Component {
   render() {
     const { emulator } = this.props;
     const { showDebugButtons } = this.state;
-    const { running, error, registers, mode } = emulator;
+    const { running, error, registers, selectedBank, mode } = emulator;
     // amount is always even, so no need to take care for last element
     const registerPairs = (registers.index || []).reduce((acc, reg, idx, ar) => idx % 2 ? [...acc, [ar[idx - 1], reg]] : acc, []);
     const stack = registers.stack || [];
@@ -91,6 +91,7 @@ class General extends Component {
                   <tr><td>{padHex(registers.pc || 0, 3) }</td><td><Tag>PC</Tag></td></tr>
                   <tr><td>{padHex(registers.acc || 0, 2) }</td><td><Tag>ACC</Tag></td></tr>
                   <tr><td>{padHex(registers.carry || 0, 2) }</td><td><Tag>CY</Tag></td></tr>
+                  <tr><td>{padHex(selectedBank || 0, 2) }</td><td><Tag>Bank</Tag></td></tr>
                   <tr><td>{padHex(registers.sp || 0, 2) }</td><td><Tag>SP</Tag></td></tr>
                   <tr><td>{padHex(stack[0] || 0, 3) }</td><td><Tag>S0</Tag></td></tr>
                   <tr><td>{padHex(stack[1] || 0, 3) }</td><td><Tag>S1</Tag></td></tr>
