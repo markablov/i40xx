@@ -21,6 +21,7 @@ const run = (dump, mode = 'run') => {
 };
 
 const stop = () => {
+  worker.postMessage({ command: 'stop' });
 };
 
 export { run, stop };

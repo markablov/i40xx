@@ -18,6 +18,11 @@ const commands = {
       postMessage({ command: 'state', registers: system.registers, ram: system.memory });
       postMessage({ command: 'finish' });
     }
+  },
+
+  stop: () => {
+    system = null;
+    postMessage({ command: 'finish' });
   }
 };
 
