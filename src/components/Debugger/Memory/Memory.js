@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { Component } from 'react';
 
-const Memory = () => (
-  <>
-  </>
-);
+class Memory extends Component {
+  render(){
+    return (
+      <>
+      </>
+    );
+  }
+}
 
 export default Memory;
