@@ -2,7 +2,8 @@ import System from './system.js';
 
 let system;
 
-const sendState = () => postMessage({ command: 'state', registers: system.registers, ram: system.memory });
+const sendState = () =>
+  postMessage({ command: 'state', registers: system.registers, ram: system.memory, selectedBank: system.selectedBank });
 
 const commands = {
   run: ({ mode, dump }) => {

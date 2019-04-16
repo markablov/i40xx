@@ -41,6 +41,10 @@ class System {
   get memory() {
     return this.ram.banks;
   }
+
+  get selectedBank() {
+    return RAM.getBankNoFromPinsData(this.cpu.registers.ramControl);
+  }
 }
 
 export default System;
