@@ -7,6 +7,7 @@ const defaultState = {
     registers: {},
     ram: []
   },
+  breakpoints: [],
   compiling: false,
   compilerErrors: [],
   dump: null,
@@ -26,6 +27,8 @@ export default (state = defaultState, { type, payload }) => {
       return { ...state, emulator: { ...state.emulator, ...payload } };
     case Actions.SELECT_MEMORY_BANK:
       return { ...state, selectedMemoryBank: payload };
+    case Actions.SET_BREAKPOINTS:
+      return { ...state, breakpoints: payload };
     default:
       return state;
   }
