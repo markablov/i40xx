@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { Field, Control, Select } from 'react-bulma-components/lib/components/form';
 
 class Memory extends Component {
@@ -19,4 +20,4 @@ class Memory extends Component {
   }
 }
 
-export default Memory;
+export default connect(({ emulator }) => ({ emulator }))(Memory);
