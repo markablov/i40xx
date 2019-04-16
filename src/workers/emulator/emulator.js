@@ -46,6 +46,10 @@ const commands = {
       sendState();
     } else
       postMessage({ command: 'finish' });
+  },
+
+  breakpoints: ({ breakpoints: inputBreakpoints }) => {
+    breakpoints = inputBreakpoints;
   }
 };
 
