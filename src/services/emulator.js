@@ -16,7 +16,7 @@ worker.onmessage = ({ data: { command, error, ...rest } }) => {
 };
 
 const run = (dump, mode = 'run') => {
-  store.dispatch(updateEmulatorState({ running: true, error: '' }));
+  store.dispatch(updateEmulatorState({ running: true, error: '', mode }));
   worker.postMessage({ command: 'run', mode, dump });
 };
 

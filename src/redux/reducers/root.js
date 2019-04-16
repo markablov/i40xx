@@ -3,6 +3,7 @@ import * as Actions from '../constants.js';
 const defaultState = {
   emulator: {
     running: false,
+    mode: 'run',
     registers: {},
     ram: []
   },
