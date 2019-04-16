@@ -46,13 +46,22 @@ class CPU {
     return ph | (pm << 4) | (pl);
   }
 
+  isExecutingTwoCycleOperation() {
+    if (!this.previousOp)
+      return false;
+
+    // JUN/JMS/JCN/ISZ
+    if ([0x4, 0x5, 0x1, 0x7].includes(this.previousOp.opr))
+      return true;
+
+    // FIN/FIM
+    return ([0x3, 0x2].includes(this.previousOp.opr) && (this.previousOp.opa & 0x1) === 0x0);
+  }
+
   /*
    * Return new value for PC if it's 2nd cycle for two-cycle operation or "undefined" otherwise
    */
   _executeTwoCycleOperation(currentOpr, currentOpa) {
-    if (!this.previousOp)
-      return;
-
     const { opr: previousOpr, opa: previousOpa, pc: previousPC } = this.previousOp;
 
     switch (previousOpr) {
@@ -503,13 +512,11 @@ class CPU {
       case 0:
         if (this.opr !== undefined) {
           // decode and execute instruction
-          const oldPC = this.registers.pc;
-          const newPC = this._executeTwoCycleOperation(this.opr, this.opa);
-
-          if (newPC !== undefined) {
-            this.registers.pc = newPC;
+          if (this.isExecutingTwoCycleOperation()) {
+            this.registers.pc = this._executeTwoCycleOperation(this.opr, this.opa);
             this.previousOp = null;
           } else {
+            const oldPC = this.registers.pc;
             this.registers.pc = this._executeAtX3(this.opr, this.opa);
             this.previousOp = { opr: this.opr, opa: this.opa, pc: oldPC };
           }
