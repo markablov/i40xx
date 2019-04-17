@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import AceEditor from 'react-ace';
 import 'brace/mode/javascript';
 import 'brace/theme/monokai';
+import Button from 'react-bulma-components/lib/components/button';
 
 import GutterRenderer from './GutterRenderer.js';
 import OffsetCalculator from './OffsetCalculator/OffsetCalculator.js';
@@ -82,9 +83,15 @@ class Editor extends Component {
         if (Editor.isDebugMode(this.props.emulator))
           continueExec();
       },
-      scrollIntoView: 'cursor',
       multiSelectAction: 'forEach',
       readOnly: true
+    });
+
+    editor.commands.addCommand({
+      name: 'save',
+      bindKey: { win: 'Ctrl-S', mac: 'Cmd-S' },
+      exec: () => this._save(),
+      multiSelectAction: 'forEach'
     });
   }
 
@@ -167,16 +174,25 @@ class Editor extends Component {
     return false;
   }
 
+  _save = () => localStorage.setItem('source_code', this.editor.getValue());
+
+  _load = () => localStorage.getItem('source_code');
+
   componentDidMount() {
     this.props.setEditorRef(this.editor);
     this.setupEditor();
-    this.editor.setValue(SampleCode, -1);
+    this.editor.setValue(this._load() || SampleCode, -1);
   }
+
+  handleSave = () => this._save();
 
   render(){
     return (
       <>
         <AceEditor mode="text" theme="monokai" name="editor" width="auto" ref={this.state.editorRef} />
+        <div className="buttons">
+          <Button color="success" onClick={this.handleSave}>Save</Button>
+        </div>
       </>
     );
   }
