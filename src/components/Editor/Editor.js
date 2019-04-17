@@ -16,12 +16,13 @@ import { step, continueExec } from '../../services/emulator.js';
 import './Editor.css';
 
 class Editor extends Component {
-  state = { executingLine: undefined };
-
-  editorRef = React.createRef();
+  state = {
+    executingLine: undefined,
+    editorRef: React.createRef()
+  };
 
   get editor(){
-    return this.editorRef.current.editor;
+    return this.state.editorRef.current.editor;
   }
 
   setupROMOffsets(editor, session) {
@@ -171,7 +172,7 @@ class Editor extends Component {
   render(){
     return (
       <>
-        <AceEditor mode="text" theme="monokai" name="editor" width="auto" ref={this.editorRef} />
+        <AceEditor mode="text" theme="monokai" name="editor" width="auto" ref={this.state.editorRef} />
       </>
     );
   }
