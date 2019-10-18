@@ -107,7 +107,7 @@ class CPU {
        * ISZ instruction (Increment index register skip if zero)
        */
       case 0x7:
-        this.registers.index[previousOpa]++;
+        this.registers.index[previousOpa] = (this.registers.index[previousOpa] + 1) & 0xF;
         return this.registers.index[previousOpa] === 0 ? this.registers.pc + 1 : this._getFullAddressFromShort(currentOpr, currentOpa);
 
       /*
