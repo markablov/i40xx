@@ -12,7 +12,7 @@ class OffsetCalculator {
   }
 
   row(offset) {
-    return this._instructions.findIndex(instruction => instruction.offset === offset);
+    return this._instructions.findIndex(instruction => instruction.offset === offset && instruction.len > 0);
   }
 
   all() {
