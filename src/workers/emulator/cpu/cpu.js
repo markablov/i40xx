@@ -24,9 +24,8 @@ class CPU {
   }
 
   _pop() {
-    const value = this.registers.stack[this.registers.sp];
     this.registers.sp = (this.registers.sp - 1 + this.registers.stack.length) % this.registers.stack.length;
-    return value;
+    return this.registers.stack[this.registers.sp];
   }
 
   _add(value) {
