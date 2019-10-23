@@ -131,6 +131,8 @@ class Editor extends Component {
     if (!editor)
       return null;
 
+    const session = editor.getSession();
+
     // show compilation errors
     if (compilerErrors && compilerErrors.length) {
       session.setAnnotations(compilerErrors.map(error => ({ ...error, type: 'error' })));
@@ -138,7 +140,6 @@ class Editor extends Component {
     }
 
     const debugMode = Editor.isDebugMode(emulator);
-    const session = editor.getSession();
 
     // during debug, editor should be on read-only state
     const currentReadOnly = editor.getReadOnly();
