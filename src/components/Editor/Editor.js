@@ -153,6 +153,8 @@ class Editor extends Component {
         if (executingLine)
           session.removeMarker(executingLine.id);
         const highlighted = session.highlightLines(row, row);
+        editor.moveCursorTo(row, 0);
+        editor.scrollToLine(row);
         return { executingLine: { row, id: highlighted.id } };
       }
     } else {
