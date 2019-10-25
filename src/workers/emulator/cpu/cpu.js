@@ -28,16 +28,16 @@ class CPU {
     return this.registers.stack[this.registers.sp];
   }
 
-  _add(value, ignoreCarry = false) {
-    const result = this.registers.acc + value + (ignoreCarry ? 0 : this.registers.carry);
+  _add(value) {
+    const result = this.registers.acc + value + this.registers.carry;
     this.registers.acc = result & 0xF;
     this.registers.carry = +(result > 0xF);
   }
 
   // acc = acc - reg - carry = acc + ~reg + ~carry, set carry = 1 if no borrow, 0 otherwise
   _sub(value, ignoreCarry = false) {
-    this.registers.carry = (~this.registers.carry) & 0x1;
-    this._add((~value) & 0xF, ignoreCarry);
+    this.registers.carry = ignoreCarry ? 1 : ((~this.registers.carry) & 0x1);
+    this._add((~value) & 0xF);
   }
 
   _getFullAddressFromShort(pm, pl) {
