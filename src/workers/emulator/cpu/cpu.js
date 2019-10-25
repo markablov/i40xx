@@ -28,16 +28,16 @@ class CPU {
     return this.registers.stack[this.registers.sp];
   }
 
-  _add(value) {
-    const result = this.registers.acc + value + this.registers.carry;
+  _add(value, ignoreCarry = false) {
+    const result = this.registers.acc + value + (ignoreCarry ? 0 : this.registers.carry);
     this.registers.acc = result & 0xF;
     this.registers.carry = +(result > 0xF);
   }
 
   // acc = acc - reg - carry = acc + ~reg + ~carry, set carry = 1 if no borrow, 0 otherwise
-  _sub(value) {
+  _sub(value, ignoreCarry = false) {
     this.registers.carry = (~this.registers.carry) & 0x1;
-    this._add((~value) & 0xF);
+    this._add((~value) & 0xF, ignoreCarry);
   }
 
   _getFullAddressFromShort(pm, pl) {
@@ -337,14 +337,14 @@ class CPU {
            * IAC instruction (Increment accumulator)
            */
           case 0x2:
-            this._add(1);
+            this._add(1, true);
             break;
 
           /*
            * DAC instruction (decrement accumulator)
            */
           case 0x8:
-            this._sub(1);
+            this._sub(1, true);
             break;
 
           /*
