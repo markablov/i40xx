@@ -1,9 +1,9 @@
-import { Parser, MismatchedTokenException }  from 'chevrotain';
+import { EmbeddedActionsParser, MismatchedTokenException }  from 'chevrotain';
 
 import { Tokens, allTokens } from './tokens.js';
 import CodeGenerator, { AddrType } from './CodeGenerator.js';
 
-class AsmParser extends Parser {
+class AsmParser extends EmbeddedActionsParser {
   constructor() {
     super(allTokens, { outputCst: false });
 
@@ -35,8 +35,10 @@ class AsmParser extends Parser {
       const label = $.CONSUME(Tokens.Label);
       $.CONSUME(Tokens.Colon);
 
-      if (!codeGenerator.addLabel(label.image))
-        throw $.SAVE_ERROR(new MismatchedTokenException('Duplicated definition for label', label));
+      $.ACTION(() => {
+        if (!codeGenerator.addLabel(label.image))
+          throw $.SAVE_ERROR(new MismatchedTokenException('Duplicated definition for label', label));
+      });
     });
 
     $.RULE('instruction', () => {
@@ -87,7 +89,9 @@ class AsmParser extends Parser {
         { ALT: () => $.CONSUME(Tokens.InstructionDCL) }
       ]);
 
-      codeGenerator.pushInstructionWithoutArg(instruction.image);
+      $.ACTION(() => {
+        codeGenerator.pushInstructionWithoutArg(instruction.image);
+      });
     });
 
     $.RULE('instructionWithReg', () => {
@@ -101,7 +105,9 @@ class AsmParser extends Parser {
 
       const reg = $.CONSUME(Tokens.Register);
 
-      codeGenerator.pushInstructionWithReg(instruction.image, reg.image);
+      $.ACTION(() => {
+        codeGenerator.pushInstructionWithReg(instruction.image, reg.image);
+      });
     });
 
     $.RULE('instructionWithRegPair', () => {
@@ -113,7 +119,9 @@ class AsmParser extends Parser {
 
       const regPair = $.CONSUME(Tokens.RegisterPair);
 
-      codeGenerator.pushInstructionWithRegPair(instruction.image, regPair.image);
+      $.ACTION(() => {
+        codeGenerator.pushInstructionWithRegPair(instruction.image, regPair.image);
+      });
     });
 
     $.RULE('instructionWithData4', () => {
@@ -124,11 +132,13 @@ class AsmParser extends Parser {
 
       const data = $.CONSUME(Tokens.Data);
 
-      try {
-        codeGenerator.pushInstructionWithData4(instruction.image, data.image);
-      } catch (err) {
-        throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), data, instruction));
-      }
+      $.ACTION(() => {
+        try {
+          codeGenerator.pushInstructionWithData4(instruction.image, data.image);
+        } catch (err) {
+          throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), data, instruction));
+        }
+      });
     });
 
     $.RULE('instructionFIM', () => {
@@ -137,11 +147,13 @@ class AsmParser extends Parser {
       const prevToken = $.CONSUME(Tokens.Comma);
       const data = $.CONSUME(Tokens.Data);
 
-      try {
-        codeGenerator.pushInstructionWithRegPairAndData8(instruction.image, regPair.image, data.image);
-      } catch (err) {
-        throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), data, prevToken));
-      }
+      $.ACTION(() => {
+        try {
+          codeGenerator.pushInstructionWithRegPairAndData8(instruction.image, regPair.image, data.image);
+        } catch (err) {
+          throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), data, prevToken));
+        }
+      });
     });
 
     $.RULE('address', () => {
@@ -160,7 +172,9 @@ class AsmParser extends Parser {
 
       const { token: addr, type } = $.SUBRULE($.address);
 
-      codeGenerator.pushInstructionWithAddr12(instruction.image, addr.image, type);
+      $.ACTION(() => {
+        codeGenerator.pushInstructionWithAddr12(instruction.image, addr.image, type);
+      });
     });
 
     $.RULE('instructionISZ', () => {
@@ -169,11 +183,13 @@ class AsmParser extends Parser {
       $.CONSUME(Tokens.Comma);
       const { token: addr, type } = $.SUBRULE($.address);
 
-      try {
-        codeGenerator.pushInstructionWithRegAndAddr8(instruction.image, reg.image, addr.image, type);
-      } catch (err) {
-        throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), addr, reg));
-      }
+      $.ACTION(() => {
+        try {
+          codeGenerator.pushInstructionWithRegAndAddr8(instruction.image, reg.image, addr.image, type);
+        } catch (err) {
+          throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), addr, reg));
+        }
+      });
     });
 
     $.RULE('instructionJCN', () => {
@@ -182,11 +198,13 @@ class AsmParser extends Parser {
       $.CONSUME(Tokens.Comma);
       const { token: addr, type } = $.SUBRULE($.address);
 
-      try {
-        codeGenerator.pushInstructionWithCondAndAddr8(instruction.image, cond.image, addr.image, type);
-      } catch (err) {
-        throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), addr, cond));
-      }
+      $.ACTION(() => {
+        try {
+          codeGenerator.pushInstructionWithCondAndAddr8(instruction.image, cond.image, addr.image, type);
+        } catch (err) {
+          throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), addr, cond));
+        }
+      });
     });
 
     $.performSelfAnalysis();
