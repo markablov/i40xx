@@ -1,6 +1,6 @@
 /* eslint-env jest */
 
-import parse from '../parser/parser.js';
+import parse from '../parser.js';
 
 const matchParseResults = (source, data, error) => {
   const { errors: parseErrors, data: parseData } = parse(source);

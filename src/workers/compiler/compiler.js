@@ -1,4 +1,4 @@
-import parse from './parser/parser.js';
+import parse from '../../../libs/parser/parser.js';
 
 onmessage = ({ data: sourceCode }) => {
   const { data, errors } = parse(sourceCode);
