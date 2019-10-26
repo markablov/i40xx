@@ -1,4 +1,4 @@
-import System from './system.js';
+import System from '../../../libs/emulator/system.js';
 
 let system;
 let breakpoints = {};
