@@ -28,8 +28,8 @@ class CPU {
     return this.registers.stack[this.registers.sp];
   }
 
-  _add(value) {
-    const result = this.registers.acc + value + this.registers.carry;
+  _add(value, ignoreCarry = false) {
+    const result = this.registers.acc + value + (ignoreCarry  ? 0 : this.registers.carry);
     this.registers.acc = result & 0xF;
     this.registers.carry = +(result > 0xF);
   }
