@@ -56,6 +56,22 @@ class General extends Component {
           { showDebugButtons && (mode === 'debug') && <Button onClick={this.handleContinue}>Continue</Button> }
         </div>
         <Columns>
+          <Columns.Column size={3}>
+            <FramedBox title='Miscellaneous'>
+              <Table striped={false} bordered={false} size='narrow'>
+                <tbody>
+                  <tr><td>{padHex(registers.acc || 0, 2) }</td><td><Tag>ACC</Tag></td></tr>
+                  <tr><td>{padHex(registers.carry || 0, 2) }</td><td><Tag>CY</Tag></td></tr>
+                  <tr><td>{padHex(selectedBank || 0, 2) }</td><td><Tag>Bank</Tag></td></tr>
+                  <tr><td>{padHex(registers.pc || 0, 3) }</td><td><Tag>PC</Tag></td></tr>
+                  <tr><td>{padHex(registers.sp || 0, 2) }</td><td><Tag>SP</Tag></td></tr>
+                  <tr><td>{padHex(stack[0] || 0, 3) }</td><td><Tag>S0</Tag></td></tr>
+                  <tr><td>{padHex(stack[1] || 0, 3) }</td><td><Tag>S1</Tag></td></tr>
+                  <tr><td>{padHex(stack[2] || 0, 3) }</td><td><Tag>S2</Tag></td></tr>
+                </tbody>
+              </Table>
+            </FramedBox>
+          </Columns.Column>
           <Columns.Column size={6}>
             <FramedBox title='Registers'>
               <Table striped={false} bordered={false}>
@@ -83,22 +99,6 @@ class General extends Component {
                       <tr key={`regPair-${idx}`}><td>{padHex((reg1 << 4) | reg2, 2)}</td><td><Tag>{`R${idx}`}</Tag></td></tr>
                     )
                   }
-                </tbody>
-              </Table>
-            </FramedBox>
-          </Columns.Column>
-          <Columns.Column size={3}>
-            <FramedBox title='Miscellaneous'>
-              <Table striped={false} bordered={false} size='narrow'>
-                <tbody>
-                  <tr><td>{padHex(registers.pc || 0, 3) }</td><td><Tag>PC</Tag></td></tr>
-                  <tr><td>{padHex(registers.acc || 0, 2) }</td><td><Tag>ACC</Tag></td></tr>
-                  <tr><td>{padHex(registers.carry || 0, 2) }</td><td><Tag>CY</Tag></td></tr>
-                  <tr><td>{padHex(selectedBank || 0, 2) }</td><td><Tag>Bank</Tag></td></tr>
-                  <tr><td>{padHex(registers.sp || 0, 2) }</td><td><Tag>SP</Tag></td></tr>
-                  <tr><td>{padHex(stack[0] || 0, 3) }</td><td><Tag>S0</Tag></td></tr>
-                  <tr><td>{padHex(stack[1] || 0, 3) }</td><td><Tag>S1</Tag></td></tr>
-                  <tr><td>{padHex(stack[2] || 0, 3) }</td><td><Tag>S2</Tag></td></tr>
                 </tbody>
               </Table>
             </FramedBox>
