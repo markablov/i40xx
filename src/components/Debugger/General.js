@@ -38,10 +38,11 @@ class General extends Component {
     const stack = registers.stack || [];
 
     // prevent flickering for quick execution sessions
-    if (running) {
-      setTimeout(() => {
-        if (this.props.emulator.running)
+    if (running && !this.delayedButtonDisplayer) {
+      this.delayedButtonDisplayer = setTimeout(() => {
+        if (this.props.emulator.running && !this.state.showDebugButtons)
           this.setState({ showDebugButtons: true });
+        this.delayedButtonDisplayer = null;
       }, 500);
     }
 
