@@ -41,7 +41,7 @@ const commands = {
     postMessage({ command: 'finish' });
   },
 
-  step: () => {
+  stepInto: () => {
     if (!system.isFinished()) {
       system.instruction();
       sendState();
