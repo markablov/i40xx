@@ -13,7 +13,6 @@ import SampleCode from './SampleCode.js';
 import setEditorRef from '../../redux/actions/setEditorRef.js';
 import setBreakpoints from '../../redux/actions/setBreakpoints.js';
 import { stepInto, stepOver, continueExec } from '../../services/emulator.js';
-import store from '../../redux/store.js';
 
 import './Editor.css';
 
@@ -116,10 +115,6 @@ class Editor extends Component {
     session.setTabSize(2);
 
     editor.on('guttermousedown', e => {
-      // allow to edit breakpoints only during debug
-      if (!Editor.isDebugMode(this.props.emulator))
-        return e.preventDefault();
-
       const row = e.getDocumentPosition().row;
       const offset = this.state.offsetCalculator.offset(row);
       if (session.getBreakpoints()[row]) {
@@ -138,7 +133,7 @@ class Editor extends Component {
     this.setupROMOffsets(editor, session);
   }
 
-  static getDerivedStateFromProps({ compilerErrors, emulator, breakpoints }, { editorRef, executingLine, offsetCalculator }) {
+  static getDerivedStateFromProps({ compilerErrors, emulator }, { editorRef, executingLine, offsetCalculator }) {
     const editor = editorRef.current && editorRef.current.editor;
     if (!editor)
       return null;
@@ -171,10 +166,6 @@ class Editor extends Component {
         return { executingLine: { row, id: highlighted.id } };
       }
     } else {
-      session.clearBreakpoints();
-      if (breakpoints && Object.keys(breakpoints).length)
-        store.dispatch(setBreakpoints({}));
-
       if (executingLine) {
         session.removeMarker(executingLine.id);
         return { executingLine: null };
