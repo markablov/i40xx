@@ -50,8 +50,17 @@ const commands = {
   },
 
   stepOver: () => {
+    const currentNestingLevel = system.registers.sp;
     if (!system.isFinished()) {
       system.instruction();
+      while (currentNestingLevel !== system.registers.sp) {
+        if (system.isFinished()) {
+          sendState();
+          postMessage({ command: 'finish' });
+          return;
+        }
+        system.instruction();
+      }
       sendState();
     } else
       postMessage({ command: 'finish' });
