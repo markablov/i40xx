@@ -49,6 +49,14 @@ const commands = {
       postMessage({ command: 'finish' });
   },
 
+  stepOver: () => {
+    if (!system.isFinished()) {
+      system.instruction();
+      sendState();
+    } else
+      postMessage({ command: 'finish' });
+  },
+
   breakpoints: ({ breakpoints: inputBreakpoints }) => {
     breakpoints = inputBreakpoints;
   }

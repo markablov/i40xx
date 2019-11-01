@@ -9,7 +9,7 @@ import Tag from 'react-bulma-components/lib/components/tag';
 import { pad, padHex } from '../../utilities/string.js';
 import buildAndRun from '../../redux/actions/buildAndRun.js';
 import FramedBox from '../UI/FramedBox/FramedBox.js';
-import { stop, stepInto, continueExec } from '../../services/emulator.js';
+import { stop, stepInto, stepOver, continueExec } from '../../services/emulator.js';
 
 class General extends Component {
   state = { showDebugButtons: false };
@@ -21,6 +21,8 @@ class General extends Component {
   handleStop = () => stop();
 
   handleStepInto = () => stepInto();
+
+  handleStepOver = () => stepOver();
 
   handleContinue = () => continueExec();
 
@@ -53,6 +55,7 @@ class General extends Component {
           <Button color="success" onClick={this.handleBuildAndRun} disabled={running}>Build & Run</Button>
           <Button color="info" onClick={this.handleBuildAndDebug} disabled={running}>Build & Debug</Button>
           { showDebugButtons && <Button color="danger" onClick={this.handleStop}>Stop</Button> }
+          { showDebugButtons && (mode === 'debug') && <Button onClick={this.handleStepOver}>Step over</Button> }
           { showDebugButtons && (mode === 'debug') && <Button onClick={this.handleStepInto}>Step into</Button> }
           { showDebugButtons && (mode === 'debug') && <Button onClick={this.handleContinue}>Continue</Button> }
         </div>

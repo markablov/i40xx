@@ -28,6 +28,10 @@ const stepInto = () => {
   worker.postMessage({ command: 'stepInto' });
 };
 
+const stepOver = () => {
+  worker.postMessage({ command: 'stepOver' });
+};
+
 const setBreakpoints = breakpoints => {
   worker.postMessage({ command: 'breakpoints', breakpoints });
 };
@@ -36,4 +40,4 @@ const continueExec = () => {
   worker.postMessage({ command: 'continue' });
 };
 
-export { run, stop, stepInto, setBreakpoints, continueExec };
+export { run, stop, stepInto, stepOver, setBreakpoints, continueExec };
