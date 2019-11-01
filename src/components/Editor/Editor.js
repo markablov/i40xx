@@ -162,7 +162,8 @@ class Editor extends Component {
         const highlighted = session.highlightLines(row, row);
         editor.moveCursorTo(row, 0);
         editor.clearSelection();
-        editor.scrollToLine(row);
+        if (!editor.isRowFullyVisible(row))
+          editor.scrollToLine(row);
         return { executingLine: { row, id: highlighted.id } };
       }
     } else {
