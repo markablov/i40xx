@@ -466,6 +466,13 @@ class CPU {
             break;
 
           /*
+           * WMP instruction (Write RAM port)
+           */
+          case 0x1:
+            this._pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
+            break;
+
+          /*
            * WR0 instruction (Write accumulator into RAM status character 0)
            */
           case 0x4:

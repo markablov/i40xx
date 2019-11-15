@@ -9,6 +9,8 @@ class RAM {
       // every bank contains 4 chips with 4 registers (16 registers in total)
       // every register contains 16 4-bit main characters and 4 4-bit status characters
       registers: Array.from(Array(16), () => ({ main: Array(16).fill(0), status: Array(4).fill(0) })),
+      // every chip in bank has 4-bit output line
+      outputs: Array(4).fill(0),
       selectedRegister: 0,
       selectedCharacter: 0
     }));
@@ -86,6 +88,13 @@ class RAM {
        */
       case 0x0:
         bank.registers[bank.selectedRegister].main[bank.selectedCharacter] = data;
+        break;
+
+      /*
+       * WMP instruction (Write RAM port)
+       */
+      case 0x1:
+        bank.outputs[bank.selectedRegister >> 2] = data;
         break;
 
       /*
