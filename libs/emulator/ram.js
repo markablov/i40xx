@@ -1,7 +1,11 @@
+import EventEmitter from 'eventemitter3';
+
 import { SYNC, CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3, D0, D1, D2, D3 } from './cpu/pins.js';
 
-class RAM {
+class RAM extends EventEmitter {
   constructor(cpuPins) {
+    super();
+
     this.cpu = cpuPins;
 
     // max memory is 8 banks * 16 registers * (16 main characters + 4 status characters) * 4 bit = 10240 bit = 1280 bytes
@@ -94,6 +98,7 @@ class RAM {
        * WMP instruction (Write RAM port)
        */
       case 0x1:
+        this.emit('output', { chip: bank.selectedRegister >> 2, data });
         bank.outputs[bank.selectedRegister >> 2] = data;
         break;
 
