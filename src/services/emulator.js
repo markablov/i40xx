@@ -1,5 +1,6 @@
 import store from '../redux/store.js';
 import updateEmulatorState from '../redux/actions/updateEmulatorState.js';
+import addEmulatorIOLogEntry from '../redux/actions/addEmulatorIOLogEntry.js';
 
 const worker = new Worker('../workers/emulator/emulator.js');
 
@@ -10,6 +11,8 @@ worker.onmessage = ({ data: { command, error, ...rest } }) => {
   switch (command) {
     case 'finish':
       return store.dispatch(updateEmulatorState({ running: false }));
+    case 'IOOutput':
+      return store.dispatch(addEmulatorIOLogEntry(rest));
     case 'state':
       return store.dispatch(updateEmulatorState(rest));
   }
