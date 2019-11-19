@@ -1,15 +1,25 @@
+import EventEmitter from 'eventemitter3';
+
 import ROM from './rom.js';
 import RAM from './ram.js';
 import CPU from './cpu/cpu.js';
 
-class System {
+class System extends EventEmitter {
   constructor(dump) {
+    super();
+
     this.cpu = new CPU();
     this.rom = new ROM(this.cpu.pins);
     this.ram = new RAM(this.cpu.pins);
     this.rom.loadDump(dump);
     // initial tick to set SYNC signal and on next tick it would be A1 stage and first machine cycle
     this._tick();
+
+    this.ram.on('output', this._onRAMOutput.bind(this));
+  }
+
+  _onRAMOutput({ chip, data }) {
+    this.emit('output', { type: 'RAM', address: `${this.selectedBank}:${chip}`, data });
   }
 
   _tick() {
