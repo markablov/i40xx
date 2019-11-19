@@ -13,6 +13,8 @@ const commands = {
 
     system = new System(dump);
 
+    system.on('output', ({ type, address, data }) => postMessage({ command: 'IOOutput', type, address, data }));
+
     sendState();
 
     if (mode === 'run') {
