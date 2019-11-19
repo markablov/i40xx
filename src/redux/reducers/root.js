@@ -5,7 +5,8 @@ const defaultState = {
     running: false,
     mode: 'run',
     registers: {},
-    ram: []
+    ram: [],
+    IOLog: [],
   },
   breakpoints: {},
   compiling: false,
@@ -29,6 +30,8 @@ export default (state = defaultState, { type, payload }) => {
       return { ...state, selectedMemoryBank: payload };
     case Actions.SET_BREAKPOINTS:
       return { ...state, breakpoints: payload };
+    case Actions.ADD_EMULATOR_IO_LOG_ENTRY:
+      return { ...state, emulator: { ...state.emulator, IOLog: [...state.emulator.IOLog, payload] } };
     default:
       return state;
   }
