@@ -3,13 +3,15 @@ import Tabs from 'react-bulma-components/lib/components/tabs';
 
 import Memory from './Memory/Memory.js';
 import General from './General.js';
+import IO from './IO.js';
 
 class Debugger extends Component {
   state = {
     activeTab: 0,
     tabs: [
       { label: 'General', component: General },
-      { label: 'Memory', component: Memory }
+      { label: 'Memory', component: Memory },
+      { label: 'IO', component: IO },
     ]
   };
 
