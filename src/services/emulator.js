@@ -2,7 +2,7 @@ import store from '../redux/store.js';
 import updateEmulatorState from '../redux/actions/updateEmulatorState.js';
 import addEmulatorIOLogEntry from '../redux/actions/addEmulatorIOLogEntry.js';
 
-const worker = new Worker('../workers/emulator/emulator.js');
+const worker = new Worker(new URL('../workers/emulator/emulator.js', import.meta.url), { type: 'module' });
 
 worker.onmessage = ({ data: { command, error, ...rest } }) => {
   if (error)
