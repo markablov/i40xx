@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Tabs from 'react-bulma-components/lib/components/tabs';
+import { Tabs } from 'react-bulma-components';
 
 import Memory from './Memory/Memory.js';
 import General from './General.js';

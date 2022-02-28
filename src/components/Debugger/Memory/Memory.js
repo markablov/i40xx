@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Field, Control, Select } from 'react-bulma-components/lib/components/form';
+import { Form } from 'react-bulma-components';
+
+const { Field, Control, Select } = Form;
 
 import selectMemoryBank from '../../../redux/actions/selectMemoryBank.js';
 import Register from './Register.js';

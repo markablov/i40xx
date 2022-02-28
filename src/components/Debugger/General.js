@@ -1,10 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import Button from 'react-bulma-components/lib/components/button';
-import Notification from 'react-bulma-components/lib/components/notification';
-import Columns from 'react-bulma-components/lib/components/columns';
-import Table from 'react-bulma-components/lib/components/table';
-import Tag from 'react-bulma-components/lib/components/tag';
+import { Button, Notification, Columns, Table, Tag } from 'react-bulma-components';
 
 import { pad, padHex } from '../../utilities/string.js';
 import buildAndRun from '../../redux/actions/buildAndRun.js';

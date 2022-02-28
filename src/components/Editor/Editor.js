@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import AceEditor from 'react-ace';
 import 'brace/mode/javascript';
 import 'brace/theme/monokai';
-import Button from 'react-bulma-components/lib/components/button';
+import { Button } from 'react-bulma-components';
 
 import GutterRenderer from './GutterRenderer.js';
 import OffsetCalculator from './OffsetCalculator/OffsetCalculator.js';

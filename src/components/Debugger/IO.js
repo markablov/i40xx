@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import Panel from 'react-bulma-components/lib/components/panel';
+import { Panel } from 'react-bulma-components';
 
 import { formatIOLogEntry } from '../../utilities/formatters.js';
 
