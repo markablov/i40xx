@@ -4,51 +4,55 @@ let system;
 let breakpoints = {};
 
 const sendState = () =>
-  postMessage({ command: 'state', registers: system.registers, ram: system.memory, selectedBank: system.selectedBank });
+  postMessage({ command: 'state', ram: system.memory, registers: system.registers, selectedBank: system.selectedBank });
 
 const commands = {
-  run: ({ mode, dump }) => {
-    if (mode !== 'debug' && mode !== 'run')
-      throw 'Unknown emulator mode';
-
-    system = new System(dump);
-
-    system.on('output', ({ type, address, data }) => postMessage({ command: 'IOOutput', type, address, data }));
-
-    sendState();
-
-    if (mode === 'run') {
-      while (!system.isFinished())
-        system.instruction();
-
-      sendState();
-      postMessage({ command: 'finish' });
-    }
-  },
-
-  stop: () => {
-    system = null;
-    postMessage({ command: 'finish' });
+  breakpoints: ({ breakpoints: inputBreakpoints }) => {
+    breakpoints = inputBreakpoints;
   },
 
   continue: () => {
     while (!system.isFinished()) {
       system.instruction();
 
-      if (breakpoints[system.registers.pc])
-        return sendState();
+      if (breakpoints[system.registers.pc]) {
+        sendState();
+        return;
+      }
     }
 
     sendState();
     postMessage({ command: 'finish' });
   },
 
+  run: ({ dump, mode }) => {
+    if (mode !== 'debug' && mode !== 'run') {
+      throw 'Unknown emulator mode';
+    }
+
+    system = new System(dump);
+
+    system.on('output', ({ address, data, type }) => postMessage({ address, command: 'IOOutput', data, type }));
+
+    sendState();
+
+    if (mode === 'run') {
+      while (!system.isFinished()) {
+        system.instruction();
+      }
+
+      sendState();
+      postMessage({ command: 'finish' });
+    }
+  },
+
   stepInto: () => {
     if (!system.isFinished()) {
       system.instruction();
       sendState();
-    } else
+    } else {
       postMessage({ command: 'finish' });
+    }
   },
 
   stepOver: () => {
@@ -64,19 +68,23 @@ const commands = {
         system.instruction();
       }
       sendState();
-    } else
+    } else {
       postMessage({ command: 'finish' });
+    }
   },
 
-  breakpoints: ({ breakpoints: inputBreakpoints }) => {
-    breakpoints = inputBreakpoints;
-  }
+  stop: () => {
+    system = null;
+    postMessage({ command: 'finish' });
+  },
 };
 
 onmessage = ({ data: { command, ...args } }) => {
   try {
-    if (!commands[command])
-      return postMessage({ command, error: 'Unknown command' });
+    if (!commands[command]) {
+      postMessage({ command, error: 'Unknown command' });
+      return;
+    }
 
     commands[command](args);
   } catch (err) {
