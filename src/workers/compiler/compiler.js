@@ -1,4 +1,4 @@
-import parse from '../../../libs/parser/parser.js';
+import parse from 'i40xx-asm';
 
 onmessage = ({ data: sourceCode }) => {
   const { data, errors } = parse(sourceCode);
