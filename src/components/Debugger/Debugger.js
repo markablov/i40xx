@@ -9,24 +9,23 @@ class Debugger extends Component {
   state = {
     activeTab: 0,
     tabs: [
-      { label: 'General', component: General },
-      { label: 'Memory', component: Memory },
-      { label: 'IO', component: IO },
-    ]
+      { component: General, id: 'general', label: 'General' },
+      { component: Memory, id: 'memory', label: 'Memory' },
+      { component: IO, id: 'io', label: 'IO' },
+    ],
   };
 
-  handleTabClick = idx => this.setState({ activeTab: idx });
+  handleTabClick = (id) => this.setState({ activeTab: id });
 
-  render(){
-    const { tabs, activeTab } = this.state;
+  render() {
+    const { activeTab, tabs } = this.state;
 
     return (
       <>
-        <Tabs type={'toggle'} fullwidth={false}>
+        <Tabs fullwidth={false} type="toggle">
           {
-            tabs.map(({ label }, idx) =>
-              <Tabs.Tab active={idx === activeTab} onClick={() => this.handleTabClick(idx)} key={`debugger-tab-${idx}`}>{label}</Tabs.Tab>
-            )
+            tabs.map(({ id, label }) =>
+              <Tabs.Tab key={`debugger-tab-${id}`} active={id === activeTab} onClick={() => this.handleTabClick(id)}>{label}</Tabs.Tab>)
           }
         </Tabs>
         { React.createElement(tabs[activeTab].component) }
