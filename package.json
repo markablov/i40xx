@@ -13,11 +13,12 @@
     "lint": "eslint ./src"
   },
   "keywords": [
-    "intel 4004",
+    "intel",
+    "4004",
+    "4040",
     "emulator",
-    "assembly",
     "i4004",
-    "4004"
+    "i4040"
   ],
   "author": "Mark Ablovatskii <mark.ablov@gmail.com>",
   "license": "MIT",
