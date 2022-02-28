@@ -11,7 +11,7 @@ module.exports = {
   parser: '@babel/eslint-parser',
   parserOptions: {
     babelOptions: {
-      plugins: ['@babel/plugin-syntax-class-properties'],
+      plugins: ['@babel/plugin-syntax-class-properties', '@babel/plugin-proposal-private-methods'],
       presets: ['@babel/preset-react'],
     },
     requireConfigFile: false,
