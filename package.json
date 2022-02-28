@@ -1,10 +1,10 @@
 {
-  "name": "js-4004",
+  "name": "i40xx-emu",
   "version": "1.0.0",
-  "description": "Javascript emulator and assembly for intel 4004",
+  "description": "Javascript emulator for intel 4004/4040",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/markablov/js-4004.git"
+    "url": "git+https://github.com/markablov/i40xx-emu.git"
   },
   "scripts": {
     "dev": "parcel ./src/index.html",
@@ -22,9 +22,9 @@
   "author": "Mark Ablovatskii <mark.ablov@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/markablov/js-4004/issues"
+    "url": "https://github.com/markablov/i40xx-emu/issues"
   },
-  "homepage": "https://github.com/markablov/js-4004#readme",
+  "homepage": "https://github.com/markablov/i40xx-emu#readme",
   "devDependencies": {
     "@babel/core": "^7.6.4",
     "@babel/plugin-proposal-class-properties": "^7.5.5",
