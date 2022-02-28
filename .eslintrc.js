@@ -17,8 +17,6 @@ module.exports = {
     requireConfigFile: false,
   },
   plugins: [
-    'jest',
-    'no-only-tests',
     'react-hooks',
     'react',
     'sort-destructure-keys',
