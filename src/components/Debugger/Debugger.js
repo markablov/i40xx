@@ -7,28 +7,30 @@ import IO from './IO.js';
 
 class Debugger extends Component {
   state = {
-    activeTab: 0,
-    tabs: [
-      { component: General, id: 'general', label: 'General' },
-      { component: Memory, id: 'memory', label: 'Memory' },
-      { component: IO, id: 'io', label: 'IO' },
-    ],
+    activeTabId: 'general',
+    tabs: {
+      general: { component: General, label: 'General' },
+      io: { component: IO, label: 'IO' },
+      memory: { component: Memory, label: 'Memory' },
+    },
   };
 
-  handleTabClick = (id) => this.setState({ activeTab: id });
+  handleTabClick = (id) => this.setState({ activeTabId: id });
 
   render() {
-    const { activeTab, tabs } = this.state;
+    const { activeTabId, tabs } = this.state;
+    const activeTab = tabs[activeTabId];
 
     return (
       <>
         <Tabs fullwidth={false} type="toggle">
           {
-            tabs.map(({ id, label }) =>
-              <Tabs.Tab key={`debugger-tab-${id}`} active={id === activeTab} onClick={() => this.handleTabClick(id)}>{label}</Tabs.Tab>)
+            Object.entries(tabs).map(([id, { label }]) => (
+              <Tabs.Tab key={`debugger-tab-${id}`} active={id === activeTabId} onClick={() => this.handleTabClick(id)}>{label}</Tabs.Tab>
+            ))
           }
         </Tabs>
-        { React.createElement(tabs[activeTab].component) }
+        { React.createElement(activeTab.component) }
       </>
     );
   }
