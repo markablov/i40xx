@@ -7,13 +7,13 @@ class BankSeparatorRenderer {
   }
 
   getSeparatorsFromCode() {
-    let separators = {};
+    const separators = {};
 
     const offsets = this.offsetCalculator.all();
-    for (let i = 0, len = offsets.length; i < len; i++) {
-      const { offset, len } = offsets[i];
-      if ((offset & 0xFF) > ((offset + len) & 0xFF))
-        separators[i + 1] = true;
+    for (const [idx, { len, offset }] of offsets.entries()) {
+      if ((offset & 0xFF) > ((offset + len) & 0xFF)) {
+        separators[idx + 1] = true;
+      }
     }
 
     return separators;
@@ -21,10 +21,10 @@ class BankSeparatorRenderer {
 
   // based on renderer.addToken(), we need to implement it by own, because we also want to remove token
   toggleSeparatorAtEditor(row, show) {
-    const { session, renderer } = this.editor;
+    const { renderer, session } = this.editor;
     // clear token cache
     session.bgTokenizer.lines[row] = null;
-    let tokens = session.getTokens(row);
+    const tokens = session.getTokens(row);
 
     if (show) {
       // modify token cache for row, it's important to set value to something, because if first token is empty
@@ -35,8 +35,9 @@ class BankSeparatorRenderer {
       // if state for row has changed between renders (for example we typed curvy bracket in C syntax mode)
       // tokenizer wants to re-tokenize next row instead of using cache that we modified
       // it's pretty safe to set state to 'start' for any row because we have no other states for our mode
-      if (!session.bgTokenizer.states[row - 1])
+      if (!session.bgTokenizer.states[row - 1]) {
         session.bgTokenizer.states[row - 1] = 'start';
+      }
     }
 
     renderer.updateLines(row, row);
@@ -47,22 +48,26 @@ class BankSeparatorRenderer {
     this.currentSeparators = this.getSeparatorsFromCode();
   }
 
-  updateOnEditorChange({ action, start: { row: startRow }, end: { row: endRow } }) {
+  updateOnEditorChange({ action, end: { row: endRow }, start: { row: startRow } }) {
     // if user modifies text with separator keeps it shown
     if (startRow === endRow) {
-      if (this.currentSeparators[startRow])
+      if (this.currentSeparators[startRow]) {
         this.toggleSeparatorAtEditor(startRow, true);
-      if (this.prevSeparators === this.currentSeparators)
+      }
+      if (this.prevSeparators === this.currentSeparators) {
         return;
+      }
     }
 
     // we want to clear previous separators
-    for (const separator of Object.keys(this.prevSeparators).map(x => +x)) {
-      if (separator < startRow)
+    for (const separator of Object.keys(this.prevSeparators).map((x) => +x)) {
+      if (separator < startRow) {
         continue;
+      }
       if (action === 'remove') {
-        if (separator >= startRow && separator <= endRow)
+        if (separator >= startRow && separator <= endRow) {
           continue;
+        }
         this.toggleSeparatorAtEditor(separator - (endRow - startRow), false);
       } else {
         this.toggleSeparatorAtEditor(separator + (endRow - startRow), false);
@@ -70,9 +75,10 @@ class BankSeparatorRenderer {
     }
 
     // re-draw current separators
-    for (const separator of Object.keys(this.currentSeparators).map(x => +x)) {
-      if (separator < startRow)
+    for (const separator of Object.keys(this.currentSeparators).map((x) => +x)) {
+      if (separator < startRow) {
         continue;
+      }
       this.toggleSeparatorAtEditor(separator, true);
     }
 
