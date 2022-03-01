@@ -3,6 +3,9 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 
+// XXX: repo is dead, dirty hack is used, https://github.com/derrickpelletier/react-loading-overlay/pull/57
+LoadingOverlay.propTypes = undefined;
+
 function BusyOverlay({ children, isCompiling }) {
   return (
     <LoadingOverlay spinner active={isCompiling} text="Compiling...">
