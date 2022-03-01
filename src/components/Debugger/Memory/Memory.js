@@ -13,7 +13,7 @@ class Memory extends Component {
   handleBankSelect = ({ target: { value } }) => {
     const { selectMemoryBank } = this.props;
 
-    selectMemoryBank(value);
+    selectMemoryBank(+value);
   };
 
   render() {

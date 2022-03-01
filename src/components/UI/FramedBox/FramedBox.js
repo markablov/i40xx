@@ -14,7 +14,7 @@ function FramedBox({ children, narrow, title }) {
 }
 
 FramedBox.propTypes = {
-  children: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.element), PropTypes.element]).isRequired,
+  children: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.node), PropTypes.node]).isRequired,
   narrow: PropTypes.bool,
   title: PropTypes.string.isRequired,
 };
