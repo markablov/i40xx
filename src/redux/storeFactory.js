@@ -5,7 +5,7 @@ import reducer from './reducers/root.js';
 import saga from './sagas/root.js';
 import { setStore } from './store.js';
 
-export default function () {
+export default function storeFactory() {
   const sagaMiddleware = createSagaMiddleware();
   const store = createStore(reducer, applyMiddleware(sagaMiddleware));
   sagaMiddleware.run(saga);

@@ -1,29 +1,31 @@
 import * as Actions from '../constants.js';
 
 const defaultState = {
-  emulator: {
-    running: false,
-    mode: 'run',
-    registers: {},
-    ram: [],
-    IOLog: [],
-  },
   breakpoints: {},
-  compiling: false,
   compilerErrors: [],
+  compiling: false,
   dump: null,
   editor: null,
-  selectedMemoryBank: 0
+  emulator: {
+    IOLog: [],
+    mode: 'run',
+    ram: [],
+    registers: {},
+    running: false,
+  },
+  selectedMemoryBank: 0,
 };
 
-export default (state = defaultState, { type, payload }) => {
+export default (stateArg, { payload, type }) => {
+  const state = stateArg || defaultState;
+
   switch (type) {
     case Actions.SET_EDITOR_REF:
       return { ...state, editor: payload };
     case Actions.START_COMPILATION:
       return { ...state, compiling: true };
     case Actions.FINISH_COMPILATION:
-      return { ...state, compiling: false, dump: payload.dump, compilerErrors: payload.errors };
+      return { ...state, compilerErrors: payload.errors, compiling: false, dump: payload.dump };
     case Actions.UPDATE_EMULATOR_STATE:
       return { ...state, emulator: { ...state.emulator, ...payload } };
     case Actions.SELECT_MEMORY_BANK:
