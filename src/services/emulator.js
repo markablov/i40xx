@@ -1,26 +1,33 @@
-import store from '../redux/store.js';
+import { getStore } from '../redux/store.js';
 import updateEmulatorState from '../redux/actions/updateEmulatorState.js';
 import addEmulatorIOLogEntry from '../redux/actions/addEmulatorIOLogEntry.js';
 
 const worker = new Worker(new URL('../workers/emulator/emulator.js', import.meta.url), { type: 'module' });
 
 worker.onmessage = ({ data: { command, error, ...rest } }) => {
-  if (error)
-    return store.dispatch(updateEmulatorState({ error, running: false }));
+  if (error) {
+    getStore().dispatch(updateEmulatorState({ error, running: false }));
+    return;
+  }
 
   switch (command) {
     case 'finish':
-      return store.dispatch(updateEmulatorState({ running: false }));
+      getStore().dispatch(updateEmulatorState({ running: false }));
+      break;
     case 'IOOutput':
-      return store.dispatch(addEmulatorIOLogEntry(rest));
+      getStore().dispatch(addEmulatorIOLogEntry(rest));
+      break;
     case 'state':
-      return store.dispatch(updateEmulatorState(rest));
+      getStore().dispatch(updateEmulatorState(rest));
+      break;
+    default:
+      break;
   }
 };
 
 const run = (dump, mode = 'run') => {
-  store.dispatch(updateEmulatorState({ running: true, error: '', mode }));
-  worker.postMessage({ command: 'run', mode, dump });
+  getStore().dispatch(updateEmulatorState({ error: '', mode, running: true }));
+  worker.postMessage({ command: 'run', dump, mode });
 };
 
 const stop = () => {
@@ -35,8 +42,8 @@ const stepOver = () => {
   worker.postMessage({ command: 'stepOver' });
 };
 
-const setBreakpoints = breakpoints => {
-  worker.postMessage({ command: 'breakpoints', breakpoints });
+const setBreakpoints = (breakpoints) => {
+  worker.postMessage({ breakpoints, command: 'breakpoints' });
 };
 
 const continueExec = () => {
