@@ -92,6 +92,7 @@ module.exports = {
     'react/jsx-uses-vars': 1,
     'react/no-array-index-key': 'off',
     'react/sort-prop-types': ['error', {
+      ignoreCase: true,
       sortShapeProp: true,
     }],
     'react/state-in-constructor': 'off',
