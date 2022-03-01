@@ -1,4 +1,4 @@
-const toHex = value => ('00' + value.toString(16).toUpperCase()).substr(-2);
+const toHex = (value) => (`00${value.toString(16).toUpperCase()}`).substr(-2);
 
 class GutterRenderer {
   constructor(editor, offsetCalculator) {
