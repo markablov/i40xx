@@ -1,4 +1,4 @@
-import 'brace/mode/text';
+import 'ace-builds/src-noconflict/mode-text';
 
 import HighlightRules from './HighlightRules.js';
 
