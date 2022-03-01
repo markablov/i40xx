@@ -228,7 +228,7 @@ class Editor extends Component {
 }
 
 Editor.propTypes = {
-  breakpoints: PropTypes.arrayOf(PropTypes.objectOf(PropTypes.bool)).isRequired,
+  breakpoints: PropTypes.objectOf(PropTypes.bool).isRequired,
 
   compilerErrors: PropTypes.arrayOf(PropTypes.shape({
     column: PropTypes.number,

@@ -163,7 +163,7 @@ class General extends Component {
 
 General.propTypes = {
   buildAndRun: PropTypes.func.isRequired,
-  editor: PropTypes.shape({ getValue: PropTypes.func }).isRequired,
+  editor: PropTypes.shape({ getValue: PropTypes.func }),
 
   emulator: PropTypes.shape({
     error: PropTypes.string,
@@ -179,6 +179,10 @@ General.propTypes = {
     running: PropTypes.bool,
     selectedBank: PropTypes.number,
   }).isRequired,
+};
+
+General.defaultProps = {
+  editor: null,
 };
 
 const mapFn = connect(
