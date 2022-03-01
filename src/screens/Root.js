@@ -10,26 +10,28 @@ import BusyOverlay from '../components/BusyOverlay.js';
 
 import './Root.css';
 
-const Root = () => (
-  <BusyOverlay>
-    <Section>
-      <Container>
-        <Columns>
-          <Columns.Column>
-            <Box>
-              <Editor />
-            </Box>
-          </Columns.Column>
-          <Columns.Column>
-            <Box>
-              <Debugger />
-            </Box>
-          </Columns.Column>
-        </Columns>
-      </Container>
-    </Section>
-    <Footer />
-  </BusyOverlay>
-);
+function Root() {
+  return (
+    <BusyOverlay>
+      <Section>
+        <Container>
+          <Columns>
+            <Columns.Column>
+              <Box>
+                <Editor />
+              </Box>
+            </Columns.Column>
+            <Columns.Column>
+              <Box>
+                <Debugger />
+              </Box>
+            </Columns.Column>
+          </Columns>
+        </Container>
+      </Section>
+      <Footer />
+    </BusyOverlay>
+  );
+}
 
 export default Root;
