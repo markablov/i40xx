@@ -27,7 +27,7 @@
   "homepage": "https://github.com/markablov/i40xx-emu#readme",
   "devDependencies": {
     "@babel/core": "^7.17.5",
-    "@babel/eslint-parser": "^7.14.3",
+    "@babel/eslint-parser": "^7.17.0",
     "@babel/plugin-proposal-private-methods": "^7.16.11",
     "@babel/plugin-syntax-class-properties": "^7.12.13",
     "@babel/preset-react": "^7.16.7",
@@ -55,7 +55,7 @@
     "i40xx-asm": "^1.0.2",
     "prop-types": "^15.8.1",
     "react": "^17.0.2",
-    "react-ace": "^6.6.0",
+    "react-ace": "^7.0.5",
     "react-bulma-components": "^4.1.0",
     "react-dom": "^17.0.2",
     "react-loading-overlay": "^1.0.1",
