@@ -12,6 +12,7 @@ function IO({ IOLog }) {
     </Panel>
   );
 }
+
 IO.propTypes = {
   IOLog: PropTypes.arrayOf(
     PropTypes.shape({
