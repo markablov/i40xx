@@ -1,57 +1,63 @@
 import CPUPins, { SYNC, D0, D1, D2, D3, CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3 } from './pins.js';
 
+const STACK_DEPTH = 7;
+
 class CPU {
   registers = {
-    pc: 0,
-    carry: 0,
     acc: 0,
+    carry: 0,
     index: Array.from(Array(16), () => 0),
-    stack: [0, 0, 0],
-    sp: 0,
+    pc: 0,
     // CM-RAM0 should be selected by default
-    ramControl: 0b0001
+    ramControl: 0b0001,
+    sp: 0,
+    stack: Array.from(Array(STACK_DEPTH), () => 0),
   };
 
+  #pins;
+
   constructor() {
-    this._pins = new CPUPins();
+    this.#pins = new CPUPins();
     this.syncStep = 0;
   }
 
   // it's circular buffer
-  _push(value) {
+  #push(value) {
     this.registers.stack[this.registers.sp] = value;
-    this.registers.sp = (this.registers.sp + 1) % this.registers.stack.length;
+    this.registers.sp = (this.registers.sp + 1) % STACK_DEPTH;
   }
 
-  _pop() {
-    this.registers.sp = (this.registers.sp - 1 + this.registers.stack.length) % this.registers.stack.length;
+  #pop() {
+    this.registers.sp = (this.registers.sp - 1 + STACK_DEPTH) % STACK_DEPTH;
     return this.registers.stack[this.registers.sp];
   }
 
-  _add(value, ignoreCarry = false) {
-    const result = this.registers.acc + value + (ignoreCarry  ? 0 : this.registers.carry);
+  #add(value, ignoreCarry = false) {
+    const result = this.registers.acc + value + (ignoreCarry ? 0 : this.registers.carry);
     this.registers.acc = result & 0xF;
     this.registers.carry = +(result > 0xF);
   }
 
   // acc = acc - reg - carry = acc + ~reg + ~carry, set carry = 1 if no borrow, 0 otherwise
-  _sub(value, ignoreCarry = false) {
+  #sub(value, ignoreCarry = false) {
     this.registers.carry = ignoreCarry ? 1 : ((~this.registers.carry) & 0x1);
-    this._add((~value) & 0xF);
+    this.#add((~value) & 0xF);
   }
 
-  _getFullAddressFromShort(pm, pl) {
+  #getFullAddressFromShort(pm, pl) {
     const ph = (this.registers.pc & 0xF00) + ((this.registers.pc & 0xFF) === 0xFF ? 0x100 : 0);
     return ph | (pm << 4) | (pl);
   }
 
   isExecutingTwoCycleOperation() {
-    if (!this.previousOp)
+    if (!this.previousOp) {
       return false;
+    }
 
     // JUN/JMS/JCN/ISZ
-    if ([0x4, 0x5, 0x1, 0x7].includes(this.previousOp.opr))
+    if ([0x4, 0x5, 0x1, 0x7].includes(this.previousOp.opr)) {
       return true;
+    }
 
     // FIN/FIM
     return ([0x3, 0x2].includes(this.previousOp.opr) && (this.previousOp.opa & 0x1) === 0x0);
@@ -60,8 +66,8 @@ class CPU {
   /*
    * Return new value for PC if it's 2nd cycle for two-cycle operation or "undefined" otherwise
    */
-  _executeTwoCycleOperation(currentOpr, currentOpa) {
-    const { opr: previousOpr, opa: previousOpa, pc: previousPC } = this.previousOp;
+  #executeTwoCycleOperation(currentOpr, currentOpa) {
+    const { opa: previousOpa, opr: previousOpr, pc: previousPC } = this.previousOp;
 
     switch (previousOpr) {
       /*
@@ -69,8 +75,10 @@ class CPU {
        */
       case 0x3: {
         // check if it was JIN instruction, which is regular one-cycle operation
-        if ((previousOpa & 0x1) === 0x1)
-          return;
+        if ((previousOpa & 0x1) === 0x1) {
+          return 0;
+        }
+
         this.registers.index[previousOpa] = currentOpr;
         this.registers.index[previousOpa + 1] = currentOpa;
         return previousPC + 1;
@@ -86,9 +94,8 @@ class CPU {
        * JMS instruction (Jump to Subroutine)
        */
       case 0x5:
-        this._push(this.registers.pc + 1);
+        this.#push(this.registers.pc + 1);
         return (previousOpa << 8) | (currentOpr << 4) | (currentOpa);
-
 
       /*
       * JCN instruction (Jump conditional)
@@ -99,30 +106,37 @@ class CPU {
         const cfIsSet = (previousOpa & 0x2) === 0x2;
         const cond = (accIsZero && (this.registers.acc === 0)) || (cfIsSet && (this.registers.carry === 1));
         const finalCond = invert ? !cond : cond;
-        return finalCond ? this._getFullAddressFromShort(currentOpr, currentOpa) : this.registers.pc + 1;
+        return finalCond ? this.#getFullAddressFromShort(currentOpr, currentOpa) : this.registers.pc + 1;
       }
 
       /*
        * ISZ instruction (Increment index register skip if zero)
        */
-      case 0x7:
-        this.registers.index[previousOpa] = (this.registers.index[previousOpa] + 1) & 0xF;
-        return this.registers.index[previousOpa] === 0 ? this.registers.pc + 1 : this._getFullAddressFromShort(currentOpr, currentOpa);
+      case 0x7: {
+        const newValue = (this.registers.index[previousOpa] + 1) & 0xF;
+        this.registers.index[previousOpa] = newValue;
+        return newValue === 0 ? this.registers.pc + 1 : this.#getFullAddressFromShort(currentOpr, currentOpa);
+      }
 
       /*
        * FIM instruction (Fetched immediate from ROM)
       */
       case 0x2:
         // check if it was SRC instruction, which is regular one-cycle operation
-        if ((previousOpa & 0x1) === 0x1)
-          return;
+        if ((previousOpa & 0x1) === 0x1) {
+          return 0;
+        }
+
         this.registers.index[previousOpa] = currentOpr;
         this.registers.index[previousOpa + 1] = currentOpa;
         return this.registers.pc + 1;
+
+      default:
+        return 0;
     }
   }
 
-  _executeAtX3(opr, opa) {
+  #executeAtX3(opr, opa) {
     switch (opr) {
       /*
        * NOP instruction (No Operation)
@@ -158,14 +172,14 @@ class CPU {
        * ADD instruction (Add index register to accumulator with carry)
        */
       case 0x8:
-        this._add(this.registers.index[opa]);
+        this.#add(this.registers.index[opa]);
         break;
 
       /*
        * SUB instruction (Subtract index register to accumulator with borrow)
        */
       case 0x9:
-        this._sub(this.registers.index[opa]);
+        this.#sub(this.registers.index[opa]);
         break;
 
       /*
@@ -180,7 +194,7 @@ class CPU {
        */
       case 0xC:
         this.registers.acc = opa;
-        return this._pop();
+        return this.#pop();
 
       /*
        * JIN instruction (Jump indirect) or FIN instruction (Fetch indirect from ROM)
@@ -188,7 +202,7 @@ class CPU {
       case 0x3: {
         // for FIN we are using reg pair 0 for indirect addressing
         const reg = (opa & 0x1) === 0x0 ? 0 : opa & 0xE;
-        return this._getFullAddressFromShort(this.registers.index[reg], this.registers.index[reg + 1]);
+        return this.#getFullAddressFromShort(this.registers.index[reg], this.registers.index[reg + 1]);
       }
 
       case 0x2:
@@ -198,9 +212,9 @@ class CPU {
          * At X3 stage we need to send low 4bit of address
          */
         if ((opa & 0x1) === 0x1) {
-          this._pins.setPinsData([D0, D1, D2, D3], this.registers.index[(opa & 0xE) + 1]);
+          this.#pins.setPinsData([D0, D1, D2, D3], this.registers.index[(opa & 0xE) + 1]);
           // need to reset CM_RAM lines
-          this._pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], 0);
+          this.#pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], 0);
         }
 
         /*
@@ -248,50 +262,53 @@ class CPU {
            * RDM instruction (Read RAM character)
            */
           case 0x9:
-            this.registers.acc = this._pins.getPinsData([D0, D1, D2, D3]);
+            this.registers.acc = this.#pins.getPinsData([D0, D1, D2, D3]);
             break;
 
           /*
            * RD0 instruction (Read RAM status character 0)
            */
           case 0xC:
-            this.registers.acc = this._pins.getPinsData([D0, D1, D2, D3]);
+            this.registers.acc = this.#pins.getPinsData([D0, D1, D2, D3]);
             break;
 
           /*
            * RD1 instruction (Read RAM status character 1)
            */
           case 0xD:
-            this.registers.acc = this._pins.getPinsData([D0, D1, D2, D3]);
+            this.registers.acc = this.#pins.getPinsData([D0, D1, D2, D3]);
             break;
 
           /*
            * RD2 instruction (Read RAM status character 2)
            */
           case 0xE:
-            this.registers.acc = this._pins.getPinsData([D0, D1, D2, D3]);
+            this.registers.acc = this.#pins.getPinsData([D0, D1, D2, D3]);
             break;
 
           /*
            * RD3 instruction (Read RAM status character 3)
            */
           case 0xF:
-            this.registers.acc = this._pins.getPinsData([D0, D1, D2, D3]);
+            this.registers.acc = this.#pins.getPinsData([D0, D1, D2, D3]);
             break;
 
           /*
            * ADM instruction (Add from memory with carry)
            */
           case 0xB:
-            this._add(this._pins.getPinsData([D0, D1, D2, D3]));
+            this.#add(this.#pins.getPinsData([D0, D1, D2, D3]));
             break;
 
           /*
            * SBM instruction (Subtract from memory with borrow)
            */
           case 0x8:
-            this._sub(this._pins.getPinsData([D0, D1, D2, D3]));
+            this.#sub(this.#pins.getPinsData([D0, D1, D2, D3]));
             break;
+
+          default:
+            throw 'Unknown instruction';
         }
         break;
 
@@ -337,14 +354,14 @@ class CPU {
            * IAC instruction (Increment accumulator)
            */
           case 0x2:
-            this._add(1, true);
+            this.#add(1, true);
             break;
 
           /*
            * DAC instruction (decrement accumulator)
            */
           case 0x8:
-            this._sub(1, true);
+            this.#sub(1, true);
             break;
 
           /*
@@ -382,8 +399,9 @@ class CPU {
             if (this.registers.carry === 1 || this.registers.acc > 9) {
               const result = this.registers.acc + 6;
               this.registers.acc = result & 0xF;
-              if (result > 0xF)
+              if (result > 0xF) {
                 this.registers.carry = 1;
+              }
             }
             break;
 
@@ -428,6 +446,9 @@ class CPU {
             this.registers.ramControl = accBits === 0 ? 0b0001 : (accBits << 1);
             break;
           }
+
+          default:
+            throw 'Unknown instruction';
         }
         break;
 
@@ -438,7 +459,7 @@ class CPU {
     return this.registers.pc + 1;
   }
 
-  _executeAtX2(opr, opa) {
+  #executeAtX2(opr, opa) {
     switch (opr) {
       case 0x2:
         /*
@@ -447,14 +468,17 @@ class CPU {
          * At X2 stage we need to send high 4bit of address
          */
         if ((opa & 0x1) === 0x1) {
-          this._pins.setPinsData([D0, D1, D2, D3], this.registers.index[opa & 0xE]);
-          this._pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], this.registers.ramControl);
+          this.#pins.setPinsData([D0, D1, D2, D3], this.registers.index[opa & 0xE]);
+          this.#pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], this.registers.ramControl);
         }
+        break;
+
+      default:
         break;
     }
   }
 
-  _executeAtX1(opr, opa) {
+  #executeAtX1(opr, opa) {
     switch (opr) {
       case 0xE:
         switch (opa) {
@@ -462,50 +486,56 @@ class CPU {
            * WRM instruction (Write accumulator into RAM character)
            */
           case 0x0:
-            this._pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
+            this.#pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
             break;
 
           /*
            * WMP instruction (Write RAM port)
            */
           case 0x1:
-            this._pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
+            this.#pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
             break;
 
           /*
            * WR0 instruction (Write accumulator into RAM status character 0)
            */
           case 0x4:
-            this._pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
+            this.#pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
             break;
 
           /*
            * WR1 instruction (Write accumulator into RAM status character 1)
            */
           case 0x5:
-            this._pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
+            this.#pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
             break;
 
           /*
            * WR2 instruction (Write accumulator into RAM status character 2)
            */
           case 0x6:
-            this._pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
+            this.#pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
             break;
 
           /*
            * WR3 instruction (Write accumulator into RAM status character 3)
            */
           case 0x7:
-            this._pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
+            this.#pins.setPinsData([D0, D1, D2, D3], this.registers.acc);
+            break;
+
+          default:
             break;
         }
+        break;
+
+      default:
         break;
     }
   }
 
   get pins() {
-    return this._pins;
+    return this.#pins;
   }
 
   /*
@@ -519,53 +549,58 @@ class CPU {
         if (this.opr !== undefined) {
           // decode and execute instruction
           if (this.isExecutingTwoCycleOperation()) {
-            this.registers.pc = this._executeTwoCycleOperation(this.opr, this.opa);
+            this.registers.pc = this.#executeTwoCycleOperation(this.opr, this.opa);
             this.previousOp = null;
           } else {
             const oldPC = this.registers.pc;
-            this.registers.pc = this._executeAtX3(this.opr, this.opa);
-            this.previousOp = { opr: this.opr, opa: this.opa, pc: oldPC };
+            this.registers.pc = this.#executeAtX3(this.opr, this.opa);
+            this.previousOp = { opa: this.opa, opr: this.opr, pc: oldPC };
           }
         }
-        this._pins.setPin(SYNC, 1);
+        this.#pins.setPin(SYNC, 1);
         break;
       // A1 stage
       case 1:
-        this._pins.setPin(SYNC, 0);
-        this._pins.setPinsData([D0, D1, D2, D3], this.registers.pc & 0x000F);
+        this.#pins.setPin(SYNC, 0);
+        this.#pins.setPinsData([D0, D1, D2, D3], this.registers.pc & 0x000F);
         break;
       // A2 stage
       case 2:
-        this._pins.setPinsData([D0, D1, D2, D3], (this.registers.pc & 0x00F0) >> 4);
+        this.#pins.setPinsData([D0, D1, D2, D3], (this.registers.pc & 0x00F0) >> 4);
         break;
       // A3 stage
       case 3:
-        this._pins.setPinsData([D0, D1, D2, D3], (this.registers.pc & 0x0F00) >> 8);
+        this.#pins.setPinsData([D0, D1, D2, D3], (this.registers.pc & 0x0F00) >> 8);
         break;
       // M1 stage
       case 4:
         // highest 4bit of instruction
-        this.opr = this._pins.getPinsData([D0, D1, D2, D3]);
+        this.opr = this.#pins.getPinsData([D0, D1, D2, D3]);
         break;
       // M2 stage
       case 5:
         // if it's I/O or RAM instruction we need to trigger CM-RAMx lines
-        if (this.opr === 0xE)
-          this._pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], this.registers.ramControl);
+        if (this.opr === 0xE) {
+          this.#pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], this.registers.ramControl);
+        }
         // lowest 4bit of instruction
-        this.opa = this._pins.getPinsData([D0, D1, D2, D3]);
+        this.opa = this.#pins.getPinsData([D0, D1, D2, D3]);
         break;
       // X1 stage
       case 6:
         // reset CM-RAMx lines if they were set at M2 stage
-        if (this._pins.getPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3]))
-          this._pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], 0);
-        this._executeAtX1(this.opr, this.opa);
+        if (this.#pins.getPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3])) {
+          this.#pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], 0);
+        }
+        this.#executeAtX1(this.opr, this.opa);
         break;
       // X2 stage
       case 7:
-        this._executeAtX2(this.opr, this.opa);
+        this.#executeAtX2(this.opr, this.opa);
         this.syncStep = -1;
+        break;
+
+      default:
         break;
     }
 

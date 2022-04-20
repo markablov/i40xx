@@ -105,18 +105,14 @@ class General extends Component {
                     <td>{padHex(registers.sp || 0, 2) }</td>
                     <td><Tag>SP</Tag></td>
                   </tr>
-                  <tr>
-                    <td>{padHex(stack[0] || 0, 3) }</td>
-                    <td><Tag>S0</Tag></td>
-                  </tr>
-                  <tr>
-                    <td>{padHex(stack[1] || 0, 3) }</td>
-                    <td><Tag>S1</Tag></td>
-                  </tr>
-                  <tr>
-                    <td>{padHex(stack[2] || 0, 3) }</td>
-                    <td><Tag>S2</Tag></td>
-                  </tr>
+                  {
+                    stack.map((stackValue, idx) => (
+                      <tr key={`stack-${idx}`}>
+                        <td>{padHex(stackValue || 0, 3) }</td>
+                        <td><Tag>{`S${idx}`}</Tag></td>
+                      </tr>
+                    ))
+                  }
                 </tbody>
               </Table>
             </FramedBox>
