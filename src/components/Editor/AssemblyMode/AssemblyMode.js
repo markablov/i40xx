@@ -8,7 +8,7 @@ class AssemblyMode extends window.ace.acequire('ace/mode/text').Mode {
     // uses by TextMode to implement toggleCommentLines() to comment or un-comment selected lines
     this.lineCommentStart = ['//', '#'];
     this.HighlightRules = HighlightRules;
-    this.$id = 'assembly_i4004';
+    this.$id = 'assembly_i40xx';
   }
 }
 
