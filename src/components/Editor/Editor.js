@@ -24,8 +24,6 @@ class Editor extends Component {
 
   static #load = () => localStorage.getItem('source_code');
 
-  static #save = () => localStorage.setItem('source_code', this.editor.getValue());
-
   state = {
     editorRef: React.createRef(),
     executingLine: undefined,
@@ -39,13 +37,13 @@ class Editor extends Component {
     this.editor.setValue(Editor.#load() || SampleCode, -1);
   }
 
-  static handleSave = () => Editor.#save();
-
   shouldComponentUpdate() {
     // Editor have no props or state, except external compilerErrors
     // so we don't want ever to re-render component
     return false;
   }
+
+  handleSave = () => this.#save();
 
   setupROMOffsets(editor, session) {
     const offsetCalculator = new OffsetCalculator(editor);
@@ -213,6 +211,8 @@ class Editor extends Component {
     return editor;
   }
 
+  #save = () => localStorage.setItem('source_code', this.editor.getValue());
+
   render() {
     const { editorRef } = this.state;
 
@@ -220,7 +220,7 @@ class Editor extends Component {
       <>
         <AceEditor ref={editorRef} mode="text" name="editor" theme="monokai" width="auto" />
         <div className="buttons">
-          <Button color="success" onClick={Editor.handleSave}>Save</Button>
+          <Button color="success" onClick={this.handleSave}>Save</Button>
         </div>
       </>
     );
