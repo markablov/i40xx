@@ -4,9 +4,9 @@ import PropTypes from 'prop-types';
 
 import './FramedBox.css';
 
-function FramedBox({ children, narrow, title }) {
+function FramedBox({ active, children, narrow, title }) {
   return (
-    <div className={cx('framedBox', { 'is-inline-block': narrow !== undefined })}>
+    <div className={cx('framedBox', { active, 'is-inline-block': narrow !== undefined })}>
       <h1><span>{title}</span></h1>
       {children}
     </div>
@@ -14,12 +14,14 @@ function FramedBox({ children, narrow, title }) {
 }
 
 FramedBox.propTypes = {
+  active: PropTypes.bool,
   children: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.node), PropTypes.node]).isRequired,
   narrow: PropTypes.bool,
   title: PropTypes.string.isRequired,
 };
 
 FramedBox.defaultProps = {
+  active: false,
   narrow: false,
 };
 

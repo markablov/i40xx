@@ -124,7 +124,7 @@ class General extends Component {
           <Columns.Column size={6}>
             {
               registerPairs.map((indexBank, bankIdx) => (
-                <FramedBox key={`reg-bank-${bankIdx}`} title={`Registers #${bankIdx}`}>
+                <FramedBox key={`reg-bank-${bankIdx}`} active={bankIdx === registers.selectedRegisterBank} title={`Registers #${bankIdx}`}>
                   <Table bordered={false} striped={false}>
                     <tbody>
                       {
@@ -146,7 +146,7 @@ class General extends Component {
           <Columns.Column size={3}>
             {
               registerPairs.map((indexBank, bankIdx) => (
-                <FramedBox key={`regPair-bank-${bankIdx}`} title={`Register pairs #${bankIdx}`}>
+                <FramedBox key={`regPair-bank-${bankIdx}`} active={bankIdx === registers.selectedRegisterBank} title={`Register pairs #${bankIdx}`}>
                   <Table bordered={false} striped={false}>
                     <tbody>
                       {
