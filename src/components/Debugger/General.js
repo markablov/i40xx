@@ -51,10 +51,10 @@ class General extends Component {
     const { error, mode, registers, running, selectedBank } = emulator;
 
     // amount is always even, so no need to take care for last element
-    const registerPairs = (registers.index || []).reduce(
+    const registerPairs = (registers.indexBanks || []).map((indexBank) => indexBank.reduce(
       (acc, reg, idx, ar) => (idx % 2 ? [...acc, [ar[idx - 1], reg]] : acc),
       [],
-    );
+    ));
 
     const stack = registers.stack || [];
 
@@ -95,7 +95,11 @@ class General extends Component {
                   </tr>
                   <tr>
                     <td>{padHex(selectedBank || 0, 2) }</td>
-                    <td><Tag>Bank</Tag></td>
+                    <td><Tag>Mem bank</Tag></td>
+                  </tr>
+                  <tr>
+                    <td>{padHex(registers.selectedRegisterBank || 0, 2) }</td>
+                    <td><Tag>Reg bank</Tag></td>
                   </tr>
                   <tr>
                     <td>{padHex(registers.pc || 0, 3) }</td>
@@ -118,38 +122,46 @@ class General extends Component {
             </FramedBox>
           </Columns.Column>
           <Columns.Column size={6}>
-            <FramedBox title="Registers">
-              <Table bordered={false} striped={false}>
-                <tbody>
-                  {
-                    registerPairs.map(([reg1, reg2], idx) => (
-                      <tr key={`reg-${idx}`}>
-                        <td>{padHex(reg1, 2)}</td>
-                        <td><Tag>{`RR${pad(idx * 2, 2)}`}</Tag></td>
-                        <td>{padHex(reg2, 2)}</td>
-                        <td><Tag>{`RR${pad(idx * 2 + 1, 2)}`}</Tag></td>
-                      </tr>
-                    ))
-                  }
-                </tbody>
-              </Table>
-            </FramedBox>
+            {
+              registerPairs.map((indexBank, bankIdx) => (
+                <FramedBox key={`reg-bank-${bankIdx}`} title={`Registers #${bankIdx}`}>
+                  <Table bordered={false} striped={false}>
+                    <tbody>
+                      {
+                        indexBank.map(([reg1, reg2], idx) => (
+                          <tr key={`reg-${bankIdx}-${idx}`}>
+                            <td>{padHex(reg1, 2)}</td>
+                            <td><Tag>{`RR${pad(idx * 2, 2)}`}</Tag></td>
+                            <td>{padHex(reg2, 2)}</td>
+                            <td><Tag>{`RR${pad(idx * 2 + 1, 2)}`}</Tag></td>
+                          </tr>
+                        ))
+                      }
+                    </tbody>
+                  </Table>
+                </FramedBox>
+              ))
+            }
           </Columns.Column>
           <Columns.Column size={3}>
-            <FramedBox title="Register pairs">
-              <Table bordered={false} striped={false}>
-                <tbody>
-                  {
-                    registerPairs.map(([reg1, reg2], idx) => (
-                      <tr key={`regPair-${idx}`}>
-                        <td>{padHex((reg1 << 4) | reg2, 2)}</td>
-                        <td><Tag>{`R${idx}`}</Tag></td>
-                      </tr>
-                    ))
-                  }
-                </tbody>
-              </Table>
-            </FramedBox>
+            {
+              registerPairs.map((indexBank, bankIdx) => (
+                <FramedBox key={`regPair-bank-${bankIdx}`} title={`Register pairs #${bankIdx}`}>
+                  <Table bordered={false} striped={false}>
+                    <tbody>
+                      {
+                        indexBank.map(([reg1, reg2], idx) => (
+                          <tr key={`regPair-${bankIdx}-${idx}`}>
+                            <td>{padHex((reg1 << 4) | reg2, 2)}</td>
+                            <td><Tag>{`R${idx}`}</Tag></td>
+                          </tr>
+                        ))
+                      }
+                    </tbody>
+                  </Table>
+                </FramedBox>
+              ))
+            }
           </Columns.Column>
         </Columns>
       </>
@@ -167,8 +179,9 @@ General.propTypes = {
     registers: PropTypes.shape({
       acc: PropTypes.number,
       carry: PropTypes.number,
-      index: PropTypes.arrayOf(PropTypes.number),
+      indexBanks: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
       pc: PropTypes.number,
+      selectedRegisterBank: PropTypes.number,
       sp: PropTypes.number,
       stack: PropTypes.arrayOf(PropTypes.number),
     }),

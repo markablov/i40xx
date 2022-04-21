@@ -6,10 +6,14 @@ class CPU {
   registers = {
     acc: 0,
     carry: 0,
-    index: Array.from(Array(16), () => 0),
+    indexBanks: [
+      Array.from(Array(16), () => 0),
+      Array.from(Array(16), () => 0),
+    ],
     pc: 0,
     // CM-RAM0 should be selected by default
     ramControl: 0b0001,
+    selectedRegisterBank: 0,
     sp: 0,
     stack: Array.from(Array(STACK_DEPTH), () => 0),
   };
@@ -63,6 +67,22 @@ class CPU {
     return ([0x3, 0x2].includes(this.previousOp.opr) && (this.previousOp.opa & 0x1) === 0x0);
   }
 
+  #readIndexRegister(regNo) {
+    return this.registers.indexBanks[this.registers.selectedRegisterBank][regNo];
+  }
+
+  #writeIndexRegister(regNo, value) {
+    if (regNo < 8) {
+      this.registers.indexBanks[this.registers.selectedRegisterBank][regNo] = value;
+      return;
+    }
+
+    // high segment of index register file is shared between banks
+    for (const indexBank of this.registers.indexBanks) {
+      indexBank[regNo] = value;
+    }
+  }
+
   /*
    * Return new value for PC if it's 2nd cycle for two-cycle operation or "undefined" otherwise
    */
@@ -79,8 +99,8 @@ class CPU {
           return 0;
         }
 
-        this.registers.index[previousOpa] = currentOpr;
-        this.registers.index[previousOpa + 1] = currentOpa;
+        this.#writeIndexRegister(previousOpa, currentOpr);
+        this.#writeIndexRegister(previousOpa + 1, currentOpa);
         return previousPC + 1;
       }
 
@@ -113,8 +133,8 @@ class CPU {
        * ISZ instruction (Increment index register skip if zero)
        */
       case 0x7: {
-        const newValue = (this.registers.index[previousOpa] + 1) & 0xF;
-        this.registers.index[previousOpa] = newValue;
+        const newValue = (this.#readIndexRegister(previousOpa) + 1) & 0xF;
+        this.#writeIndexRegister(previousOpa, newValue);
         return newValue === 0 ? this.registers.pc + 1 : this.#getFullAddressFromShort(currentOpr, currentOpa);
       }
 
@@ -127,8 +147,8 @@ class CPU {
           return 0;
         }
 
-        this.registers.index[previousOpa] = currentOpr;
-        this.registers.index[previousOpa + 1] = currentOpa;
+        this.#writeIndexRegister(previousOpa, currentOpr);
+        this.#writeIndexRegister(previousOpa + 1, currentOpa);
         return this.registers.pc + 1;
 
       default:
@@ -155,7 +175,7 @@ class CPU {
        * LD instruction (Load index register to Accumulator)
        */
       case 0xA:
-        this.registers.acc = this.registers.index[opa];
+        this.registers.acc = this.#readIndexRegister(opa);
         break;
 
       /*
@@ -163,8 +183,8 @@ class CPU {
        */
       case 0xB: {
         const t = this.registers.acc;
-        this.registers.acc = this.registers.index[opa];
-        this.registers.index[opa] = t;
+        this.registers.acc = this.#readIndexRegister(opa);
+        this.#writeIndexRegister(opa, t);
         break;
       }
 
@@ -172,21 +192,21 @@ class CPU {
        * ADD instruction (Add index register to accumulator with carry)
        */
       case 0x8:
-        this.#add(this.registers.index[opa]);
+        this.#add(this.#readIndexRegister(opa));
         break;
 
       /*
        * SUB instruction (Subtract index register to accumulator with borrow)
        */
       case 0x9:
-        this.#sub(this.registers.index[opa]);
+        this.#sub(this.#readIndexRegister(opa));
         break;
 
       /*
        * INC instruction (Increment index register)
        */
       case 0x6:
-        this.registers.index[opa] = (this.registers.index[opa] + 1) & 0xF;
+        this.#writeIndexRegister(opa, (this.#readIndexRegister(opa) + 1) & 0xF);
         break;
 
       /*
@@ -202,7 +222,7 @@ class CPU {
       case 0x3: {
         // for FIN we are using reg pair 0 for indirect addressing
         const reg = (opa & 0x1) === 0x0 ? 0 : opa & 0xE;
-        return this.#getFullAddressFromShort(this.registers.index[reg], this.registers.index[reg + 1]);
+        return this.#getFullAddressFromShort(this.#readIndexRegister(reg), this.#readIndexRegister(reg + 1));
       }
 
       case 0x2:
@@ -212,7 +232,7 @@ class CPU {
          * At X3 stage we need to send low 4bit of address
          */
         if ((opa & 0x1) === 0x1) {
-          this.#pins.setPinsData([D0, D1, D2, D3], this.registers.index[(opa & 0xE) + 1]);
+          this.#pins.setPinsData([D0, D1, D2, D3], this.#readIndexRegister((opa & 0xE) + 1));
           // need to reset CM_RAM lines
           this.#pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], 0);
         }
@@ -468,7 +488,7 @@ class CPU {
          * At X2 stage we need to send high 4bit of address
          */
         if ((opa & 0x1) === 0x1) {
-          this.#pins.setPinsData([D0, D1, D2, D3], this.registers.index[opa & 0xE]);
+          this.#pins.setPinsData([D0, D1, D2, D3], this.#readIndexRegister(opa & 0xE));
           this.#pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], this.registers.ramControl);
         }
         break;
