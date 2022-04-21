@@ -158,10 +158,59 @@ class CPU {
 
   #executeAtX3(opr, opa) {
     switch (opr) {
-      /*
-       * NOP instruction (No Operation)
-       */
       case 0x0:
+        switch (opa) {
+          /*
+           * NOP instruction (No Operation)
+           */
+          case 0x0:
+            break;
+
+          /*
+          * OR4 instruction
+          */
+          case 0x4:
+            this.registers.acc |= this.#readIndexRegister(4);
+            break;
+
+          /*
+          * OR5 instruction
+          */
+          case 0x5:
+            this.registers.acc |= this.#readIndexRegister(5);
+            break;
+
+          /*
+          * AN6 instruction
+          */
+          case 0x6:
+            this.registers.acc &= this.#readIndexRegister(6);
+            break;
+
+          /*
+          * AN7 instruction
+          */
+          case 0x7:
+            this.registers.acc &= this.#readIndexRegister(7);
+            break;
+
+          /*
+          * SB0 instruction
+          */
+          case 0xA:
+            this.registers.selectedRegisterBank = 0;
+            break;
+
+          /*
+          * SB1 instruction
+          */
+          case 0xB:
+            this.registers.selectedRegisterBank = 1;
+            break;
+
+          default:
+            throw 'Unknown instruction';
+        }
         break;
 
       /*
