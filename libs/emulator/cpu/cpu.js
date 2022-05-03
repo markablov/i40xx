@@ -377,7 +377,7 @@ class CPU {
             break;
 
           default:
-            throw 'Unknown instruction';
+            break;
         }
         break;
 
@@ -529,6 +529,10 @@ class CPU {
   }
 
   #executeAtX2(opr, opa) {
+    if (this.isExecutingTwoCycleOperation()) {
+      return;
+    }
+
     switch (opr) {
       case 0x2:
         /*
@@ -548,6 +552,10 @@ class CPU {
   }
 
   #executeAtX1(opr, opa) {
+    if (this.isExecutingTwoCycleOperation()) {
+      return;
+    }
+
     switch (opr) {
       case 0xE:
         switch (opa) {
