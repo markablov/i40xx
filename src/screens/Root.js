@@ -3,6 +3,7 @@ import { Box, Columns, Container, Section } from 'react-bulma-components';
 
 import Editor from '../components/Editor/Editor.js';
 import Debugger from '../components/Debugger/Debugger.js';
+import Memory from '../components/Debugger/Memory/Memory.js';
 import Footer from '../components/Footer.js';
 import BusyOverlay from '../components/BusyOverlay.js';
 
@@ -12,7 +13,7 @@ function Root() {
   return (
     <BusyOverlay>
       <Section>
-        <Container>
+        <Container breakpoint="fluid">
           <Columns>
             <Columns.Column>
               <Box>
@@ -22,6 +23,11 @@ function Root() {
             <Columns.Column>
               <Box>
                 <Debugger />
+              </Box>
+            </Columns.Column>
+            <Columns.Column>
+              <Box>
+                <Memory />
               </Box>
             </Columns.Column>
           </Columns>
