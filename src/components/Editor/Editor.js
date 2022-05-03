@@ -155,7 +155,7 @@ class Editor extends Component {
 
     editor.commands.addCommand({
       bindKey: { mac: 'Cmd-S', win: 'Ctrl-S' },
-      exec: () => Editor.#save(),
+      exec: () => this.handleSave(),
       multiSelectAction: 'forEach',
       name: 'save',
     });
@@ -218,7 +218,7 @@ class Editor extends Component {
 
     return (
       <>
-        <AceEditor ref={editorRef} mode="text" name="editor" theme="monokai" width="auto" />
+        <AceEditor ref={editorRef} height="1024px" mode="text" name="editor" theme="monokai" width="auto" />
         <div className="buttons">
           <Button color="success" onClick={this.handleSave}>Save</Button>
         </div>
