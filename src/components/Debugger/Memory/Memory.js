@@ -1,50 +1,34 @@
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
-import { Form } from 'react-bulma-components';
 
-import selectMemoryBankAction from '../../../redux/actions/selectMemoryBank.js';
 import Register from './Register.js';
 import FramedBox from '../../UI/FramedBox/FramedBox.js';
 
-const { Control, Field, Select } = Form;
+import './Memory.css';
 
-class Memory extends Component {
-  handleBankSelect = ({ target: { value } }) => {
-    const { selectMemoryBank } = this.props;
-
-    selectMemoryBank(+value);
-  };
-
-  render() {
-    const { ram, selectedMemoryBank } = this.props;
-
-    return (
-      <>
-        <Field>
-          <Control>
-            <Select onChange={this.handleBankSelect} value={selectedMemoryBank}>
+function Memory({ ram, selectedBank }) {
+  return (
+    <>
+      {
+        ram.map(({ registers, selectedCharacter, selectedRegister }, bankIdx) => (
+          <FramedBox key={`ram-bank-${bankIdx}`} narrow active={selectedBank === bankIdx} title={`Bank #${bankIdx}`}>
+            <div className="memoryBank">
               {
-                Array.from(
-                  Array(ram.length),
-                  (_, idx) => (<option key={`ram-bank-${idx}`} value={idx}>{`Bank #${idx}`}</option>),
-                )
+                registers.map((reg, regIdx) => (
+                  <Register
+                    key={`ram-bank-${bankIdx}-reg-${regIdx}`}
+                    data={reg}
+                    selectedCharacter={selectedRegister === regIdx ? selectedCharacter : undefined}
+                  />
+                ))
               }
-            </Select>
-          </Control>
-        </Field>
-        {
-          ram.length
-            ? (
-              <FramedBox narrow title={`Bank #${selectedMemoryBank}`}>
-                {ram[selectedMemoryBank].registers.map((register, idx) => <Register key={`ram-register-${idx}`} data={register} index={idx} />)}
-              </FramedBox>
-            )
-            : null
-        }
-      </>
-    );
-  }
+            </div>
+          </FramedBox>
+        ))
+      }
+    </>
+  );
 }
 
 Memory.propTypes = {
@@ -56,16 +40,18 @@ Memory.propTypes = {
           status: PropTypes.arrayOf(PropTypes.number),
         }),
       ),
+      selectedCharacter: PropTypes.number,
+      selectedRegister: PropTypes.number,
     }),
   ).isRequired,
 
-  selectedMemoryBank: PropTypes.number.isRequired,
-  selectMemoryBank: PropTypes.func.isRequired,
+  selectedBank: PropTypes.number,
 };
 
-const mapFn = connect(
-  ({ emulator: { ram }, selectedMemoryBank }) => ({ ram, selectedMemoryBank }),
-  { selectMemoryBank: selectMemoryBankAction },
-);
+Memory.defaultProps = {
+  selectedBank: 0,
+};
+
+const mapFn = connect(({ emulator: { ram, selectedBank } }) => ({ ram, selectedBank }));
 
 export default mapFn(Memory);

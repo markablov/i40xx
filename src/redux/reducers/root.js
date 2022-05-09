@@ -13,7 +13,6 @@ const defaultState = {
     registers: {},
     running: false,
   },
-  selectedMemoryBank: 0,
 };
 
 export default (stateArg, { payload, type }) => {
@@ -28,8 +27,6 @@ export default (stateArg, { payload, type }) => {
       return { ...state, compilerErrors: payload.errors, compiling: false, dump: payload.dump };
     case Actions.UPDATE_EMULATOR_STATE:
       return { ...state, emulator: { ...state.emulator, ...payload } };
-    case Actions.SELECT_MEMORY_BANK:
-      return { ...state, selectedMemoryBank: payload };
     case Actions.SET_BREAKPOINTS:
       return { ...state, breakpoints: payload };
     case Actions.ADD_EMULATOR_IO_LOG_ENTRY:

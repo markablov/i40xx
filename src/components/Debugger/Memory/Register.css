@@ -1,15 +1,3 @@
-.statusCharacters {
-  margin-top: -2px;
-  padding-top: 2px;
-  margin-right: -3px;
-  padding-right: 3px;
-  background: #c7efc6;
-}
-
-.character {
-  margin-left: 3px;
-}
-
-.zero {
-  color: #bbbbbb
+.selectedMemoryChar {
+  background: #bfd4f6;
 }

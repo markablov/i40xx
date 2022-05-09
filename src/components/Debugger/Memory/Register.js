@@ -1,22 +1,24 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import cx from 'classnames';
 
-import FramedBox from '../../UI/FramedBox/FramedBox.js';
 import { toHex } from '../../../utilities/string.js';
 
 import './Register.css';
 
-function Register({ data, index }) {
+const wrapSelectedChar = (val) => <span className="selectedMemoryChar">{toHex(val)}</span>;
+
+function Register({ data, selectedCharacter }) {
+  const statusChars = data.status.map(toHex).join('');
+  const mainChars = selectedCharacter !== undefined
+    ? data.main.map((val, charIdx) => (charIdx === selectedCharacter ? wrapSelectedChar(val) : toHex(val)))
+    : data.main.map(toHex);
+
   return (
-    <FramedBox narrow title={`Register #${index}`}>
-      { data.main.slice(0, 10).map(toHex).map((x, i) => <span key={`reg-${index}-char-${i}`} className={cx('character', { zero: +x === 0 })}>{x}</span>) }
-      <br />
-      { data.main.slice(10).map(toHex).map((x, i) => <span key={`reg-${index}-char-${i + 10}`} className={cx('character', { zero: +x === 0 })}>{x}</span>) }
-      <span className="statusCharacters">
-        { data.status.map(toHex).map((x, i) => <span key={`reg-${index}-status-${i}`} className={cx('character', { zero: +x === 0 })}>{x}</span>) }
-      </span>
-    </FramedBox>
+    <div>
+      {mainChars}
+      |
+      {statusChars}
+    </div>
   );
 }
 
@@ -26,7 +28,11 @@ Register.propTypes = {
     status: PropTypes.arrayOf(PropTypes.number),
   }).isRequired,
 
-  index: PropTypes.number.isRequired,
+  selectedCharacter: PropTypes.number,
+};
+
+Register.defaultProps = {
+  selectedCharacter: undefined,
 };
 
 export default Register;
