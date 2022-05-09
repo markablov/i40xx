@@ -657,7 +657,7 @@ class CPU {
       // M2 stage
       case 5:
         // if it's I/O or RAM instruction we need to trigger CM-RAMx lines
-        if (this.opr === 0xE) {
+        if (this.opr === 0xE && !this.isExecutingTwoCycleOperation()) {
           this.#pins.setPinsData([CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3], this.registers.ramControl);
         }
         // lowest 4bit of instruction
