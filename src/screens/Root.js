@@ -6,6 +6,7 @@ import Debugger from '../components/Debugger/Debugger.js';
 import Memory from '../components/Debugger/Memory/Memory.js';
 import Footer from '../components/Footer.js';
 import BusyOverlay from '../components/BusyOverlay.js';
+import CompilerInfo from '../components/CompilerInfo.js';
 
 import './Root.scss';
 
@@ -17,6 +18,7 @@ function Root() {
           <Columns>
             <Columns.Column>
               <Box>
+                <CompilerInfo />
                 <Editor />
               </Box>
             </Columns.Column>
