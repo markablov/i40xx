@@ -5,6 +5,8 @@ import RAM from './ram.js';
 import CPU from './cpu/cpu.js';
 
 class System extends EventEmitter {
+  #terminated = false;
+
   constructor(dump) {
     super();
 
@@ -13,35 +15,41 @@ class System extends EventEmitter {
     this.ram = new RAM(this.cpu.pins);
     this.rom.loadDump(dump);
     // initial tick to set SYNC signal and on next tick it would be A1 stage and first machine cycle
-    this._tick();
+    this.#tick();
 
-    this.ram.on('output', this._onRAMOutput.bind(this));
+    this.ram.on('output', this.#onRAMOutput.bind(this));
   }
 
-  _onRAMOutput({ chip, data }) {
-    this.emit('output', { type: 'RAM', address: `${this.selectedBank}:${chip}`, data });
+  #onRAMOutput({ chip, data }) {
+    this.emit('output', { address: `${this.selectedBank}:${chip}`, data, type: 'RAM' });
   }
 
-  _tick() {
+  #tick() {
     this.cpu.tick();
     this.rom.tick();
     this.ram.tick();
   }
 
-  _cycle() {
+  #cycle() {
     // every machine cycle has 8 stages
-    for (let stage = 0; stage < 8; stage++)
-      this._tick();
+    for (let stage = 0; stage < 8; stage++) {
+      this.#tick();
+    }
   }
 
   instruction() {
-    this._cycle();
-    if (this.cpu.isExecutingTwoCycleOperation() && !this.isFinished())
-      this._cycle();
+    this.#cycle();
+    if (this.cpu.isExecutingTwoCycleOperation() && !this.isFinished()) {
+      this.#cycle();
+    }
   }
 
   isFinished() {
-    return !this.rom.isAddressValid(this.cpu.registers.pc);
+    return this.#terminated || !this.rom.isAddressValid(this.cpu.registers.pc);
+  }
+
+  terminate() {
+    this.#terminated = true;
   }
 
   get registers() {
