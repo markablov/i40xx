@@ -78,10 +78,12 @@ const commands = {
     }
   },
 
-  stepOver: () => {
+  stepOver: async () => {
     const currentNestingLevel = system.registers.sp;
     if (!system.isFinished()) {
       system.instruction();
+      let stepsFromLastChannelCheck = 0;
+
       while (currentNestingLevel !== system.registers.sp) {
         if (system.isFinished()) {
           sendState();
@@ -89,6 +91,12 @@ const commands = {
           return;
         }
         system.instruction();
+
+        stepsFromLastChannelCheck++;
+        if (stepsFromLastChannelCheck % YIELD_PERIOD_TO_CHECK_FOR_NEW_MESSAGES_IN_EMULATOR_INSTRUCTIONS === 0) {
+          await yieldToMacrotasks();
+          stepsFromLastChannelCheck = 0;
+        }
       }
       sendState();
     } else {
