@@ -3,6 +3,7 @@ import { Box, Columns, Container, Section } from 'react-bulma-components';
 
 import Editor from '../components/Editor/Editor.js';
 import Debugger from '../components/Debugger/Debugger.js';
+import IO from '../components/Debugger/IO.js';
 import Memory from '../components/Debugger/Memory/Memory.js';
 import Footer from '../components/Footer.js';
 import BusyOverlay from '../components/BusyOverlay.js';
@@ -30,6 +31,9 @@ function Root() {
             <Columns.Column>
               <Box>
                 <Memory />
+              </Box>
+              <Box style={{ maxHeight: '300px', overflow: 'auto' }}>
+                <IO />
               </Box>
             </Columns.Column>
           </Columns>

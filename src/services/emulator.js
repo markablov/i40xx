@@ -1,6 +1,7 @@
 import { getStore } from '../redux/store.js';
 import updateEmulatorState from '../redux/actions/updateEmulatorState.js';
 import addEmulatorIOLogEntry from '../redux/actions/addEmulatorIOLogEntry.js';
+import clearIOState from '../redux/actions/clearIOState.js';
 
 const worker = new Worker(new URL('../workers/emulator/emulator.js', import.meta.url), { type: 'module' });
 
@@ -27,6 +28,7 @@ worker.onmessage = ({ data: { command, error, ...rest } }) => {
 
 const run = (dump, mode = 'run') => {
   getStore().dispatch(updateEmulatorState({ error: '', mode, running: true }));
+  getStore().dispatch(clearIOState());
   worker.postMessage({ command: 'run', dump, mode });
 };
 

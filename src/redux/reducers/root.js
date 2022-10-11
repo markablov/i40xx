@@ -31,6 +31,8 @@ export default (stateArg, { payload, type }) => {
       return { ...state, breakpoints: payload };
     case Actions.ADD_EMULATOR_IO_LOG_ENTRY:
       return { ...state, emulator: { ...state.emulator, IOLog: [...state.emulator.IOLog, payload] } };
+    case Actions.CLEAR_IO_STATE:
+      return { ...state, emulator: { ...state.emulator, IOLog: [] } };
     default:
       return state;
   }

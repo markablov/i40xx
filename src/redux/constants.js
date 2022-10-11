@@ -5,3 +5,4 @@ export const UPDATE_EMULATOR_STATE = Symbol('i4004/UPDATE_EMULATOR_STATE');
 export const BUILD_AND_RUN = Symbol('i4004/BUILD_AND_RUN');
 export const SET_BREAKPOINTS = Symbol('i4004/SET_BREAKPOINTS');
 export const ADD_EMULATOR_IO_LOG_ENTRY = Symbol('i4004/ADD_EMULATOR_IO_LOG_ENTRY');
+export const CLEAR_IO_STATE = Symbol('i4004/CLEAR_IO_STATE');
