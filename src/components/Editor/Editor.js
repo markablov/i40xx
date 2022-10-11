@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-javascript';
 import 'ace-builds/src-noconflict/theme-monokai';
+import 'ace-builds/src-noconflict/ext-searchbox';
 import { Button } from 'react-bulma-components';
 
 import GutterRenderer from './GutterRenderer.js';
