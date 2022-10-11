@@ -5,12 +5,14 @@ import { toHex } from '../../../utilities/string.js';
 
 import './Register.css';
 
-const wrapSelectedChar = (val) => <span className="selectedMemoryChar">{toHex(val)}</span>;
+const wrapSelectedChar = (val, idx) => (
+  <span key={`selected-memory-char-${idx}`} className="selectedMemoryChar">{toHex(val)}</span>
+);
 
 function Register({ data, selectedCharacter }) {
   const statusChars = data.status.map(toHex).join('');
   const mainChars = selectedCharacter !== undefined
-    ? data.main.map((val, charIdx) => (charIdx === selectedCharacter ? wrapSelectedChar(val) : toHex(val)))
+    ? data.main.map((val, charIdx) => (charIdx === selectedCharacter ? wrapSelectedChar(val, charIdx) : toHex(val)))
     : data.main.map(toHex);
 
   return (
