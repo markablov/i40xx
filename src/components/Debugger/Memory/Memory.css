@@ -3,3 +3,9 @@
   padding-left: 8px;
   padding-right: 8px;
 }
+
+.registerSeparator {
+  height: 2px;
+  width: 100%;
+  background-color: #A1A1A1;
+}

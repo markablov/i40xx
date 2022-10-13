@@ -16,11 +16,14 @@ function Memory({ ram, selectedBank }) {
             <div className="memoryBank">
               {
                 registers.map((reg, regIdx) => (
-                  <Register
-                    key={`ram-bank-${bankIdx}-reg-${regIdx}`}
-                    data={reg}
-                    selectedCharacter={selectedRegister === regIdx ? selectedCharacter : undefined}
-                  />
+                  <>
+                    {(regIdx && regIdx % 4 === 0) ? <div className="registerSeparator" /> : null}
+                    <Register
+                      key={`ram-bank-${bankIdx}-reg-${regIdx}`}
+                      data={reg}
+                      selectedCharacter={selectedRegister === regIdx ? selectedCharacter : undefined}
+                    />
+                  </>
                 ))
               }
             </div>
