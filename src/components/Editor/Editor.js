@@ -111,7 +111,7 @@ class Editor extends Component {
     });
 
     editor.commands.addCommand({
-      bindKey: { mac: 'F11', win: 'F11' },
+      bindKey: { mac: 'F7', win: 'F7' },
       exec: () => {
         const { emulator } = this.props;
 
@@ -126,7 +126,7 @@ class Editor extends Component {
     });
 
     editor.commands.addCommand({
-      bindKey: { mac: 'F10', win: 'F10' },
+      bindKey: { mac: 'F8', win: 'F8' },
       exec: () => {
         const { emulator } = this.props;
 
