@@ -1,0 +1,19 @@
+{
+  "name": "i40xx-asm",
+  "version": "1.0.3",
+  "author": "Mark Ablovatskii <mark.ablov@gmail.com>",
+  "license": "MIT",
+  "description": "Assembler for intel 4004/4040 microprocessors",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint ./src"
+  },
+  "bin": {
+    "i40xx-asm": "src/bin/cli.js"
+  },
+  "dependencies": {
+    "chevrotain": "^10.1.1"
+  }
+}
