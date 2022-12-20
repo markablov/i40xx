@@ -1,4 +1,4 @@
-import System from '../../../libs/emulator/system.js';
+import Emulator from 'i40xx-emu';
 
 let system;
 let breakpoints = {};
@@ -46,7 +46,7 @@ const commands = {
       throw 'Unknown emulator mode';
     }
 
-    system = new System(dump);
+    system = new Emulator({ romDump: dump });
 
     system.on('output', ({ address, data, type }) => postMessage({ address, command: 'IOOutput', data, type }));
 
