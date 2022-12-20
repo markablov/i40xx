@@ -17,7 +17,6 @@
     "bulma": "^0.9.3",
     "classnames": "^2.3.1",
     "i40xx-asm": "^1.0.3",
-    "i40xx-emu": "github:markablov/i40xx-emu",
     "prop-types": "^15.8.1",
     "react": "^17.0.2",
     "react-ace": "^9.5.0",
