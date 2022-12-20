@@ -46,9 +46,10 @@ const commands = {
       throw 'Unknown emulator mode';
     }
 
-    system = new Emulator({ romDump: dump });
-
-    system.on('output', ({ address, data, type }) => postMessage({ address, command: 'IOOutput', data, type }));
+    system = new Emulator({
+      romDump: dump,
+      ramOutputHandler: ({ address, data, type }) => postMessage({ address, command: 'IOOutput', data, type }),
+    });
 
     sendState();
 

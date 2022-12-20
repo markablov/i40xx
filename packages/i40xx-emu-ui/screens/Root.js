@@ -6,14 +6,13 @@ import Debugger from '../components/Debugger/Debugger.js';
 import IO from '../components/Debugger/IO.js';
 import Memory from '../components/Debugger/Memory/Memory.js';
 import Footer from '../components/Footer.js';
-import BusyOverlay from '../components/BusyOverlay.js';
 import CompilerInfo from '../components/CompilerInfo.js';
 
 import './Root.scss';
 
 function Root() {
   return (
-    <BusyOverlay>
+    <>
       <Section>
         <Container breakpoint="fluid">
           <Columns>
@@ -40,7 +39,7 @@ function Root() {
         </Container>
       </Section>
       <Footer />
-    </BusyOverlay>
+    </>
   );
 }
 
