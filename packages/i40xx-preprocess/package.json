@@ -1,0 +1,16 @@
+{
+  "name": "i40xx-preprocess",
+  "version": "1.0.0",
+  "author": "Mark Ablovatskii <mark.ablov@gmail.com>",
+  "license": "MIT",
+  "description": "Preprocessor for assembly sources for Intel 4004/4040 CPUs",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules npx jest",
+    "lint": "eslint ./src"
+  },
+  "type": "module",
+  "dependencies": {
+    "cross-env": "^7.0.3"
+  }
+}
