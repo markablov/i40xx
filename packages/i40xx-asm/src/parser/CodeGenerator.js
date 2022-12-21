@@ -29,7 +29,9 @@ const ROM_SIZE = 4096;
 class CodeGenerator {
   #bin = new Uint8Array(ROM_SIZE);
 
-  #labels = {};
+  labelsOffsets = {};
+
+  functions = new Set();
 
   #offsetsToLabel = {};
 
@@ -85,11 +87,11 @@ class CodeGenerator {
   };
 
   addLabel(label) {
-    if (this.#labels[label] !== undefined) {
+    if (this.labelsOffsets[label] !== undefined) {
       return false;
     }
 
-    this.#labels[label] = this.#current;
+    this.labelsOffsets[label] = this.#current;
     return true;
   }
 
@@ -138,6 +140,10 @@ class CodeGenerator {
   }
 
   pushInstructionWithAddr12(instruction, addr, type) {
+    if (instruction === 'jms' && type === AddrType.Label) {
+      this.functions.add(addr);
+    }
+
     const addrValue = this.getAddrCode(addr, type, false);
     // format is [O O O O A A A A] [A A A A A A A A], where OOOOO is opcode, AAAAAAAAAAAA is 12-bit address
     const OPR = InstructionsWithAddr12.get(instruction);
@@ -174,7 +180,7 @@ class CodeGenerator {
   generate() {
     // on this stage we have information about all labels, so we can fill all offsets
     for (const [offset, { label, short }] of Object.entries(this.#offsetsToLabel).map(([k, v]) => ([+k, v]))) {
-      const addr = this.#labels[label];
+      const addr = this.labelsOffsets[label];
       if (addr === undefined) {
         throw new Error(`Unknown label ${label}`);
       }
@@ -182,9 +188,16 @@ class CodeGenerator {
       if (short) {
         if ((addr >> 8) !== (offset >> 8)) {
           const err = new Error('For short jumps, address should be in the same bank as instruction');
-          err.labelName = label;
+          err.meta = { label, offset, code: 'short_jump_another_bank' };
           throw err;
         }
+
+        if ((addr & 0xFF) === 0xFE) {
+          const err = new Error('Short jumps from xx:0xFE address should be avoided!');
+          err.meta = { label, offset, code: 'short_jump_from_edge' };
+          throw err;
+        }
+
         this.#bin[offset + 1] = addr & 0xFF;
       } else {
         this.#bin[offset] |= addr >> 8;
@@ -198,7 +211,7 @@ class CodeGenerator {
   clear() {
     this.#bin = new Uint8Array(ROM_SIZE);
     this.#current = 0;
-    this.#labels = {};
+    this.labelsOffsets = {};
     this.#offsetsToLabel = {};
   }
 }

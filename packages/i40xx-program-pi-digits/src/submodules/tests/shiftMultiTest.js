@@ -45,7 +45,7 @@ const TESTS = [
 
 const test = () => {
   const { rom, sourceCode } = compileCodeForTest(
-    'submodules/shiftMulti/shiftMulti.i4040',
+    'submodules/shiftMulti.i4040',
     'shiftLeftVarFromMainMemory',
   );
 

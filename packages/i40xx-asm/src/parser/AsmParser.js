@@ -11,6 +11,7 @@ class AsmParser extends EmbeddedActionsParser {
 
     const codeGenerator = new CodeGenerator();
     this.codeGenerator = codeGenerator;
+    this.labels = new Map();
 
     $.RULE('program', () => {
       $.AT_LEAST_ONE_SEP({
@@ -24,10 +25,18 @@ class AsmParser extends EmbeddedActionsParser {
           return codeGenerator.generate();
         }
       } catch (err) {
-        if (err.labelName) {
-          const token = $.tokVector.find(({ tokenType: { name }, image }, idx) =>
-            name === 'Label' && image === err.labelName && $.tokVector[idx + 1].tokenType.name === 'Colon');
-          throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), token));
+        if (err.meta) {
+          const { label, offset, code } = err.meta;
+          const token = $.tokVector.find(
+            ({ tokenType: { name }, image }, idx) => (
+              name === 'Label' && image === label && $.tokVector[idx + 1].tokenType.name === 'Colon'
+            ),
+          );
+
+          const errToThrow = new MismatchedTokenException(err.toString(), token);
+          errToThrow.offset = offset;
+          errToThrow.code = code;
+          throw $.SAVE_ERROR(errToThrow);
         }
         throw $.SAVE_ERROR(new MismatchedTokenException(err.toString()));
       }
@@ -41,13 +50,15 @@ class AsmParser extends EmbeddedActionsParser {
     });
 
     $.RULE('label', () => {
-      const label = $.CONSUME(Tokens.Label);
+      const labelToken = $.CONSUME(Tokens.Label);
       $.CONSUME(Tokens.Colon);
 
       $.ACTION(() => {
-        if (!codeGenerator.addLabel(label.image)) {
-          throw $.SAVE_ERROR(new MismatchedTokenException('Duplicated definition for label', label));
+        if (!codeGenerator.addLabel(labelToken.image)) {
+          throw $.SAVE_ERROR(new MismatchedTokenException('Duplicated definition for label', labelToken));
         }
+
+        this.labels.set(labelToken.image, labelToken.startOffset);
       });
     });
 
