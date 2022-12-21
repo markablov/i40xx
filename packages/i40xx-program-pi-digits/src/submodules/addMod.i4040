@@ -1,0 +1,56 @@
+# INPUT:
+#   rr0..rr3 - first addend (a)
+#   rr8..rr11 - second addend (b)
+#   memMainVar[0x07] - divisor (m)
+# OUTPUT:
+#   rr0..rr3 - result = (a + b) % m
+# VARIABLES:
+#   rr4..rr7 - tmp
+addMod:
+  LD rr8
+  ADD rr0
+  XCH rr0
+  LD rr9
+  ADD rr1
+  XCH rr1
+  LD rr10
+  ADD rr2
+  XCH rr2
+  LD rr11
+  ADD rr3
+  XCH rr3                # res = a + b
+  FIM r6, 0x70
+  SRC r6
+  LD rr0
+  SBM
+  XCH rr4
+  CMC
+  INC rr13
+  SRC r6
+  LD rr1
+  SBM
+  XCH rr5
+  CMC
+  INC rr13
+  SRC r6
+  LD rr2
+  SBM
+  XCH rr6
+  CMC
+  INC rr13
+  SRC r6
+  LD rr3
+  SBM
+  XCH rr7                # tmp = res - m
+  JCN nc, addMod_return  # if (tmp < 0)
+  CLC
+  LD rr4
+  XCH rr0
+  LD rr5
+  XCH rr1
+  LD rr6
+  XCH rr2
+  LD rr7
+  XCH rr3                # res = tmp
+addMod_return:
+  BBL 0

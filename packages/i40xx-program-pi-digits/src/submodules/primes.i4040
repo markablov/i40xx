@@ -1,0 +1,440 @@
+%include "memory.i4040"
+%include "shiftMulti.i4040"
+%include "sqrt.i4040"
+%include "mul4.i4040"
+%include "divMulti.i4040"
+
+# INPUT:
+#   memCharVar[0x0E] - N
+# OUTPUT:
+#   memCharVar[0x08] - primeIteratorInfo
+#   memCharVar[0x09] - currentPrimenessSegmentEnd
+#   memMainVar[0x0B] - primeLimit
+initPrimeGeneratorVariables:
+  FIM r0, 0x20
+  FIM r1, 0x00
+  LDM 0x09
+  # currentPrimenessSegmentEnd = 2
+  JMS storeVarToStatusCharMemory
+  LDM 0x0E
+  JMS loadVarFromStatusCharMemory
+  LDM 0x0B
+  # primeLimit = N
+  JMS storeVarToMainMemory
+  # maximum length of N is 4 digits, doesn't matter much if shift would do some extra work
+  FIM r0, 0xB3
+  FIM r1, 0x13
+  # primeLimit = 2 * N = N << 1
+  JMS shiftLeftVarFromMainMemory
+  LDM 0x0B
+  XCH rr7
+  # segmentSize = ceil(sqrt(primeLimit))
+  JMS ceilSqrt
+  LDM 0x08
+  FIM r1, 0xFF
+  JMS storeVarToStatusCharMemory
+  BBL 0
+
+# INPUT:
+#   memCharVar[0x08] - segmentSize
+#   memCharVar[0x09] - currentPrimenessSegmentEnd
+# OUTPUT:
+#   memCharVar[0x09] - currentPrimenessSegmentEnd
+# VARIABLES:
+#   rr0/rr1/rr2/rr3 - currentSegmentEnd
+#   r2 = rr4/rr5 - reg/char index for element in primeness map
+#   rr6 - one (for AN6 instruction)
+#   rr7 - bank index for element in primeness map
+#   rr8/rr9 - segmentSize
+fillSegmentPrimenessMap:
+  LDM 0x08
+  JMS loadVarFromStatusCharMemory
+  LD rr0
+  XCH rr8
+  LD rr1
+  XCH rr9
+  LDM 0x09
+  JMS loadVarFromStatusCharMemory
+  FIM r3, 0x10
+  FIM r2, 0x00
+  LDM 0x00
+  DCL
+fillSegmentPrimenessMap_loop:
+  ISZ rr0, fillSegmentPrimenessMap_writeNumberToMap
+  ISZ rr1, fillSegmentPrimenessMap_writeNumberToMap
+  ISZ rr2, fillSegmentPrimenessMap_writeNumberToMap
+  INC rr3
+fillSegmentPrimenessMap_writeNumberToMap:
+  CLB
+  XCH rr5
+  SRC r2
+  LD rr0
+  AN6
+  JCN z, fillSegmentPrimenessMap_writeZeroToMap
+  LD rr3
+  WR3
+  LD rr2
+  WR2
+  LD rr1
+  WR1
+  LD rr0
+fillSegmentPrimenessMap_writeZeroToMap:
+  WR0
+  ISZ rr4, fillSegmentPrimenessMap_checkLoopCond
+  INC rr7
+  LD rr7
+  DCL
+fillSegmentPrimenessMap_checkLoopCond:
+  LD rr4
+  SUB rr8
+  CMC
+  LD rr7
+  SUB rr9
+  # idx < segmentSize
+  JCN nc, fillSegmentPrimenessMap_loop
+  CLC
+  LDM 0x07
+  DCL
+  LDM 0x09
+  JMS storeVarToStatusCharMemory
+  BBL 0
+
+# VARIABLES:
+#   rr0/rr1 - segmentSize
+#   r1 = rr2/rr3 - reg/char indexes for currentPrimenessMap addressing
+#   rr6 - initialSegmentMaxPrime
+#   rr7 - current prime candidate
+#   rr12/rr13 - sieved multiplier of prime
+initialSieveForPrimes:
+  LDM 0x07
+  # leftover value for segmentSize from initPrimeGeneratorVariables() call
+  JMS loadVarFromMainMemory
+  LDM 0x06
+  JMS storeVarToMainMemory
+  LDM 0x06
+  XCH rr7
+  # initialSegmentMaxPrime = ceil(sqrt(segmentSize)), from our requirements we are sure that it's single-digit number
+  JMS ceilSqrt
+  LD rr0
+  XCH rr6
+  LDM 0x08
+  JMS loadVarFromStatusCharMemory
+  LDM 0x03
+  XCH rr7
+initialSieveForPrimes_outerLoop:
+  LDM 0x00
+  DCL
+  FIM r1, 0x30
+  LD rr7
+  SUB rr2
+  CLC
+  XCH rr2
+  SRC r1
+  RD0
+  JCN z, initialSieveForPrimes_continueOuterLoop
+  LD rr7
+  XCH rr10
+  LD rr7
+  XCH rr11
+  # prime * prime
+  JMS mul4x4
+  FIM r1, 0x30
+  LD rr12
+  SUB rr2
+  XCH rr12
+  CMC
+  LD rr13
+  SUB rr3
+  # prime * prime - 3
+  XCH rr13
+initialSieveForPrimes_innerLoop:
+  LD rr13
+  DCL
+  LD rr12
+  XCH rr2
+  SRC r1
+  CLB
+  WR0
+  FIM r5, 0xE0
+initialSieveForPrimes_innerLoopIter:
+  LD rr12
+  ADD rr7
+  XCH rr12
+  LD rr13
+  ADD rr3
+  XCH rr13
+  ISZ rr10, initialSieveForPrimes_innerLoopIter
+  LD rr0
+  SUB rr12
+  CMC
+  LD rr1
+  SUB rr13
+  JCN c, initialSieveForPrimes_innerLoop
+initialSieveForPrimes_continueOuterLoop:
+  INC rr7
+  INC rr7
+  LD rr7
+  SUB rr6
+  JCN nc, initialSieveForPrimes_outerLoop
+  LDM 0x07
+  DCL
+  BBL 0
+
+# INPUT:
+#   memCharVar[0x08] - segmentSize
+# VARIABLES:
+#   rr0/rr1 - segmentSize
+#   r1 = rr2/rr3 - reg/char indexes for currentPrimenessMap addressing
+#   r2 = rr4/rr5 - reg/char indexes for initialSegment addressing
+#   rr6 - bank index for currentPrimenessMap addressing
+buildInitialPrimesSegment:
+  LDM 0x08
+  JMS loadVarFromStatusCharMemory
+  FIM r1, 0x00
+  FIM r2, 0xC0
+  FIM r4, 0x20
+  CLB
+  XCH rr6
+buildInitialPrimesSegment_loop:
+  LD rr6
+  DCL
+  SRC r1
+  RD0
+  JCN z, buildInitialPrimesSegment_iterate
+  XCH rr10
+  RD1
+  XCH rr11
+  LDM 0x00
+  XCH rr3
+  LDM 0x07
+  DCL
+  SRC r2
+  LD rr10
+  WRM
+  INC rr5
+  SRC r2
+  LD rr11
+  WRM
+  ISZ rr5, buildInitialPrimesSegment_iterate
+  INC rr4
+buildInitialPrimesSegment_iterate:
+  LD rr2
+  ADD rr8
+  XCH rr2
+  TCC
+  ADD rr6
+  XCH rr6
+  LD rr2
+  SUB rr0
+  CMC
+  LD rr6
+  SUB rr1
+  JCN nc, buildInitialPrimesSegment_loop
+  CLC
+  LDM 0x07
+  DCL
+  BBL 0
+
+initPrimes:
+  JMS initPrimeGeneratorVariables
+  JMS fillSegmentPrimenessMap
+  JMS initialSieveForPrimes
+  JMS buildInitialPrimesSegment
+  BBL 0
+
+# INPUT:
+#   primeIteratorInfo
+# OUTPUT:
+#   memMainVar[0x09] - next prime number
+# VARIABLES:
+#   rr2 - nextPrimeRegIdx
+#   rr3 - nextPrimeBankIdx
+getNextPrime:
+  LDM 0x8
+  JMS loadVarFromStatusCharMemory
+getNextPrime_searchLoop:
+  ISZ rr2, getNextPrime_loopCond
+  INC rr3
+getNextPrime_loopCond:
+  # check that current idx < segmentSize
+  LD rr2
+  SUB rr0
+  CMC
+  LD rr3
+  SUB rr1
+  JCN c, regeneratePrimeSegment
+  LD rr3
+  DCL
+  SRC r1
+  RD0
+  JCN z, getNextPrime_searchLoop
+  LDM 0x07
+  DCL
+  LDM 0x08
+  JMS storeVarToStatusCharMemory
+  LD rr3
+  DCL
+  RD0
+  XCH rr0
+  RD1
+  XCH rr1
+  RD2
+  XCH rr2
+  RD3
+  XCH rr3
+  LDM 0x07
+  DCL
+  LDM 0x09
+  JMS storeVarToMainMemory
+  BBL 0
+
+# INPUT:
+#   primeIteratorInfo
+#   currentPrimenessSegmentEnd
+# OUTPUT:
+#   primeIteratorInfo->previousPrimeIdx
+regeneratePrimeSegment:
+  LDM 0x07
+  DCL
+  JMS fillSegmentPrimenessMap
+  LDM 0x08
+  JMS loadVarFromStatusCharMemory
+  FIM r1, 0xBE
+regeneratePrimeSegment_primeLoop:
+  INC rr3
+  ISZ rr3, regeneratePrimeSegment_updateInitialPrimeIdxVar
+  INC rr2
+regeneratePrimeSegment_updateInitialPrimeIdxVar:
+  LDM 0x08
+  JMS storeVarToStatusCharMemory
+  SRC r1
+  RDM
+  JCN z, regeneratePrimeSegment_return
+  XCH rr6
+  INC rr3
+  SRC r1
+  RDM
+  XCH rr7
+  FIM r2, 0x90
+  SRC r2
+  LD rr6
+  WRM
+  INC rr5
+  SRC r2
+  LD rr7
+  WRM
+  INC rr5
+  SRC r2
+  CLB
+  WRM
+  INC rr5
+  SRC r2
+  CLB
+  WRM
+  JMS getFirstMultipleForPrimeInCurrentSegment
+  LDM 0x08
+  JMS loadVarFromStatusCharMemory
+  # VARIABLES:
+  #   rr0/rr1 - segment size
+  #   rr4/rr5 - index for sieve loop
+  #   rr6/rr7 - current prime for sieve
+regeneratePrimeSegment_sieveLoop:
+  LD rr5
+  DCL
+  SRC r2
+  CLB
+  WR0
+  LD rr4
+  ADD rr6
+  XCH rr4
+  LD rr5
+  ADD rr7
+  XCH rr5
+  LD rr4
+  SUB rr0
+  CMC
+  LD rr5
+  SUB rr1
+  JCN nc, regeneratePrimeSegment_sieveLoop
+  CLC
+  LDM 0x07
+  DCL
+  JUN regeneratePrimeSegment_primeLoop
+regeneratePrimeSegment_return:
+  FIM r1, 0xFF
+  LDM 0x08
+  JMS storeVarToStatusCharMemory
+  JUN getNextPrime
+
+# INPUT:
+#   rr0/rr1 - segmentSize
+# OUTPUT:
+#   rr4/rr5 - start index for sieve loop
+#   rr6/rr7 - prime
+getFirstMultipleForPrimeInCurrentSegment:
+  LD rr0
+  XCH rr4
+  LD rr1
+  XCH rr5
+  LDM 0x09
+  JMS loadVarFromStatusCharMemory
+  ISZ rr0, getFirstMultipleForPrimeInCurrentSegment_calculateSegmentStart
+  ISZ rr1, getFirstMultipleForPrimeInCurrentSegment_calculateSegmentStart
+  ISZ rr2, getFirstMultipleForPrimeInCurrentSegment_calculateSegmentStart
+  INC rr3
+getFirstMultipleForPrimeInCurrentSegment_calculateSegmentStart:
+  LD rr0
+  SUB rr4
+  XCH rr0
+  CMC
+  LD rr1
+  SUB rr5
+  XCH rr1
+  CMC
+  LDM 0x00
+  XCH rr6
+  LD rr2
+  SUB rr6
+  XCH rr2
+  CMC
+  LD rr3
+  SUB rr6
+  XCH rr3
+  CLB
+  LDM 0x08
+  # segmentStart = currentSegmentEnd + 1 - segmentSize
+  JMS storeVarToMainMemory
+  JMS divMWxMW
+  FIM r4, 0x80
+  SRC r4
+  RDM
+  XCH rr10
+  INC rr9
+  SRC r4
+  RDM
+  # rr10/rr11 = (segmentStart % prime)
+  XCH rr11
+  FIM r4, 0x90
+  SRC r4
+  RDM
+  XCH rr6
+  INC rr9
+  SRC r4
+  RDM
+  # rr6/rr7 = prime
+  XCH rr7
+  LD rr10
+  JCN nz, getFirstMultipleForPrimeInCurrentSegment_reminderIsNotZero
+  LD rr11
+  JCN nz, getFirstMultipleForPrimeInCurrentSegment_reminderIsNotZero
+  FIM r2, 0x00
+  BBL 0
+getFirstMultipleForPrimeInCurrentSegment_reminderIsNotZero:
+  LD rr6
+  SUB rr10
+  XCH rr4
+  CMC
+  LD rr7
+  SUB rr11
+  XCH rr5
+  BBL 0

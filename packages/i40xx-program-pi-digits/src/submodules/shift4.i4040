@@ -1,0 +1,33 @@
+# INPUT:
+#   acc - shift value
+#   rr12 - value
+# OUTPUT:
+#   rr12 - shifted value
+shiftRight:
+  CMA
+  IAC
+  XCH rr14
+  LD rr12
+shiftRight_loop:
+  RAR
+  CLC
+  ISZ rr14, shiftRight_loop
+  XCH rr12
+  BBL 0
+
+# INPUT:
+#   acc - shift value
+#   rr13 - value
+# OUTPUT:
+#   rr13 - shifted value
+shiftLeft:
+  CMA
+  IAC
+  XCH rr14
+  LD rr13
+shiftLeft_loop:
+  RAL
+  CLC
+  ISZ rr14, shiftLeft_loop
+  XCH rr13
+  BBL 0

@@ -1,0 +1,11 @@
+{
+  "name": "i40xx-program-pi-digits",
+  "version": "1.0.0",
+  "author": "Mark Ablovatskii <mark.ablov@gmail.com>",
+  "license": "MIT",
+  "description": "Computation of first X digits of Pi, running at intel 4040 CPU",
+  "type": "module",
+  "imports": {
+    "#utilties/*": "./src/utilities/*"
+  }
+}

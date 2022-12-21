@@ -1,0 +1,253 @@
+%include "memory.i4040"
+%include "powerMod.i4040"
+%include "mulMod.i4040"
+%include "mulMulti.i4040"
+%include "divMulti.i4040"
+%include "addMulti.i4040"
+%include "add16.i4040"
+
+# INPUT:
+#   memStatusCharVar[0x0A] - digitPosition
+#   memStatusCharVar[0x0B] - f
+#   memMainVar[0x07] - divisor
+# OUTPUT:
+#   memStatusCharVar[0x07] - d
+#   memMainVar[0x0A] - Di
+computeDi:
+  LDM 0x0A
+  JMS clearVarFromMainMemory
+  LDM 0x0A
+  JMS loadVarFromStatusCharMemory
+  LDM 0x0A
+  JMS storeVarToMainMemory
+  FIM r0, 0xA0
+  FIM r1, 0x00
+  JMS powerMod                       # d = (10 ^ digitPosition) mod m
+  FIM r7, 0xB7
+  JMS mulMod                         # d = (d * f) mod m
+  LDM 0x07
+  JMS loadVarFromStatusCharMemory
+  LDM 0x06
+  JMS storeVarToMainMemory
+  JMS write1e15
+  FIM r1, 0x60
+  FIM r2, 0x90
+  JMS mulMWxMW                       # d = d * (10 ^ 15)
+  LDM 0x09
+  JMS clearVarFromMainMemory
+  LDM 0x07
+  JMS loadVarFromMainMemory
+  LDM 0x09
+  JMS storeVarToMainMemory
+  JMS divMWxMW
+  BBL 0
+
+# INPUT:
+#   memStatusCharVar[0x06][0..1] - chunksCount
+#   memStatusCharVar[0x0B] - f
+#   memStatusCharVar[0x0C] - startingPosition
+#   memMainVar[0x07] - divisor
+# VARIABLES:
+#   memStatusCharVar[0x06][2..3] - chunkNo
+#   memStatusCharVar[0x0A] - digitPosition
+updateDigitsChunks:
+  LDM 0x0C
+  JMS loadVarFromStatusCharMemory
+  LDM 0x0A
+  JMS storeVarToStatusCharMemory     # digitPosition = startingPosition
+  FIM r0, 0x60
+  SRC r0
+  LD rr1
+  WR2
+  WR3                                # chunkNo = 0
+updateDigitsChunks_loop:
+  JMS computeDi
+  FIM r0, 0x60
+  SRC r0
+  RD3
+  XCH rr2
+  RD2
+  XCH rr0
+  JMS addMWxMW                       # chunks[chunkNo] = chunks[chunkNo] + Di
+  ISZ rr0, updateDigitsChunks_updateChunkNo
+  INC rr2
+updateDigitsChunks_updateChunkNo:
+  FIM r2, 0x60
+  SRC r2
+  LD rr2
+  WR3
+  LD rr0
+  WR2                                # chunkNo++
+  RD0
+  SUB rr0
+  CMC
+  RD1
+  SUB rr2
+  CMC
+  JCN c, updateDigitsChunks_return  # if (chunkNo === chunksCount)
+  LDM 0x0A
+  JMS loadVarFromStatusCharMemory
+  FIM r2, 0x90
+  FIM r3, 0x00
+  JMS add16x16
+  LDM 0x0A
+  JMS storeVarToStatusCharMemory     # digitPosition = digitPosition + 9
+  JUN updateDigitsChunks_loop
+updateDigitsChunks_return:
+  CLC
+  BBL 0
+
+# INPUT:
+#    rr2 - bankNo for digits chunk
+#    rr1 - zero
+#    rr0 - regNo for digits chunk
+#    banks[rr2] -> regs[rr0] - digits chunk
+# OUTPUT:
+#    memMainVar[0x08] - rounded chunk to 9 digits
+getRoundedChunk:
+  FIM r2, 0x00
+  FIM r3, 0x80
+getRoundedChunk_copyChunkToVar_loop:
+  LD rr2
+  DCL
+  SRC r0
+  RDM
+  XCH rr5
+  LDM 0x07
+  DCL
+  SRC r3
+  LD rr5
+  WRM
+  INC rr1
+  INC rr7
+  ISZ rr4, getRoundedChunk_copyChunkToVar_loop   # roundedChunk = chunk
+  JMS write1e15
+  JMS divMWxMW                                   # roundedChunk = roundedChunk % 1_000_000_000_000_000
+  LDM 0x09
+  JMS clearVarFromMainMemory
+  FIM r0, 0x90
+  SRC r0
+  CLB
+  WRM                                            # 0x0
+  INC rr1
+  SRC r0
+  LDM 0x04
+  WRM                                            # 0x4
+  INC rr1
+  SRC r0
+  LDM 0x02
+  WRM                                            # 0x2
+  INC rr1
+  SRC r0
+  LDM 0x04
+  WRM                                            # 0x4
+  INC rr1
+  SRC r0
+  LDM 0x0F
+  WRM                                            # 0xF
+  INC rr1
+  SRC r0
+  CLB
+  WRM                                            # 0x0
+  JMS divMWxMW                                   # tmp = roundedChunk / 1_000_000
+  FIM r0, 0xA0
+  FIM r1, 0x80
+  JMS cloneVar                                   # roundedChunk = tmp
+  BBL 0
+
+# INPUT:
+#    rr2 - bankNo for digits chunk
+#    rr1 - zero
+#    rr0 - regNo for digits chunk
+#    banks[rr2] -> regs[rr0] - digits chunk
+# OUTPUT:
+#    memMainVar[0x0B] - digits chunk in BCD format
+# VARIABLES
+#    memStatusCharVar[0x08] - digitIdx
+convertChunkToDecimal:
+  JMS getRoundedChunk                # processedChunk = roundedChunk
+  FIM r0, 0x80
+  SRC r0
+  LDM 0x08
+  WR0                                # digitIdx = 8
+  LDM 0x09
+  JMS clearVarFromMainMemory
+  FIM r0, 0x90
+  SRC r0
+  LDM 0x0A
+  WRM
+convertChunkToDecimal_loop:
+  JMS divMWxMW
+  FIM r0, 0x80
+  SRC r0
+  RDM
+  XCH rr5                            # rr5 = processedChunk % 10
+  FIM r1, 0xB0
+  RD0
+  XCH rr3
+  SRC r1
+  LD rr5
+  WRM                                # chunkDigits[digitIdx] = rr5
+  FIM r0, 0xA0
+  FIM r1, 0x80
+  JMS cloneVar                       # processedChunk = processedChunk / 10
+  RD0
+  DAC
+  WR0                                # digitIdx--
+  JCN c, convertChunkToDecimal_loop  # digitIdx >= 0
+  BBL 0
+
+# INPUT:
+#    memMainVar[0x0B] - digits chunk in BCD format
+# VARIABLES:
+#    rr0 / rr1 - reg/char pair for current digit to print
+#    rr2 - loop iterator
+printDecDigitsForChunk:
+  FIM r0, 0xB0
+  FIM r1, 0x70
+printDecDigitsForChunk_loop:
+  SRC r0
+  RDM
+  WMP
+  INC rr1
+  ISZ rr2, printDecDigitsForChunk_loop
+  BBL 0
+
+# VARIABLES:
+#    memStatusCharVar[0x06] - chunkNo
+printPiDigits:
+  FIM r0, 0x60
+  SRC r0
+  LD rr1
+  WR2
+  WR3                                # chunkNo = 0
+printPiDigits_loop:
+  FIM r0, 0x60
+  SRC r0
+  RD2
+  XCH rr2
+  RD3
+  XCH rr0
+  JMS convertChunkToDecimal
+  JMS printDecDigitsForChunk
+  FIM r2, 0x60
+  SRC r2
+  RD2
+  XCH rr2
+  RD3
+  XCH rr0
+  ISZ rr0, printPiDigits_updateChunkNo
+  INC rr2
+printPiDigits_updateChunkNo:
+  LD rr2
+  WR2
+  LD rr0
+  WR3                                # chunkNo++
+  RD1
+  SUB rr0
+  CMC
+  RD0
+  SUB rr2
+  CMC
+  JCN nz, printPiDigits_loop         # if (chunkNo !== chunksCount)
+  BBL 0

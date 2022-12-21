@@ -1,0 +1,48 @@
+%include "memory.i4040"
+%include "mulMod.i4040"
+%include "shiftMulti.i4040"
+
+# INPUT:
+#   rr0..rr3 - base
+#   memMainVar[0x0A] - exponent
+#   memMainVar[0x07] - divisor
+# OUTPUT:
+#   memStatusCharVar[0x07] - result
+# VARIABLES:
+#   memStatusCharVar[0x0D] - poweredBase = (base ^ step) % mod
+powerMod:
+  LDM 0x0D
+  JMS storeVarToStatusCharMemory     # poweredBase = base
+  LDM 0x07
+  JMS clearVarFromStatusCharMemory
+  FIM r0, 0x70
+  SRC r0
+  LDM 0x01
+  WR0                                # res = 1
+powerMod_loop:
+  FIM r0, 0xA0
+  SRC r0
+  RDM
+  FIM r3, 0x10
+  AN6
+  JCN z, powerMod_skipResultUpdate  # if (exp & 1 === 0)
+  FIM r7, 0xD7
+  JMS mulMod                         # res = (res * poweredBase) % m
+powerMod_skipResultUpdate:
+  FIM r7, 0xDD
+  JMS mulMod                         # poweredBase = (poweredBase * poweredBase) % m
+  LDM 0x0A
+  JMS MSWForVarFromMainMemory
+  JCN c, powerMod_ret
+  LD rr1
+  XCH rr7
+  FIM r0, 0xA0
+  FIM r1, 0x13
+  JMS shiftRightVarFromMainMemory   # exp = exp / 2
+  LD rr12
+  ADD rr1
+  JCN c, powerMod_loop              # (exp.length - 1 + exp[0] === 0) => (exp.length === 1 && exp[0] === 0) => (exp === 0)
+  JCN nz, powerMod_loop
+powerMod_ret:
+  CLC
+  BBL 0

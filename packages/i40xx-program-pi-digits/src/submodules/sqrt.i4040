@@ -1,0 +1,43 @@
+%include "memory.i4040"
+%include "mulMulti.i4040"
+
+# INPUT:
+#   rr7 - variable number in main memory, for which we are calculating square root
+# OUTPUT:
+#  rr0/rr1/rr2/rr3 - square root
+# VARIABLES:
+#   r7 = rr14/rr15 - register/character idx for low digit for current candidate for square root
+ceilSqrt:
+  FIM r7, 0x71
+  SRC r7
+  CLB
+  WRM
+  XCH rr15
+  SRC r7
+  LDM 0x01
+  WRM
+ceilSqrt_loop:
+  FIM r7, 0x70
+  SRC r7
+  RDM
+  IAC
+  WRM
+  INC rr15
+  SRC r7
+  TCC
+  ADM
+  WRM
+  LDM 0x07
+  XCH rr2
+  LDM 0x07
+  XCH rr4
+  JMS mulMWxMW
+  LD rr7
+  XCH rr0
+  LDM 0x08
+  XCH rr1
+  JMS compareVarsFromMainMemory
+  JCN c, ceilSqrt_loop
+  LDM 0x07
+  JMS loadVarFromMainMemory
+  BBL 0

@@ -9,7 +9,6 @@ import { extractDirectives } from './workers/directives.js';
 export function preprocessFile(filePath) {
   const unvisited = [filePath];
   const sourceCodeFiles = new Map();
-  const sourceDirectory = path.dirname(filePath);
 
   while (unvisited.length) {
     const currentPath = unvisited.shift();
@@ -19,7 +18,7 @@ export function preprocessFile(filePath) {
 
     const includesFromFile = directives.map((directive) => directive.match(/^%include "(.+)"$/)?.[1]).filter(Boolean);
     for (const includePath of includesFromFile) {
-      const fullPathForInclude = path.resolve(sourceDirectory, includePath);
+      const fullPathForInclude = path.resolve(path.dirname(currentPath), includePath);
       if (!sourceCodeFiles.has(fullPathForInclude)) {
         unvisited.push(fullPathForInclude);
       }

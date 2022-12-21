@@ -1,0 +1,22 @@
+# INPUT:
+#   rr10 - first factor
+#   rr11 - second factor
+# OUTPUT:
+#   rr12, rr13 - product (low, high)
+mul4x4:
+  FIM r6, 0x00
+  LD rr11
+  JCN z, mul4x4_return
+  CMA
+  IAC
+  XCH rr11
+mul4x4_loop:
+  LD rr12
+  ADD rr10
+  XCH rr12
+  LDM 0x00
+  ADD rr13
+  XCH rr13
+  ISZ rr11, mul4x4_loop
+mul4x4_return:
+  BBL 0

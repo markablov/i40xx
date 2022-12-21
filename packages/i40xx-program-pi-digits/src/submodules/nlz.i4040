@@ -1,0 +1,19 @@
+# INPUT:
+#   acc - value
+# OUTPUT:
+#   rr2 - number of leading zeros
+#   rr3 - most significant bit
+nlzAndMSB:
+  FIM r1, 0x0C
+nlzAndMSB_loop:
+  RAL
+  JCN c, nlzAndMSB_return
+  INC rr2
+  ISZ rr3, nlzAndMSB_loop
+nlzAndMSB_return:
+  CLC
+  LDM 0x4
+  SUB rr2
+  XCH rr3
+  CLC
+  BBL 0
