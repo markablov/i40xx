@@ -4,6 +4,7 @@ import Emulator from 'i40xx-emu';
 
 import { hexToHWNumber, hwNumberToHex } from '#utilties/numbers.js';
 import { compileCodeForTest } from '#utilties/compile.js';
+import { writeValueToMainChars } from '#utilties/memory.js';
 
 import {
   addInitializationWithTestValues, generateMemoryMainCharactersInitialization, generateRegisterInitialization,
@@ -15,10 +16,7 @@ const runSingleTest = (romDump, { value, shiftCount }) => {
   const { memory, registers } = system;
 
   const hwValue = hexToHWNumber(value);
-  // store value to memory
-  for (const [idx, byte] of Object.entries(hwValue)) {
-    memory[0].registers[8].main[idx] = byte;
-  }
+  writeValueToMainChars(hwValue, memory, 8);
 
   // variable number
   registers.indexBanks[0][0] = 8;

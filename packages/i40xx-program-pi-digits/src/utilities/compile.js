@@ -22,10 +22,10 @@ export const compileCodeForTest = (fileName, funcName) => {
   `;
 
   for (let attempts = 0; attempts < MAX_ATTEMPTS_TO_REARRANGE_CODE; attempts++) {
-    const { data: rom, functions, errors } = compiler(testCode);
+    const { data: rom, functions, errors, labelsOffsets } = compiler(testCode);
     if (!errors?.length) {
       console.log(`Source code has been compiled, ram size = ${rom.length} bytes`);
-      return { rom, sourceCode: testCode };
+      return { rom, sourceCode: testCode, labelsOffsets };
     }
 
     if (errors[0].code !== 'short_jump_another_bank') {

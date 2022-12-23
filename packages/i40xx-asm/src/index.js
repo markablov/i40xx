@@ -16,6 +16,7 @@ const parse = (sourceCode) => {
       bytecodeOffset: labelsOffsets[name],
       sourceCodeOffset: asmParser.labels.get(name),
     })),
+    labelsOffsets,
     errors: asmParser.errors,
   };
 };
