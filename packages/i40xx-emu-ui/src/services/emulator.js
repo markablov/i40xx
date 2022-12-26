@@ -26,10 +26,10 @@ worker.onmessage = ({ data: { command, error, ...rest } }) => {
   }
 };
 
-const run = (dump, mode = 'run') => {
+const run = (dump, mode = 'run', ramDump = null) => {
   getStore().dispatch(updateEmulatorState({ error: '', mode, running: true }));
   getStore().dispatch(clearIOState());
-  worker.postMessage({ command: 'run', dump, mode });
+  worker.postMessage({ command: 'run', dump, mode, ramDump });
 };
 
 const stop = () => {

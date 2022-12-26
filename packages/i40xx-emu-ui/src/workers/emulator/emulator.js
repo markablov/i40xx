@@ -41,14 +41,15 @@ const commands = {
     postMessage({ command: 'finish' });
   },
 
-  run: async ({ dump, mode }) => {
+  run: async ({ dump, mode, ramDump }) => {
     if (mode !== 'debug' && mode !== 'run') {
       throw 'Unknown emulator mode';
     }
 
     system = new Emulator({
-      romDump: dump,
+      ramDump,
       ramOutputHandler: ({ address, data, type }) => postMessage({ address, command: 'IOOutput', data, type }),
+      romDump: dump,
     });
 
     sendState();

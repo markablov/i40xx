@@ -13,6 +13,7 @@ const defaultState = {
     registers: {},
     running: false,
   },
+  initialRAM: null,
 };
 
 export default (stateArg, { payload, type }) => {
@@ -33,6 +34,8 @@ export default (stateArg, { payload, type }) => {
       return { ...state, emulator: { ...state.emulator, IOLog: [...state.emulator.IOLog, payload] } };
     case Actions.CLEAR_IO_STATE:
       return { ...state, emulator: { ...state.emulator, IOLog: [] } };
+    case Actions.SET_INITIAL_RAM_DUMP:
+      return { ...state, initialRAM: payload };
     default:
       return state;
   }

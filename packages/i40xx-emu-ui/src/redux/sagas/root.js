@@ -12,9 +12,10 @@ function* buildAndRun({ payload: { mode, sourceCode } }) {
     return;
   }
 
-  run(dump, mode);
+  const { editor, initialRAM } = yield select();
 
-  const { editor } = yield select();
+  run(dump, mode, initialRAM);
+
   editor.focus();
 }
 

@@ -33,6 +33,7 @@ module.exports = {
     curly: ['error', 'all'],
     'implicit-arrow-linebreak': 'off',
     'import/extensions': 'off',
+    'import/no-extraneous-dependencies': 0,
     'max-len': [
       'error',
       120,
