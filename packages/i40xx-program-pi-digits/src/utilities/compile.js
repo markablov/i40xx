@@ -11,7 +11,7 @@ export const compileCodeForTest = (fileName, funcName) => {
   const preprocessedCode = preprocessFile(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../', fileName));
 
   const testCode = `
-    JMS entrypoint
+    JUN entrypoint
     
     ${preprocessedCode}
     
