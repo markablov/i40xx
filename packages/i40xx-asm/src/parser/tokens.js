@@ -14,7 +14,7 @@ addToken('NewLine', { pattern: /\r?\n/ });
 addToken('Colon', { pattern: ':' });
 addToken('Comma', { pattern: ',' });
 addToken('Comment', { pattern: /(?:#|(?:\/\/))[^\n\r]*/, group: Lexer.SKIPPED });
-addToken('WhiteSpace', { pattern: /\s+/, group: Lexer.SKIPPED });
+addToken('WhiteSpace', { pattern: /[^\S\r\n]+/, group: Lexer.SKIPPED });
 
 const instructions = [
   'nop', 'rdm', 'rd0', 'rd1', 'rd2', 'rd3', 'rdr', 'wrm', 'wr0', 'wr1', 'wr2', 'wr3', 'wrr', 'wmp', 'adm', 'sbm', 'clb',
