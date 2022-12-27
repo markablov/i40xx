@@ -166,7 +166,9 @@ class CodeGenerator {
 
   pushInstructionWithCondAndAddr8(instruction, cond, addr, type) {
     if ((this.#current & 0xFF) === 0xFE) {
-      throw new Error('Conditional jump never happens if instruction would be located at xx:0xFE address');
+      const err = new Error('Conditional jump never happens if instruction would be located at xx:0xFE address');
+      err.meta = { offset: this.#current, code: 'cond_jump_from_edge' };
+      throw err;
     }
 
     const addrValue = this.getAddrCode(addr, type, true);

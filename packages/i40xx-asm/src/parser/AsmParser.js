@@ -4,6 +4,14 @@ const { Tokens, allTokens } = require('./tokens.js');
 const { CodeGenerator, AddrType } = require('./CodeGenerator.js');
 
 class AsmParser extends EmbeddedActionsParser {
+  throwMismatchError(message, token, previousToken, extra) {
+    const errToThrow = new MismatchedTokenException(message, token, previousToken);
+    for (const [key, value] of Object.entries(extra || {})) {
+      errToThrow[key] = value;
+    }
+    throw this.SAVE_ERROR(errToThrow);
+  }
+
   constructor() {
     super(allTokens, { outputCst: false });
 
@@ -26,17 +34,14 @@ class AsmParser extends EmbeddedActionsParser {
         }
       } catch (err) {
         if (err.meta) {
-          const { label, offset, code } = err.meta;
+          const { label } = err.meta;
           const token = $.tokVector.find(
             ({ tokenType: { name }, image }, idx) => (
               name === 'Label' && image === label && $.tokVector[idx + 1].tokenType.name === 'Colon'
             ),
           );
 
-          const errToThrow = new MismatchedTokenException(err.toString(), token);
-          errToThrow.offset = offset;
-          errToThrow.code = code;
-          throw $.SAVE_ERROR(errToThrow);
+          $.throwMismatchError(err.toString(), token, null, err.meta);
         }
         throw $.SAVE_ERROR(new MismatchedTokenException(err.toString()));
       }
@@ -235,7 +240,7 @@ class AsmParser extends EmbeddedActionsParser {
         try {
           codeGenerator.pushInstructionWithCondAndAddr8(instruction.image, cond.image, addr.image, type);
         } catch (err) {
-          throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), addr, cond));
+          $.throwMismatchError(err.toString(), addr, cond, err.meta);
         }
       });
     });
