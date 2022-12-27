@@ -23,7 +23,7 @@ export const generateRegisterInitialization = (regNo, value) => [
 ];
 
 /*
- * Generate instructions to seed memory location with specified value
+ * Generate instructions to seed main characters in memory location with specified value
  */
 export const generateMemoryMainCharactersInitialization = (memoryRegNo, values) => {
   const lines = [
@@ -43,3 +43,24 @@ export const generateMemoryMainCharactersInitialization = (memoryRegNo, values) 
 
   return lines;
 };
+
+/*
+ * Generate instructions to seed status characters in memory location with specified value
+ */
+export const generateMemoryStatusCharactersInitialization = (memoryRegNo, values) => [
+  `FIM r0, 0x${memoryRegNo}0`,
+  'SRC r0',
+  `LDM ${values[0]}`,
+  'WR0',
+  `LDM ${values[1]}`,
+  'WR1',
+  `LDM ${values[2]}`,
+  'WR2',
+  `LDM ${values[3]}`,
+  'WR3',
+];
+
+/*
+ * Generate instruction to switch memory bank
+ */
+export const generateMemoryBankSwitch = (bankNo) => [`LDM ${bankNo}`, 'DCL'];

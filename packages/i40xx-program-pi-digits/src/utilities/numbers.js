@@ -4,7 +4,13 @@
  * Data is stored as little-endian numbers [least significant digit, ..., most significant digit]
  */
 export const hwNumberToHex = (chars) => (
-  `0x${[...chars].reverse().map((char) => char.toString(16)).join('').replaceAll(/^0+(?!$)/g, '')}`
+  `0x${
+    [...chars].reverse()
+      .map((char) => char.toString(16))
+      .join('')
+      .replaceAll(/^0+(?!$)/g, '')
+      .toUpperCase()
+  }`
 );
 
 /*

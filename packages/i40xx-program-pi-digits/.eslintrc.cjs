@@ -4,7 +4,10 @@ module.exports = {
   parserOptions: {
     requireConfigFile: false,
     babelOptions: {
-      plugins: ['@babel/plugin-syntax-class-properties'],
+      plugins: [
+        '@babel/plugin-syntax-class-properties',
+        '@babel/plugin-syntax-import-assertions',
+      ],
     },
   },
   rules: {
@@ -72,4 +75,7 @@ module.exports = {
     'no-bitwise': 'off',
   },
   overrides: [],
+  env: {
+    es2020: true,
+  }
 };
