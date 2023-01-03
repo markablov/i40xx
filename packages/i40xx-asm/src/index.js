@@ -4,6 +4,32 @@ const asmParser = require('./parser/AsmParser.js');
 const MAX_ATTEMPTS_TO_REARRANGE_CODE = 15;
 
 /*
+ * Reflect paddings in source code, based on code generator information
+ */
+const insertPaddingsIntoSourceCode = (sourceCode, paddings, bytecodeOffsets, sourceCodeOffsets) => {
+  const parts = [];
+  const labelsForOffset = Object.fromEntries(Object.entries(bytecodeOffsets).map(([k, v]) => [v, k]));
+
+  let currentSourceCodeOffset = 0;
+
+  for (const { offset, paddingCount } of paddings) {
+    const label = labelsForOffset[offset];
+    if (!label) {
+      throw Error('Something wrong happened!');
+    }
+
+    const paddingSourceCodeOffset = sourceCodeOffsets.get(label);
+    parts.push(sourceCode.substring(currentSourceCodeOffset, paddingSourceCodeOffset));
+    parts.push('  NOP\n'.repeat(paddingCount));
+    currentSourceCodeOffset = paddingSourceCodeOffset;
+  }
+
+  parts.push(sourceCode.substring(currentSourceCodeOffset));
+
+  return parts.join('').replace(/__location_short\(\w+\)\n/g, '');
+};
+
+/*
  * Simply compile provided code
  */
 const compileOnce = (sourceCode) => {
@@ -13,7 +39,7 @@ const compileOnce = (sourceCode) => {
   }
 
   const data = asmParser.parse(tokens);
-  const { functions, labelsOffsets } = asmParser.codeGenerator;
+  const { functions, labelsOffsets, paddings } = asmParser.codeGenerator;
   return {
     data,
     functions: [...functions].filter((name) => labelsOffsets[name]).map((name) => ({
@@ -23,7 +49,7 @@ const compileOnce = (sourceCode) => {
     })),
     labelsOffsets,
     errors: asmParser.errors,
-    sourceCode,
+    sourceCode: insertPaddingsIntoSourceCode(sourceCode, paddings, labelsOffsets, asmParser.labels),
   };
 };
 

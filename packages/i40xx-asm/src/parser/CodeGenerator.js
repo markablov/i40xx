@@ -99,10 +99,10 @@ class CodeGenerator {
       return;
     }
 
-    this.paddings.push({ offset: currentOffset, paddingCount });
     for (let i = 0; i < paddingCount; i++, this.#current++) {
       this.#bin[this.#current] = InstructionsWithoutArgCodes.get('nop');
     }
+    this.paddings.push({ offset: this.#current, paddingCount });
   }
 
   addLabel(label) {
