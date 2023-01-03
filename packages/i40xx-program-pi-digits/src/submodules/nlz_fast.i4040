@@ -1,0 +1,44 @@
+# INPUT:
+#   acc - value
+# OUTPUT:
+#   rr2 - number of leading zeros
+#   rr3 - 0x0
+#   rr4 - most significant bit
+#   rr5 - 0x8
+nlzAndMSB:
+  XCH rr6
+  LDM 0x8
+  AN6
+  JCN nz, nlzAndMSB_4
+  LDM 0x4
+  AN6
+  JCN nz, nlzAndMSB_3
+  LDM 0x2
+  AN6
+  JCN nz, nlzAndMSB_2
+  LDM 0x1
+  AN6
+  JCN nz, nlzAndMSB_1
+  FIM r1, 0x40
+  FIM r2, 0x08
+  BBL 0
+
+nlzAndMSB_4:
+  FIM r1, 0x00
+  FIM r2, 0x48
+  BBL 0
+
+nlzAndMSB_3:
+  FIM r1, 0x10
+  FIM r2, 0x38
+  BBL 0
+
+nlzAndMSB_2:
+  FIM r1, 0x20
+  FIM r2, 0x28
+  BBL 0
+
+nlzAndMSB_1:
+  FIM r1, 0x30
+  FIM r2, 0x18
+  BBL 0
