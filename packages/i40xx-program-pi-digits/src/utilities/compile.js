@@ -19,12 +19,12 @@ export const compileCodeForTest = (fileName, funcName) => {
       JMS ${funcName}
   `;
 
-  const { data: rom, errors, labelsOffsets } = compile(testCode, { tryRearrange: true });
+  const { data: rom, errors, labelsOffsets, sourceCode } = compile(testCode, { tryRearrange: true });
   if (errors.length) {
     console.log('COULD NOT PARSE SOURCE CODE!');
     console.log(errors);
     process.exit(1);
   }
 
-  return { rom, sourceCode: testCode, labelsOffsets };
+  return { rom, sourceCode, labelsOffsets };
 };

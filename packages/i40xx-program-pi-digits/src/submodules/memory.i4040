@@ -1,3 +1,7 @@
+%define BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3  0x00
+%define BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_2       0x01
+%define BANK_WITH_VARIABLES                         0x07
+
 clearMemory:
   FIM r0, 0x80
 clearMemory_loopBank:

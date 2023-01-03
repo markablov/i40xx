@@ -4,6 +4,8 @@ import Emulator from 'i40xx-emu';
 
 import { compileCodeForTest } from '#utilties/compile.js';
 
+const PROLOGUE_CYCLES_COUNT = 4;
+
 const runSingleTestStandard = (romDump, value) => {
   const system = new Emulator({ romDump });
 
@@ -71,7 +73,7 @@ const runSingleTestFast = (romDump, value) => {
       process.exit(1);
     }
 
-    sum += Number(elapsed);
+    sum += (Number(elapsed) - PROLOGUE_CYCLES_COUNT);
   }
 
   console.log('All tests are passed!');
