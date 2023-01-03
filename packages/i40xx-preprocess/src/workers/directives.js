@@ -20,7 +20,10 @@ export function extractDirectives(codeRaw) {
       currentPos++;
     }
     directives.push(codeRaw.substring(directiveStart, currentPos));
-    currentPos++;
+
+    while (codeRaw[currentPos] === '\n') {
+      currentPos++;
+    }
   }
 
   return { directives, sourceCode: codeRaw.substring(currentPos) };
