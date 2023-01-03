@@ -116,7 +116,7 @@ class RAM {
        * WMP instruction (Write RAM port)
        */
       case 0x1:
-        this.emit('output', { chip: bank.selectedRegister >> 2, data });
+        this?.#outputHandler({ chip: bank.selectedRegister >> 2, data });
         bank.outputs[bank.selectedRegister >> 2] = data;
         break;
 
