@@ -50,8 +50,26 @@ class AsmParser extends EmbeddedActionsParser {
     });
 
     $.RULE('instructionWithLabel', () => {
-      $.OPTION(() => $.SUBRULE($.label));
-      $.OPTION2(() => $.SUBRULE($.instruction));
+      $.OPTION1(() => $.SUBRULE($.keyword));
+      $.OPTION2(() => $.SUBRULE($.label));
+      $.OPTION3(() => $.SUBRULE($.instruction));
+    });
+
+    $.RULE('keyword', () => {
+      $.OR([
+        { ALT: () => $.SUBRULE($.keywordLocationShort) },
+      ]);
+    });
+
+    $.RULE('keywordLocationShort', () => {
+      $.CONSUME(Tokens.KeywordLocationShort);
+      $.CONSUME(Tokens.LBracket);
+      const offset = $.CONSUME(Tokens.Data);
+      $.CONSUME(Tokens.RBracket);
+
+      $.ACTION(() => {
+        codeGenerator.addCodePadding(offset.image);
+      });
     });
 
     $.RULE('label', () => {

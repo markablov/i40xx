@@ -33,6 +33,8 @@ class CodeGenerator {
 
   functions = new Set();
 
+  paddings = [];
+
   #offsetsToLabel = {};
 
   #current = 0;
@@ -85,6 +87,23 @@ class CodeGenerator {
 
     return addrValue;
   };
+
+  addCodePadding(offsetStr) {
+    const requiredOffset = CodeGenerator.#byteFromNumeric(offsetStr);
+    const currentOffset = this.#current & 0xFF;
+    const paddingCount = currentOffset <= requiredOffset
+      ? requiredOffset - currentOffset
+      : (0x100 - currentOffset + requiredOffset);
+
+    if (paddingCount === 0) {
+      return;
+    }
+
+    this.paddings.push({ offset: currentOffset, paddingCount });
+    for (let i = 0; i < paddingCount; i++, this.#current++) {
+      this.#bin[this.#current] = InstructionsWithoutArgCodes.get('nop');
+    }
+  }
 
   addLabel(label) {
     if (this.labelsOffsets[label] !== undefined) {
