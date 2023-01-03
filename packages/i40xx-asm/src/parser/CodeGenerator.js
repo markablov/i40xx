@@ -1,7 +1,7 @@
 const AddrType = {
   Label: Symbol('Label'),
   FlatAddress: Symbol('FlatAddress'),
-  BankAddress: Symbol('BankAddress'),
+  ROMAddress: Symbol('ROMAddress'),
 };
 
 const InstructionsWithoutArgCodes = new Map([
@@ -55,25 +55,25 @@ class CodeGenerator {
     return (cond.includes('n') ? 8 : 0) | (cond.includes('z') ? 4 : 0) | (cond.includes('c') ? 2 : 0) | (cond.includes('t') ? 1 : 0);
   }
 
-  // addr could be label name or 12-bit number (0 <= addr <= 4095) or "bank:offset" string,
-  // where "bank" is 4-bit bank number and "offset" is 8-bit offset for specific bank
+  // addr could be label name or 12-bit number (0 <= addr <= 4095) or "page:offset" string,
+  // where "page" is 4-bit page number and "offset" is 8-bit offset for specific page
   getAddrCode = (addr, type, short) => {
     let addrValue = 0;
-    const currentBank = this.#current >> 8;
+    const currentPage = this.#current >> 8;
 
     switch (type) {
       case AddrType.FlatAddress:
         addrValue = CodeGenerator.#byteFromNumeric(addr);
-        if (short && (addrValue >> 8) !== currentBank) {
-          throw new Error('For short jumps, address should be in the same bank as instruction');
+        if (short && (addrValue >> 8) !== currentPage) {
+          throw new Error('For short jumps, address should be in the same page as instruction');
         }
         break;
-      case AddrType.BankAddress: {
-        const [bank, offset] = addr.split(':').map((numeric) => CodeGenerator.#byteFromNumeric(numeric));
-        if (short && bank !== currentBank) {
-          throw new Error('For short jumps, address should be in the same bank as instruction');
+      case AddrType.ROMAddress: {
+        const [page, offset] = addr.split(':').map((numeric) => CodeGenerator.#byteFromNumeric(numeric));
+        if (short && page !== currentPage) {
+          throw new Error('For short jumps, address should be in the same page as instruction');
         }
-        addrValue = (bank << 8) | offset;
+        addrValue = (page << 8) | offset;
         break;
       }
       case AddrType.Label:
@@ -189,8 +189,8 @@ class CodeGenerator {
 
       if (short) {
         if ((addr >> 8) !== (offset >> 8)) {
-          const err = new Error('For short jumps, address should be in the same bank as instruction');
-          err.meta = { label, offset, code: 'short_jump_another_bank' };
+          const err = new Error('For short jumps, address should be in the same page as instruction');
+          err.meta = { label, offset, code: 'short_jump_another_page' };
           throw err;
         }
 

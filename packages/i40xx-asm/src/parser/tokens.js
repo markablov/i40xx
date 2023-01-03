@@ -32,10 +32,10 @@ addToken('RegisterPair', { pattern: /r[0-7]/ });
 
 addToken('Cond', { pattern: /n?(?:(?:zct)|(?:zc)|(?:zt)|(?:ct)|z|c|t)/, longer_alt: labelToken });
 
-// Bank address format is 00:0xFF, two parts - bank number and address inside bank
-// bank number: [0..9] OR [10..15]
-// address inside bank: [100..199] OR [200..249] OR [250..255] OR [0x00..0xFF] OR [00..99]
-addToken('BankAddress', { pattern: /(?:(?:0?\d)|(?:1[0-5])):(?:(?:[01]\d\d)|(?:2[0-4]\d)|(?:25[0-5])|(?:0x[0-9a-f]{1,2})|(?:\d{1,2}))/ });
+// ROM address format is 00:0xFF, two parts - page number and address inside page
+// page number: [0..9] OR [10..15]
+// address inside page [100..199] OR [200..249] OR [250..255] OR [0x00..0xFF] OR [00..99]
+addToken('ROMAddress', { pattern: /(?:(?:0?\d)|(?:1[0-5])):(?:(?:[01]\d\d)|(?:2[0-4]\d)|(?:25[0-5])|(?:0x[0-9a-f]{1,2})|(?:\d{1,2}))/ });
 
 // Data is 12-bit maximum, so it could accept 0x000..0xFFF and 0..4095 ranges
 // [1000..3999] OR [4000..4089] OR [4090..4095] OR [0x000..0xFFF] OR [000..999]

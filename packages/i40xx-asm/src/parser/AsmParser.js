@@ -199,7 +199,7 @@ class AsmParser extends EmbeddedActionsParser {
     $.RULE('address', () => $.OR([
       { ALT: () => ({ token: $.CONSUME(Tokens.Label), type: AddrType.Label }) },
       { ALT: () => ({ token: $.CONSUME(Tokens.Data), type: AddrType.FlatAddress }) },
-      { ALT: () => ({ token: $.CONSUME(Tokens.BankAddress), type: AddrType.BankAddress }) },
+      { ALT: () => ({ token: $.CONSUME(Tokens.ROMAddress), type: AddrType.ROMAddress }) },
     ]));
 
     $.RULE('instructionWithAddr12', () => {

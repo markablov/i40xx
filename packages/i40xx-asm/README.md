@@ -46,7 +46,7 @@ Operand could be one of kind:
 - 4-bit index register, format is `rrX`, where X is [1..16]: `LD rr10`
 - 8-bit index register pair, format is `rX`, where X is [1..8]: `FIN r3`
 - immediate value, either hex or decimal: `LDM 0xF` / `FIM r2, 200`
-- bank address, format is `XX:YYY`, where XX is bank number (in decimal form) and YYY is offset inside bank: `JUN 5:0xDD`
+- ROM address, format is `XX:YYY`, where XX is page number (in decimal form) and YYY is offset inside page: `JUN 5:0xDD`
 - label name: `ISZ rr5, do_loop`
 - condition (for `JCN` instruction), combination of symbols `n` (invert condition), `z` (if zero), `t` (if test signal is 0), `c` (if carry): `JCN nz, non_zero`
 

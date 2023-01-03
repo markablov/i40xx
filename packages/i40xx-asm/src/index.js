@@ -37,13 +37,13 @@ const getPaddingCountToFixJumpIssues = (error, labelsOffsets) => {
   }
 
   const lowestOffset = Math.min(error.offset, labelsOffsets[error.label]);
-  // shift either label or jump instruction to next bank (to be in same bank as corresponding jump/label)
+  // shift either label or jump instruction to next page (to be in same page as corresponding jump/label)
   return 0x100 - (lowestOffset & 0xFF);
 };
 
 /*
  * Compile provided code with extra options:
- *   - allow to rearrange code to avoid i40xx jump limitations (short jump to another RAM bank, for example)
+ *   - allow to rearrange code to avoid i40xx jump limitations (short jump to another ROM page, for example)
  */
 const compile = (sourceCode, { tryRearrange = false } = {}) => {
   if (tryRearrange === false) {
@@ -56,7 +56,7 @@ const compile = (sourceCode, { tryRearrange = false } = {}) => {
     const compilerResults = compileOnce(rearrangedCode);
     const { functions, errors, labelsOffsets } = compilerResults;
     const errorCode = errors[0]?.code;
-    if (!['cond_jump_from_edge', 'short_jump_another_bank'].includes(errorCode)) {
+    if (!['cond_jump_from_edge', 'short_jump_another_page'].includes(errorCode)) {
       return compilerResults;
     }
 
