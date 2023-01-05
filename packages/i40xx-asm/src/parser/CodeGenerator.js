@@ -234,6 +234,8 @@ class CodeGenerator {
     this.#current = 0;
     this.labelsOffsets = {};
     this.#offsetsToLabel = {};
+    this.functions = new Set();
+    this.paddings = [];
   }
 }
 
