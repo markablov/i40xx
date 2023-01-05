@@ -30,15 +30,15 @@ const runSingleTestTable = (romDump, { a, b }) => {
 
   const { registers } = system;
   registers.acc = a;
-  registers.indexBanks[0][4] = b;
-  registers.indexBanks[0][5] = 0x0;
+  registers.indexBanks[0][10] = b;
+  registers.indexBanks[0][11] = 0x0;
 
   while (!system.isFinished()) {
     system.instruction();
   }
 
   return {
-    result: (registers.indexBanks[0][7] << 4) + registers.indexBanks[0][6],
+    result: (registers.indexBanks[0][13] << 4) + registers.indexBanks[0][12],
     elapsed: system.instructionCycles,
   };
 };
