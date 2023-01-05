@@ -10,20 +10,29 @@ import setInitialRamDumpAction from '../../../redux/actions/setInitialRamDump.js
 import './Memory.css';
 
 class Memory extends Component {
+  state = { uploadedRAMDumpName: '' };
+
   uploadRAMDump = async (file) => {
     const { setInitialRamDump } = this.props;
 
     const dump = await file.text();
     setInitialRamDump(JSON.parse(dump));
+
+    this.setState({ uploadedRAMDumpName: file.name });
   };
 
   render() {
     const { ram, selectedBank } = this.props;
+    const { uploadedRAMDumpName } = this.state;
 
     return (
       <>
         <div className="mb-2">
           <Form.InputFile label="Initial RAM dump..." onChange={(e) => this.uploadRAMDump(e.target.files[0])} />
+          <span>
+            Loaded dump:
+            {uploadedRAMDumpName || 'none'}
+          </span>
         </div>
         {
           ram.map(({ registers, selectedCharacter, selectedRegister }, bankIdx) => (
