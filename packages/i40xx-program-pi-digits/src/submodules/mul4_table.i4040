@@ -1,0 +1,193 @@
+%include "memory.i4040"
+
+__location_short(0x00)
+mul4x4_0:
+  FIM r3, 0x00                                         # low, high = 0
+  BBL 0
+
+__location_short(0x10)
+mul4x4_1:
+  XCH rr6                                              # low  = a
+  LDM 0x0
+  XCH rr7                                              # high = 0
+  BBL 0
+
+__location_short(0x20)
+mul4x4_2:
+  XCH rr4
+  LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
+  DCL
+  SRC r2
+  RD0
+  XCH rr6                                              # low  = a << 1
+  RD3
+  XCH rr7                                              # high = a >> 3
+  BBL 0
+
+__location_short(0x30)
+mul4x4_3:
+  XCH rr4
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_3
+  DCL
+  SRC r2
+  RD2
+  XCH rr6                                              # low
+  RD3
+  XCH rr7                                              # high
+  BBL 0
+
+__location_short(0x40)
+mul4x4_4:
+  XCH rr4
+  LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_2
+  DCL
+  SRC r2
+  RD0
+  XCH rr6                                              # low  = a << 2
+  RD1
+  XCH rr7                                              # high = a >> 2
+  BBL 0
+
+__location_short(0x50)
+mul4x4_5:
+  XCH rr4
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_5
+  DCL
+  SRC r2
+  RD0
+  XCH rr6                                              # low
+  RD1
+  XCH rr7                                              # high
+  BBL 0
+
+__location_short(0x60)
+mul4x4_6:
+  XCH rr4
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_6
+  DCL
+  SRC r2
+  RD2
+  XCH rr6                                              # low
+  RD3
+  XCH rr7                                              # high
+  BBL 0
+
+__location_short(0x70)
+mul4x4_7:
+  XCH rr4
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_7
+  DCL
+  SRC r2
+  RD0
+  XCH rr6                                              # low
+  RD1
+  XCH rr7                                              # high
+  BBL 0
+
+__location_short(0x80)
+mul4x4_8:
+  XCH rr4
+  LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
+  DCL
+  SRC r2
+  RD1
+  XCH rr6                                              # low  = a << 3
+  RD2
+  XCH rr7                                              # high = a >> 1
+  BBL 0
+
+__location_short(0x90)
+mul4x4_9:
+  XCH rr4
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_9
+  DCL
+  SRC r2
+  RD2
+  XCH rr6                                              # low
+  RD3
+  XCH rr7                                              # high
+  BBL 0
+
+__location_short(0xA0)
+mul4x4_A:
+  XCH rr4
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_A
+  DCL
+  SRC r2
+  RD0
+  XCH rr6                                              # low
+  RD1
+  XCH rr7                                              # high
+  BBL 0
+
+
+__location_short(0xB0)
+mul4x4_B:
+  XCH rr4
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_B
+  DCL
+  SRC r2
+  RD2
+  XCH rr6                                              # low
+  RD3
+  XCH rr7                                              # high
+  BBL 0
+
+__location_short(0xC0)
+mul4x4_C:
+  XCH rr4
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_C
+  DCL
+  SRC r2
+  RD0
+  XCH rr6                                              # low
+  RD1
+  XCH rr7                                              # high
+  BBL 0
+
+__location_short(0xD0)
+mul4x4_D:
+  XCH rr4
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_D
+  DCL
+  SRC r2
+  RD2
+  XCH rr6                                              # low
+  RD3
+  XCH rr7                                              # high
+  BBL 0
+
+__location_short(0xE0)
+mul4x4_E:
+  XCH rr4
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_E
+  DCL
+  SRC r2
+  RD0
+  XCH rr6                                              # low
+  RD1
+  XCH rr7                                              # high
+  BBL 0
+
+
+__location_short(0xF0)
+mul4x4_F:
+  XCH rr4
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_F
+  DCL
+  SRC r2
+  RD2
+  XCH rr6                                              # low
+  RD3
+  XCH rr7                                              # high
+  BBL 0
+
+# INPUT:
+#   acc - first factor (a)
+#   rr4 - second factor
+#   rr5 - 0x0
+# OUTPUT:
+#   rr6 - low word of product
+#   rr7 - high word of product
+mul4x4:
+  JIN r2
