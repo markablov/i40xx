@@ -4,10 +4,10 @@ import Emulator from 'i40xx-emu';
 import compile from 'i40xx-asm';
 import * as fs from 'node:fs';
 
-import { hexToHWNumber, hwNumberToHex } from '#utilties/numbers.js';
-import { compileCodeForTest } from '#utilties/compile.js';
-import { writeValueToMainChars, writeValueToStatusChars } from '#utilties/memory.js';
-import { addInitializationWithTestValues, generateMemoryBankSwitch } from '#utilties/codeGenerator.js';
+import { hexToHWNumber, hwNumberToHex } from '#utilities/numbers.js';
+import { compileCodeForTest } from '#utilities/compile.js';
+import { writeValueToMainChars, writeValueToStatusChars } from '#utilities/memory.js';
+import { addInitializationWithTestValues, generateMemoryBankSwitch } from '#utilities/codeGenerator.js';
 
 import TESTS from './data/updateDigitsChunksTestData.json' assert { type: 'json' };
 

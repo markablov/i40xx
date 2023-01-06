@@ -2,7 +2,7 @@
 
 import Emulator from 'i40xx-emu';
 
-import { compileCodeForTest } from '#utilties/compile.js';
+import { compileCodeForTest } from '#utilities/compile.js';
 
 const PROLOGUE_CYCLES_COUNT = 4;
 

@@ -2,9 +2,9 @@
 
 import Emulator from 'i40xx-emu';
 
-import { hexToHWNumber, hwNumberToHex } from '#utilties/numbers.js';
-import { compileCodeForTest } from '#utilties/compile.js';
-import { writeValueToMainChars, writeValueToStatusChars } from '#utilties/memory.js';
+import { hexToHWNumber, hwNumberToHex } from '#utilities/numbers.js';
+import { compileCodeForTest } from '#utilities/compile.js';
+import { writeValueToMainChars, writeValueToStatusChars } from '#utilities/memory.js';
 
 const runSingleTest = (romDump, loopIterationCodeOffset, { N, v, vmax, m, a }) => {
   const system = new Emulator({ romDump });

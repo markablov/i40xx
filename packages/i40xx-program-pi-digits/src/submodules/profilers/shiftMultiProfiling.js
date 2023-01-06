@@ -2,10 +2,10 @@
 
 import Emulator from 'i40xx-emu';
 
-import { hexToHWNumber } from '#utilties/numbers.js';
-import { compileCodeForTest } from '#utilties/compile.js';
-import { writeValueToMainChars } from '#utilties/memory.js';
-import { runWithProfiler } from '#utilties/profiling.js';
+import { hexToHWNumber } from '#utilities/numbers.js';
+import { compileCodeForTest } from '#utilities/compile.js';
+import { writeValueToMainChars } from '#utilities/memory.js';
+import { runWithProfiler } from '#utilities/profiling.js';
 
 const STARTING_VALUES = { value: '0x8234567890000000', shiftCount: 2 };
 

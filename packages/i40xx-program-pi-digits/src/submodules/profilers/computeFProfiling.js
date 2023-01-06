@@ -2,10 +2,10 @@
 
 import Emulator from 'i40xx-emu';
 
-import { hexToHWNumber } from '#utilties/numbers.js';
-import { compileCodeForTest } from '#utilties/compile.js';
-import { writeValueToMainChars, writeValueToStatusChars } from '#utilties/memory.js';
-import { runWithProfiler } from '#utilties/profiling.js';
+import { hexToHWNumber } from '#utilities/numbers.js';
+import { compileCodeForTest } from '#utilities/compile.js';
+import { writeValueToMainChars, writeValueToStatusChars } from '#utilities/memory.js';
+import { runWithProfiler } from '#utilities/profiling.js';
 
 const CYCLES_PER_SECOND = 95000n;
 

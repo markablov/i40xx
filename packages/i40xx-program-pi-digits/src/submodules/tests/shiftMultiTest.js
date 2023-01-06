@@ -2,13 +2,13 @@
 
 import Emulator from 'i40xx-emu';
 
-import { hexToHWNumber, hwNumberToHex } from '#utilties/numbers.js';
-import { compileCodeForTest } from '#utilties/compile.js';
-import { writeValueToMainChars } from '#utilties/memory.js';
+import { hexToHWNumber, hwNumberToHex } from '#utilities/numbers.js';
+import { compileCodeForTest } from '#utilities/compile.js';
+import { writeValueToMainChars } from '#utilities/memory.js';
 
 import {
   addInitializationWithTestValues, generateMemoryMainCharactersInitialization, generateRegisterInitialization,
-} from '#utilties/codeGenerator.js';
+} from '#utilities/codeGenerator.js';
 
 const runSingleTest = (romDump, { value, shiftCount }) => {
   const system = new Emulator({ romDump });
