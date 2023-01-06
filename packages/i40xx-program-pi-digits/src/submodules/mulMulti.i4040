@@ -1,5 +1,5 @@
 %include "memory.i4040"
-%include "mul4.i4040"
+%include "mul4_table.i4040"
 
 # CARRY INSENSITIVE
 # INPUT:
@@ -35,6 +35,7 @@ mulMWxMW:
   CMA
   XCH rr6                            # rr6 = 16 - len(a)
   FIM r0, 0x80
+  FIM r5, 0x00
 mulMWxMW_loopOuter:
   LD rr14
   XCH rr8
@@ -48,8 +49,9 @@ mulMWxMW_loopInner:
   XCH rr10
   SRC r2
   RDM
-  XCH rr11
   JMS mul4x4                         # [rr12, rr13] = a[i] * b[j]
+  LDM $BANK_WITH_VARIABLES
+  DCL
   LD rr3
   ADD rr5
   XCH rr1

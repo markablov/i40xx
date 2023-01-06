@@ -2,7 +2,7 @@
 
 __location_short(0x00)
 mul4x4_0:
-  FIM r3, 0x00                                         # low, high = 0
+  FIM r6, 0x00                                         # low, high = 0
   BBL 0
 
 __location_short(0x10)
