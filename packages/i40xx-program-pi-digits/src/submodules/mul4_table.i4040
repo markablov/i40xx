@@ -14,10 +14,10 @@ mul4x4_1:
 
 __location_short(0x20)
 mul4x4_2:
-  XCH rr10
+  XCH rr12
   LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
   DCL
-  SRC r5
+  SRC r6
   RD0
   XCH rr12                                              # low  = a << 1
   RD3
@@ -26,10 +26,10 @@ mul4x4_2:
 
 __location_short(0x30)
 mul4x4_3:
-  XCH rr10
+  XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_3
   DCL
-  SRC r5
+  SRC r6
   RD2
   XCH rr12                                              # low
   RD3
@@ -38,10 +38,10 @@ mul4x4_3:
 
 __location_short(0x40)
 mul4x4_4:
-  XCH rr10
+  XCH rr12
   LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_2
   DCL
-  SRC r5
+  SRC r6
   RD0
   XCH rr12                                              # low  = a << 2
   RD1
@@ -50,10 +50,10 @@ mul4x4_4:
 
 __location_short(0x50)
 mul4x4_5:
-  XCH rr10
+  XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_5
   DCL
-  SRC r5
+  SRC r6
   RD0
   XCH rr12                                              # low
   RD1
@@ -62,10 +62,10 @@ mul4x4_5:
 
 __location_short(0x60)
 mul4x4_6:
-  XCH rr10
+  XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_6
   DCL
-  SRC r5
+  SRC r6
   RD2
   XCH rr12                                              # low
   RD3
@@ -74,10 +74,10 @@ mul4x4_6:
 
 __location_short(0x70)
 mul4x4_7:
-  XCH rr10
+  XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_7
   DCL
-  SRC r5
+  SRC r6
   RD0
   XCH rr12                                              # low
   RD1
@@ -86,10 +86,10 @@ mul4x4_7:
 
 __location_short(0x80)
 mul4x4_8:
-  XCH rr10
+  XCH rr12
   LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
   DCL
-  SRC r5
+  SRC r6
   RD1
   XCH rr12                                              # low  = a << 3
   RD2
@@ -98,10 +98,10 @@ mul4x4_8:
 
 __location_short(0x90)
 mul4x4_9:
-  XCH rr10
+  XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_9
   DCL
-  SRC r5
+  SRC r6
   RD2
   XCH rr12                                              # low
   RD3
@@ -110,10 +110,10 @@ mul4x4_9:
 
 __location_short(0xA0)
 mul4x4_A:
-  XCH rr10
+  XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_A
   DCL
-  SRC r5
+  SRC r6
   RD0
   XCH rr12                                              # low
   RD1
@@ -123,10 +123,10 @@ mul4x4_A:
 
 __location_short(0xB0)
 mul4x4_B:
-  XCH rr10
+  XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_B
   DCL
-  SRC r5
+  SRC r6
   RD2
   XCH rr12                                              # low
   RD3
@@ -135,10 +135,10 @@ mul4x4_B:
 
 __location_short(0xC0)
 mul4x4_C:
-  XCH rr10
+  XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_C
   DCL
-  SRC r5
+  SRC r6
   RD0
   XCH rr12                                              # low
   RD1
@@ -147,10 +147,10 @@ mul4x4_C:
 
 __location_short(0xD0)
 mul4x4_D:
-  XCH rr10
+  XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_D
   DCL
-  SRC r5
+  SRC r6
   RD2
   XCH rr12                                              # low
   RD3
@@ -159,10 +159,10 @@ mul4x4_D:
 
 __location_short(0xE0)
 mul4x4_E:
-  XCH rr10
+  XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_E
   DCL
-  SRC r5
+  SRC r6
   RD0
   XCH rr12                                              # low
   RD1
@@ -172,10 +172,10 @@ mul4x4_E:
 
 __location_short(0xF0)
 mul4x4_F:
-  XCH rr10
+  XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_F
   DCL
-  SRC r5
+  SRC r6
   RD2
   XCH rr12                                              # low
   RD3
