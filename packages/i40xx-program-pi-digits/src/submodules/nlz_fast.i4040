@@ -2,9 +2,9 @@
 #   acc - value
 # OUTPUT:
 #   rr2 - number of leading zeros
-#   rr3 - 0x0
+#   rr3 - 0x8
 #   rr4 - most significant bit
-#   rr5 - 0x8
+#   rr5 - 0x0
 nlzAndMSB:
   XCH rr6
   LDM 0x8
@@ -19,26 +19,26 @@ nlzAndMSB:
   LDM 0x1
   AN6
   JCN nz, nlzAndMSB_1
-  FIM r1, 0x40
-  FIM r2, 0x08
+  FIM r1, 0x48
+  FIM r2, 0x00
   BBL 0
 
 nlzAndMSB_4:
-  FIM r1, 0x00
-  FIM r2, 0x48
+  FIM r1, 0x08
+  FIM r2, 0x40
   BBL 0
 
 nlzAndMSB_3:
-  FIM r1, 0x10
-  FIM r2, 0x38
+  FIM r1, 0x18
+  FIM r2, 0x30
   BBL 0
 
 nlzAndMSB_2:
-  FIM r1, 0x20
-  FIM r2, 0x28
+  FIM r1, 0x28
+  FIM r2, 0x20
   BBL 0
 
 nlzAndMSB_1:
-  FIM r1, 0x30
-  FIM r2, 0x18
+  FIM r1, 0x38
+  FIM r2, 0x10
   BBL 0

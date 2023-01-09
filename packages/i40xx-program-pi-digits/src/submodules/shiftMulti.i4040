@@ -1,59 +1,62 @@
-%include "shift4.i4040"
+%include "shift4_table.i4040"
 
 # INPUT:
 #   rr0 - variable number (06..0B)
 #   rr1 - index of MSW
 #   rr2 - shift value
-#   rr3 - 4 - shift value
+#   rr3 - 0x8
+#   rr4 - 4 - shift value
+#   rr5 - 0x0
 # VARIABLES:
 #   rr13 - high shifted bits from previous digit
 #   rr12 - low shifted bits from current digit
-#   rr5 - loop iterator
+#   rr8 - 0x2 constant
+#   rr9 - loop iterator
 # NOTES:
 #   There is special case for long division with 16-word number dividend. This number ends with few 0s, so we perform
 #   normalization step for such numbers by pretending that it has 17 digits, by safely replacing dividend[0] with
 #   dividend[16]. This function should handle such case.
 shiftLeftVarFromMainMemory:
   LDM 0x2
-  XCH rr6
+  XCH rr8
   LD rr1
   CMA
   JCN nz, shiftLeftVarFromMainMemory_normalVar
   IAC
   IAC
 shiftLeftVarFromMainMemory_normalVar:
-  XCH rr5                                   # rr5 = len(var) === 16 ? 2 : (16 - len(var))
+  XCH rr9                                   # rr9 = len(var) === 16 ? 2 : (16 - len(var))
   INC rr1
   INC rr1
 shiftLeftVarFromMainMemory_loop:
   LD rr1
-  SUB rr6
+  SUB rr8
   CLC
   XCH rr1
   SRC r0
   RDM
-  XCH rr12
-  LD rr3
-  JMS shiftRight                            # rr12 = var[i - 1] >> (4 - s)
+  XCH rr6
+  JMS shift4ByR2                            # rr12 = var[i - 1] >> (4 - s)
+  DCL
   INC rr1
   SRC r0
   RDM
-  XCH rr13
-  LD rr2
-  JMS shiftLeft                             # rr13 = var[i] << s
+  XCH rr6
+  JMS shift4ByR1                            # rr13 = var[i] << s
+  DCL
   LD rr13
   ADD rr12
   WRM                                       # var[i] = (var[i] << s) | (var[i - 1] >> (4 - s))
-  ISZ rr5, shiftLeftVarFromMainMemory_loop
+  ISZ rr9, shiftLeftVarFromMainMemory_loop
   LD rr1
   DAC
   CLC
   XCH rr1
   SRC r0
   RDM
-  XCH rr13
-  LD rr2
-  JMS shiftLeft
+  XCH rr6
+  JMS shift4ByR1
+  DCL
   LD rr13                                   # var[0] = var[0] << s
   WRM
 shiftLeftVarFromMainMemory_ret:
@@ -61,46 +64,49 @@ shiftLeftVarFromMainMemory_ret:
 
 # INPUT:
 #   rr0 - variable number (06..0B)
-#   rr1 - zero (modified to be variable digit index)
+#   rr1 - 0x0
 #   rr2 - shift value
-#   rr3 - 4 - shift value
-#   rr7 - MSW for variable
+#   rr3 - 0x0
+#   rr4 - 4 - shift value
+#   rr5 - 0x8
+#   rr6 - MSW for variable
 # VARIABLES:
-#   rr5 - high shifted bits from previous digit
-#   rr6 - low shifted bits from current digit
+#   rr13 - high shifted bits from previous digit
+#   rr12 - low shifted bits from current digit
+#   rr9 - loop iterator
 shiftRightVarFromMainMemory:
-  LD rr7
+  LD rr6
   CMA
   IAC
   JCN z, shiftRightVarFromMainMemory_lastDigit
-  XCH rr7
+  XCH rr9
 shiftRightVarFromMainMemory_loop:
   INC rr1
   SRC r0
   RDM
-  XCH rr13
-  LD rr3
-  JMS shiftLeft                             # rr13 = var[digitIdx + 1] << (4 - shiftValue)
+  XCH rr6
+  JMS shift4ByR2                            # rr13 = var[digitIdx + 1] << (4 - shiftValue)
+  DCL
   LD rr1
   DAC
   CLC
   XCH rr1
   SRC r0
   RDM
-  XCH rr12
-  LD rr2
-  JMS shiftRight                            # rr12 = var[digitIdx] >> shiftValue
+  XCH rr6
+  JMS shift4ByR1                            # rr12 = var[digitIdx] >> shiftValue
+  DCL
   LD rr12
   ADD rr13
   WRM                                       # var[digitIdx] = rr12 | rr13
   INC rr1
-  ISZ rr7, shiftRightVarFromMainMemory_loop
+  ISZ rr9, shiftRightVarFromMainMemory_loop
 shiftRightVarFromMainMemory_lastDigit:
   SRC r0
   RDM
-  XCH rr12
-  LD rr2
-  JMS shiftRight                            # rr12 = var[varDigitsAmount - 1] >> shiftValue
+  XCH rr6
+  JMS shift4ByR1                            # rr12 = var[varDigitsAmount - 1] >> shiftValue
+  DCL
   LD rr12
   WRM
   BBL 0

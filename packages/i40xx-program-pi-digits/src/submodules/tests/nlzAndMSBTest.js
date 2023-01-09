@@ -19,9 +19,9 @@ const runSingleTestStandard = (romDump, value) => {
   return {
     result: {
       nlz: registers.indexBanks[0][2],
-      shiftDirection0: 0x0,
+      shiftDirection0: 0x8,
       msb: registers.indexBanks[0][3],
-      shiftDirection1: 0x8,
+      shiftDirection1: 0x0,
     },
     elapsed: system.instructionCycles,
   };
@@ -68,7 +68,7 @@ const runSingleTestFast = (romDump, value) => {
     const expectedNlz = value === 0 ? 4 : value.toString(2).padStart(4, '0').indexOf('1');
     const expectedMsb = 4 - expectedNlz;
     const { result: { nlz, shiftDirection0, msb, shiftDirection1 }, elapsed } = runSingleTest(rom, value);
-    if (shiftDirection0 !== 0x0 || shiftDirection1 !== 0x8 || nlz !== expectedNlz || msb !== expectedMsb) {
+    if (shiftDirection0 !== 0x8 || shiftDirection1 !== 0x0 || nlz !== expectedNlz || msb !== expectedMsb) {
       console.log(`Test failed, value = ${value}`, { nlz, shiftDirection0, msb, shiftDirection1 });
       process.exit(1);
     }

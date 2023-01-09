@@ -1,5 +1,5 @@
 %include "memory.i4040"
-%include "nlz.i4040"
+%include "nlz_fast.i4040"
 %include "shiftMulti.i4040"
 %include "mul4.i4040"
 %include "div8.i4040"
@@ -41,6 +41,7 @@ divMWxMW:
   JMS nlzAndMSB                      # get shift values for normalization
   LD rr2
   JCN z, divMWxMW_normalized
+  # shift dividend and divisor to left by NLZ
   FIM r0, 0x80
   LD rr10
   XCH rr1                            # XXX: shiftLeftVarFromMainMemory() would clear carry early
@@ -65,13 +66,18 @@ divMWxMW_loop:
   SB1
   LD rr2
   JCN z, divMWxMW_denormalized
+  LDM 0x0
+  XCH rr3
+  LDM 0x8
+  XCH rr5
+  # shift reminder and divisor to right by NLZ
   FIM r0, 0x80
   LD rr15
-  XCH rr7
+  XCH rr6
   JMS shiftRightVarFromMainMemory
   FIM r0, 0x90
   LD rr15
-  XCH rr7
+  XCH rr6
   JMS shiftRightVarFromMainMemory
 divMWxMW_denormalized:
   SB0
