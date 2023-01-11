@@ -35,9 +35,10 @@ powerMod_skipResultUpdate:
   JMS MSWForVarFromMainMemory
   JCN c, powerMod_ret
   LD rr1
-  XCH rr7
+  XCH rr6
   FIM r0, 0xA0
-  FIM r1, 0x13
+  FIM r1, 0x10
+  FIM r2, 0x38
   JMS shiftRightVarFromMainMemory   # exp = exp / 2
   LD rr12
   ADD rr1
