@@ -2,20 +2,57 @@
 %include "submodules/piDigits.i4040"
 
 # MEMORY LAYOUT:
-#   Banks #0-#6:
-#     Registers #0-#F:
-#       Main characters: chunks with digits
-#       Status characters: segment of prime numbers
-#   Bank #7:
-#     Registers #0-#5:
-#       Main characters: chunks with digits
-#       Status characters: segment of prime numbers
-#     Registers #6-#B:
-#       Main characters: variables
-#       Status characters: variables
-#     Registers #C-#F:
-#       Main characters: initial segment of prime numbers (2 digits each)
-#       Status characters: variables
+#  Bank #0:
+#    Registers #0-#F:
+#      Main characters: chunks with digits
+#      Status characters #0: lookup table for left shifts with shift value 1 (regNo << 1)
+#      Status characters #1: lookup table for left shifts with shift value 3 (regNo << 3)
+#      Status characters #2: lookup table for right shifts with shift value 1 (regNo >> 1)
+#      Status characters #3: lookup table for right shifts with shift value 3 (regNo >> 3)
+#  Bank #1:
+#    Registers #0-#F:
+#      Main characters: chunks with digits
+#      Status characters #0: lookup table for left shifts with shift value 2 (regNo << 2)
+#      Status characters #1: lookup table for right shifts with shift value 2 (regNo >> 2)
+#      Status characters #2, #3: lookup table for 4-bit multiplications by factor 0x3 (regNo * 0x3)
+#  Bank #2:
+#    Registers #0-#F:
+#      Main characters: chunks with digits
+#      Status characters #0, #1: lookup table for 4-bit multiplications by factor 0x5 (regNo * 0x5)
+#      Status characters #2, #3: lookup table for 4-bit multiplications by factor 0x6 (regNo * 0x6)
+#  Bank #3:
+#    Registers #0-#F:
+#      Main characters: chunks with digits
+#      Status characters #0, #1: lookup table for 4-bit multiplications by factor 0x7 (regNo * 0x7)
+#      Status characters #2, #3: lookup table for 4-bit multiplications by factor 0x9 (regNo * 0x9)
+#  Bank #4:
+#    Registers #0-#F:
+#      Main characters: chunks with digits
+#      Status characters #0, #1: lookup table for 4-bit multiplications by factor 0xA (regNo * 0xA)
+#      Status characters #2, #3: lookup table for 4-bit multiplications by factor 0xB (regNo * 0xB)
+#  Bank #5:
+#    Registers #0-#F:
+#      Main characters: chunks with digits
+#      Status characters #0, #1: lookup table for 4-bit multiplications by factor 0xC (regNo * 0xC)
+#      Status characters #2, #3: lookup table for 4-bit multiplications by factor 0xD (regNo * 0xD)
+#  Bank #6:
+#    Registers #0-#F:
+#      Main characters: chunks with digits
+#      Status characters #0, #1: lookup table for 4-bit multiplications by factor 0xE (regNo * 0xE)
+#      Status characters #2, #3: lookup table for 4-bit multiplications by factor 0xF (regNo * 0xF)
+#  Bank #7:
+#    Registers #0-#1:
+#      Main characters: chunks with digits
+#      Status characters: variables
+#    Registers #2-#5:
+#      Main characters: current segment of prime numbers
+#      Status characters: variables
+#    Registers #6-#B:
+#      Main characters: variables
+#      Status characters: variables
+#    Registers #C-#F:
+#      Main characters: initial segment of prime numbers
+#      Status characters: variables
 
 # MEMORY VARIABLES IN STATUS CHARACTERS:
 #   GLOBAL:
