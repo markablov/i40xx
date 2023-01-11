@@ -1,22 +1,25 @@
 %include "memory.i4040"
 %include "nlz_fast.i4040"
 %include "shiftMulti.i4040"
-%include "mul4.i4040"
+%include "mul4_table.i4040"
 %include "div8.i4040"
 
-# CARRY INSENSITIVE
-# USES ALL REGISTERS (rr0..rr15 / rr0"..rr7")
 # INPUT:
 #   memMainVar[0x08] - dividend
 #   memMainVar[0x09] - divisor
 # OUTPUT:
 #   memMainVar[0x08] - reminder
 #   memMainVar[0x0A] - quotient
+#   rr7 - MSW for quotient
 # VARIABLES:
 #   rr2" - shift value for normalization
 #   rr3" - 4 - shift value for normalization
 #   rr14 - index of currently calculated quotient digit
 #   rr15 - MSW of divisor
+# NOTES:
+#   - carry insensitive
+#   - uses all registers
+#   - could switch register bank
 divMWxMW:
   LDM 0x08
   JMS MSWForVarFromMainMemory
@@ -32,6 +35,7 @@ divMWxMW:
   STC                               # set carry to have "greater or equal" check instead of just "greater"
   JMS compareVarsFromMainMemory     # if dividend is smaller than divisor, just exit
   JCN nc, divMWxMW_return
+  CLC
   FIM r0, 0x90
   LD rr15
   XCH rr1
@@ -51,18 +55,36 @@ divMWxMW:
   XCH rr1                            # XXX: shiftLeftVarFromMainMemory() would clear carry early
   JMS shiftLeftVarFromMainMemory     # perform normalization for divisor
 divMWxMW_normalized:
-  SB0
   LD rr10
   SUB rr15
   CLC
   XCH rr14                           # quotientDigitIdx = dividendLen - divisorLen
-divMWxMW_loop:
+  LD rr14
+  XCH rr7
+  SB0
+  # run first iteration outside loop to be able to fix quotient MSW (highest digit could be 0)
   JMS divMWxMW_getQuotientDigit
+  LD rr14
+  JCN z, divMWxMW_denormalize
+  LD rr4
+  JCN nz, divMWxMW_startLoop
+divMWxMW_correctQuotientMSW:
+  SB1
   LD rr14
   DAC
   CLC
+  XCH rr7
+  SB0
+divMWxMW_startLoop:
+  LD rr14
+divMWxMW_loop:
+  DAC
+  CLC
   XCH rr14
+  JMS divMWxMW_getQuotientDigit
+  LD rr14
   JCN nz, divMWxMW_loop
+divMWxMW_denormalize:
   SB1
   LD rr2
   JCN z, divMWxMW_denormalized
@@ -80,7 +102,6 @@ divMWxMW_loop:
   XCH rr6
   JMS shiftRightVarFromMainMemory
 divMWxMW_denormalized:
-  SB0
 divMWxMW_return:
   BBL 0
 
@@ -105,6 +126,8 @@ divMWxMW_getQuotientDigit:
   JMS divMWxMW_getEstimatedQuotient
   CLB
   XCH rr9
+  LD rr4
+  JCN z, divMWxMW_getQuotientDigit_return
   LD rr14
   XCH rr7
   FIM r0, 0x00
@@ -114,12 +137,14 @@ divMWxMW_getQuotientDigit:
   LD rr4
   # XXX: we always multiply by estimatedQuotient and rr10 is not affected by anything, so we can load it once
   XCH rr10
+  LDM 0x0
+  XCH rr11
 divMWxMW_getQuotientDigit_mulsubLoop:
   SRC r4
   RDM
-  XCH rr11
   # [rr12, rr13] = estimatedQuotient * divisor[divisorDigitIdx]
   JMS mul4x4
+  DCL
   SRC r3
   # dividend[divisorDigitIdx + quotientDigit]
   RDM
@@ -255,13 +280,15 @@ divMWxMW_getEstimatedQuotient:
   RDM
   # rr0 = dividend[quotientDigit + divisorDigitsAmount - 2]
   XCH rr0
+  LDM 0x0
+  XCH rr11
 divMWxMW_getEstimatedQuotient_checkIfCorrectionNecessary:
   LD rr5
   JCN nz, divMWxMW_getEstimatedQuotient_performCorrection
   LD rr4
-  XCH rr11
   # [rr12, rr13] = estimatedQuotient * divisor[divisorDigitsAmount - 2]
   JMS mul4x4
+  DCL
   LD rr0
   SUB rr12
   CMC
