@@ -33,14 +33,6 @@ const runSingleTestMulti = (romDump, { a, b }) => {
   };
 };
 
-/*
-# INPUT:
-#   rr2 - variable number in main memory for first factor
-#   rr4 - variable number in main memory for second factor
-# OUTPUT:
-#   memMainVar[0x08] - product
- */
-
 const runSingleTest16bit = (romDump, { a, b }) => {
   const system = new Emulator({ romDump, ramDump: RAM_DUMP });
 
