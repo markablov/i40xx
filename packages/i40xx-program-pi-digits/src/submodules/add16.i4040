@@ -17,3 +17,26 @@ add16x16:
   ADD rr7
   XCH rr3
   BBL 0
+
+# INPUT
+#   rr4..rr7 - first addend
+#   [rr8, rr9, rr14, rr15] - second addend
+# OUTPUT:
+#   rr0..rr3 - sum
+# NOTES:
+#   function is small enough to ignore DRY principle and have specific version with another register usage,
+#   but it allows to save couple of dozens of cycles for data transfers from registers to registers
+add_r2r3_r4r7:
+  LD rr4
+  ADD rr8
+  XCH rr0
+  LD rr5
+  ADD rr9
+  XCH rr1
+  LD rr6
+  ADD rr14
+  XCH rr2
+  LD rr7
+  ADD rr15
+  XCH rr3
+  BBL 0
