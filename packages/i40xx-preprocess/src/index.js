@@ -7,8 +7,8 @@ import { extractDirectives } from './workers/directives.js';
  * Transform single file
  */
 const transformSourceCode = (sourceCode, { defines }) => sourceCode.replace(
-  /\$(\w+)/g,
-  (match, identifier) => defines.get(identifier),
+  /\$(\w+)(\s*\.\s*(\w+))?/g,
+  (match, identifier, _, concat) => `${defines.get(identifier)}${concat ?? ''}`,
 );
 
 /*
