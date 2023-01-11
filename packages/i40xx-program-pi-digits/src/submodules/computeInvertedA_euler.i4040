@@ -1,0 +1,68 @@
+%include "memory.i4040"
+%include "powerMod.i4040"
+
+# INPUT:
+#   memStatusCharVar[0x06] - vmax
+#   memStatusCharVar[0x0A] - A
+#   memMainVar[0x07] - divisor
+#   memMainVar[0x09] - current prime number
+# OUTPUT:
+#   memStatusCharVar[0x07] - A ^ (-1)
+# VARIABLES:
+#   memStatusCharVar[0x07] - tmp
+computeInvertedA:
+  FIM r0, 0x60
+  SRC r0
+  RD2
+  DAC
+  CLC
+  XCH rr0
+  FIM r1, 0x00
+  LDM 0x0A
+  JMS storeVarToMainMemory
+  LDM 0x09
+  JMS loadVarFromMainMemory
+  JMS powerMod                       # tmp = a ^ (vmax - 1)
+  FIM r2, 0x70
+  SRC r2
+  RD0
+  XCH rr0
+  INC rr0
+  RDM
+  SUB rr0
+  CMC
+  XCH rr0
+  JCN c, computeInvertedA_carryOnFirstDigitForExponent
+  RD0
+  IAC                                # if first digit of a ^ (vmax - 1) is 0xF, then we are subtracting 0x10 and need to set carry
+computeInvertedA_carryOnFirstDigitForExponent:
+  INC rr5
+  SRC r2
+  RD1
+  XCH rr1
+  RDM
+  SUB rr1
+  CMC
+  XCH rr1
+  INC rr5
+  SRC r2
+  RD2
+  XCH rr2
+  RDM
+  SUB rr2
+  CMC
+  XCH rr2
+  INC rr5
+  SRC r2
+  RD3
+  XCH rr3
+  RDM
+  SUB rr3
+  CMC
+  XCH rr3
+  LDM 0x0A
+  JMS storeVarToMainMemory           # tmp = m - a ^ (vmax - 1) - 1
+  LDM 0x0A
+  JMS loadVarFromStatusCharMemory
+  JMS powerMod                       # A^(-1) = (A ^ tmp) mod m
+  BBL 0

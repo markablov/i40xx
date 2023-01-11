@@ -1,0 +1,212 @@
+%include "memory.i4040"
+%include "divMulti.i4040"
+%include "mul16.i4040"
+%include "add16.i4040"
+%include "sub16.i4040"
+
+# NOTES:
+#   uses all registers in both banks
+computeInvertedA:
+  LDM $STATUS_MEM_VARIABLE_A
+  JMS loadVarFromStatusCharMemory                             # rr0..rr3 = A
+
+  LD rr0
+  DAC
+  CMC
+  JCN nz, computeInvertedA_nonTrivialA
+  LD rr1
+  JCN nz, computeInvertedA_nonTrivialA
+  LD rr2
+  JCN nz, computeInvertedA_nonTrivialA
+  LD rr3
+  JCN nz, computeInvertedA_nonTrivialA                        # if rr0..rr3 !== 1
+
+computeInvertedA_trivialA:
+  LDM $STATUS_MEM_VARIABLE_A_INV
+  JMS storeVarToStatusCharMemory
+  BBL 0                                                       # return 1
+
+computeInvertedA_nonTrivialA:
+  LDM $MAIN_MEM_VARIABLE_DIV_DIVISOR
+  JMS storeVarToMainMemory                                    # divisor = rr0..rr3
+
+  LDM $STATUS_MEM_VARIABLE_MODULUS
+  JMS loadVarFromStatusCharMemory
+  LDM $MAIN_MEM_VARIABLE_DIV_DIVIDEND
+  JMS storeVarToMainMemory                                    # dividend = m
+
+  FIM r0, 0x10
+  FIM r1, 0x00
+  LDM $STATUS_MEM_VARIABLE_A_INV
+  JMS storeVarToStatusCharMemory                              # A_inv = 1
+
+  LDM $STATUS_MEM_VARIABLE_INV_PREV_P
+  JMS clearVarFromStatusCharMemory                            # prevP = 0
+
+  # clearVarFromStatusCharMemory selects memory character, based on r0 reg pair,
+  # so selected character number would be 0 (because rr1 is 0)
+  LDM 0xF
+  WRM                                                         # sign = true
+
+computeInvertedA_loop:
+  JMS divMWxMW
+  LDM $MAIN_MEM_VARIABLE_DIV_REMINDER
+  JMS loadVarFromMainMemory                                   # rr0..rr3 = reminder
+
+  LD rr0
+  DAC
+  CMC
+  JCN nz, computeInvertedA_loop_continue
+  LD rr1
+  JCN nz, computeInvertedA_loop_continue
+  LD rr2
+  JCN nz, computeInvertedA_loop_continue
+  LD rr3
+  JCN z, computeInvertedA_ret                                 # if rr0..rr3 !== 1
+
+computeInvertedA_loop_continue:
+  FIM r2, $MAIN_MEM_VARIABLE_DIV_DIVISOR . 0
+  SRC r2
+  RDM
+  XCH rr0
+  WRM
+  INC rr5
+  SRC r2
+  RDM
+  XCH rr1
+  WRM
+  INC rr5
+  SRC r2
+  RDM
+  XCH rr2
+  WRM
+  INC rr5
+  SRC r2
+  RDM
+  XCH rr3
+  WRM                                                         # rr0..rr3 <-> divisor
+
+  LDM $MAIN_MEM_VARIABLE_DIV_DIVIDEND
+  JMS storeVarToMainMemory                                    # dividend = rr0..rr3 (ex-divisor)
+
+  JMS computeInvertedA_computeBezoutCoef
+
+  LDM $STATUS_MEM_VARIABLE_A_INV
+  JMS storeVarToStatusCharMemory                              # A_inv = rr0..rr3
+
+  JUN computeInvertedA_loop
+
+computeInvertedA_ret:
+  JMS computeInvertedA_computeBezoutCoef
+
+  FIM r4, $STATUS_MEM_VARIABLE_INV_PREV_P . 0
+  SRC r4
+  RDM
+  JCN nz, computeInvertedA_result_positive                     # if (sign)
+
+  FIM r4, $STATUS_MEM_VARIABLE_MODULUS . 0
+  SRC r4
+  RD0
+  XCH rr4
+  RD1
+  XCH rr5
+  RD2
+  XCH rr6
+  RD3
+  XCH rr7                                                     # rr4..rr7 = modulus
+
+  JMS sub16x16                                                # rr0..rr3 = rr4..rr7 - rr0..rr3
+
+computeInvertedA_result_positive:
+  LDM $STATUS_MEM_VARIABLE_A_INV
+  JMS storeVarToStatusCharMemory                              # A_inv = rr0..rr3
+
+  FIM r0, $MAIN_MEM_VARIABLE_DIV_DIVISOR . 0
+  SRC r0
+  RD0
+  WRM
+  INC rr1
+  RD1
+  WRM
+  INC rr1
+  RD2
+  WRM
+  INC rr1
+  RD3
+  WRM                                                         # divisor = current prime
+
+  BBL 0
+
+computeInvertedA_computeBezoutCoef:
+  LDM $STATUS_MEM_VARIABLE_A_INV
+  JMS loadVarFromStatusCharMemory                             # rr0..rr3 = A_inv
+
+  LD rr7
+  XCH rr10                                                    # rr10 = MSW for quotient
+
+  FIM r4, $STATUS_MEM_VARIABLE_INV_PREV_P . 0
+  SRC r4
+  RD0
+  XCH rr4
+  LD rr0
+  WR0
+  RD1
+  XCH rr5
+  LD rr1
+  WR1
+  RD2
+  XCH rr6
+  LD rr2
+  WR2
+  RD3
+  XCH rr7
+  LD rr3
+  WR3                                                         # rr4..rr7 = prevP, prevP = rr0..rr3
+
+  RDM
+  CMA
+  WRM                                                         # sign = !sign
+
+  LDM 0x1
+  SUB rr10
+  JCN nc, computeInvertedA_computeBezoutCoef_swapFactors      # if (MSW of quotient > 1) => if (quotient > 256)
+
+  FIM r4, $MAIN_MEM_VARIABLE_DIV_QUOTIENT . 0
+  CLB
+  SRC r4
+  RDM
+  XCH rr10
+  INC rr9
+  SRC r4
+  RDM
+  XCH rr11                                                    # rr10..rr11 = quotient
+
+computeInvertedA_computeBezoutCoef_cont:
+  JMS mul16x8                                                 # [rr8, rr9, rr14, rr15] = rr0..rr3 * rr10..rr11
+  JMS add_r2r3_r4r7                                           # rr0..rr3 = [rr8, rr9, rr14, rr15] + rr4..rr7
+  BBL 0
+
+computeInvertedA_computeBezoutCoef_swapFactors:
+  LD rr0
+  XCH rr10
+  LD rr1
+  XCH rr11                                                    # rr10..rr11 = A_inv
+
+  FIM r4, $MAIN_MEM_VARIABLE_DIV_QUOTIENT . 0
+  SRC r4
+  RDM
+  XCH rr0
+  INC rr9
+  SRC r4
+  RDM
+  XCH rr1
+  INC rr9
+  SRC r4
+  RDM
+  XCH rr2
+  INC rr9
+  SRC r4
+  RDM
+  XCH rr3                                                     # rr0..rr3 = quotient
+
+  JUN computeInvertedA_computeBezoutCoef_cont
