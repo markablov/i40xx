@@ -47,11 +47,10 @@ mul16x8_mulBy4bit_digit2:
 mul16x8_mulBy4bit_digit3:
   LD rr3
   JMS mul4x4                  # low, high = a3 * b
+  DCL
   LD rr12
   ADD rr15
   XCH rr15                    # r3 = low + r3
-  LDM $BANK_WITH_VARIABLES
-  DCL
   BBL 0
 
 mul16x8_mulBy8bit:
@@ -82,11 +81,10 @@ mul16x8_mulBy8bit_digit1:
 mul16x8_mulBy8bit_digit2:
   LD rr2
   JMS mul4x4                  # low, high = a2 * b1
+  DCL
   LD rr12
   ADD rr15
   XCH rr15                    # r4 = r4 + low
-  LDM $BANK_WITH_VARIABLES
-  DCL
   BBL 0
 
 mul16x8_mulBy1:

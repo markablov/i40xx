@@ -3,14 +3,14 @@
 __location_short(0x00)
 mul4x4_0:
   FIM r6, 0x00                                         # low, high = 0
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 __location_short(0x10)
 mul4x4_1:
   XCH rr12                                              # low  = a
   LDM 0x0
   XCH rr13                                              # high = 0
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 __location_short(0x20)
 mul4x4_2:
@@ -22,7 +22,7 @@ mul4x4_2:
   XCH rr12                                              # low  = a << 1
   RD3
   XCH rr13                                              # high = a >> 3
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 __location_short(0x30)
 mul4x4_3:
@@ -34,7 +34,7 @@ mul4x4_3:
   XCH rr12                                              # low
   RD3
   XCH rr13                                              # high
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 __location_short(0x40)
 mul4x4_4:
@@ -46,7 +46,7 @@ mul4x4_4:
   XCH rr12                                              # low  = a << 2
   RD1
   XCH rr13                                              # high = a >> 2
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 __location_short(0x50)
 mul4x4_5:
@@ -58,7 +58,7 @@ mul4x4_5:
   XCH rr12                                              # low
   RD1
   XCH rr13                                              # high
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 __location_short(0x60)
 mul4x4_6:
@@ -70,7 +70,7 @@ mul4x4_6:
   XCH rr12                                              # low
   RD3
   XCH rr13                                              # high
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 __location_short(0x70)
 mul4x4_7:
@@ -82,7 +82,7 @@ mul4x4_7:
   XCH rr12                                              # low
   RD1
   XCH rr13                                              # high
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 __location_short(0x80)
 mul4x4_8:
@@ -94,7 +94,7 @@ mul4x4_8:
   XCH rr12                                              # low  = a << 3
   RD2
   XCH rr13                                              # high = a >> 1
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 __location_short(0x90)
 mul4x4_9:
@@ -106,7 +106,7 @@ mul4x4_9:
   XCH rr12                                              # low
   RD3
   XCH rr13                                              # high
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 __location_short(0xA0)
 mul4x4_A:
@@ -118,7 +118,7 @@ mul4x4_A:
   XCH rr12                                              # low
   RD1
   XCH rr13                                              # high
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 
 __location_short(0xB0)
@@ -131,7 +131,7 @@ mul4x4_B:
   XCH rr12                                              # low
   RD3
   XCH rr13                                              # high
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 __location_short(0xC0)
 mul4x4_C:
@@ -143,7 +143,7 @@ mul4x4_C:
   XCH rr12                                              # low
   RD1
   XCH rr13                                              # high
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 __location_short(0xD0)
 mul4x4_D:
@@ -155,7 +155,7 @@ mul4x4_D:
   XCH rr12                                              # low
   RD3
   XCH rr13                                              # high
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 __location_short(0xE0)
 mul4x4_E:
@@ -167,7 +167,7 @@ mul4x4_E:
   XCH rr12                                              # low
   RD1
   XCH rr13                                              # high
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 
 __location_short(0xF0)
@@ -180,7 +180,7 @@ mul4x4_F:
   XCH rr12                                              # low
   RD3
   XCH rr13                                              # high
-  BBL 0
+  BBL $BANK_WITH_VARIABLES
 
 # INPUT:
 #   acc - first factor (a)
