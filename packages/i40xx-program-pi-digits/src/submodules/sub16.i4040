@@ -1,0 +1,23 @@
+# INPUT
+#   rr4..rr7 - minuend
+#   rr0..rr3 - subtrahend
+# OUTPUT:
+#   rr0..rr3 - result
+sub16x16:
+  LD rr4
+  SUB rr0
+  CMC
+  XCH rr0
+  LD rr5
+  SUB rr1
+  CMC
+  XCH rr1
+  LD rr6
+  SUB rr2
+  CMC
+  XCH rr2
+  LD rr7
+  SUB rr3
+  CMC
+  XCH rr3
+  BBL 0
