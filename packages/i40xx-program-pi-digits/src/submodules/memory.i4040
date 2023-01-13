@@ -13,18 +13,25 @@
 %define BANK_WITH_MUL_TABLE_FOR_FACTOR_F            0x6
 %define BANK_WITH_VARIABLES                         0x7
 
-%define STATUS_MEM_VARIABLE_A_INV             0x3
-%define STATUS_MEM_VARIABLE_V_AND_VMAX        0x7
-%define STATUS_MEM_VARIABLE_MODULUS           0x7
-%define STATUS_MEM_VARIABLE_CURRENT_PRIME     0x9
-%define STATUS_MEM_VARIABLE_A                 0xA
-%define STATUS_MEM_VARIABLE_INV_PREV_P        0xB
+%define STATUS_MEM_VARIABLE_A_INV               0x3
+%define STATUS_MEM_VARIABLE_F_COMPUTATION_K     0x4
+%define STATUS_MEM_VARIABLE_A_COMPUTATION_COEF  0x5
+%define STATUS_MEM_VARIABLE_B_COMPUTATION_COEF  0x5
+%define STATUS_MEM_VARIABLE_V                   0x6
+%define STATUS_MEM_VARIABLE_VMAX                0x6
+%define STATUS_MEM_VARIABLE_INV_PREV_P          0x7
+%define STATUS_MEM_VARIABLE_CURRENT_PRIME       0x9
+%define STATUS_MEM_VARIABLE_F_COMPUTATION_A     0xA
+%define STATUS_MEM_VARIABLE_F                   0xB
+%define STATUS_MEM_VARIABLE_MODULUS             0xD
+%define STATUS_MEM_VARIABLE_N                   0xE
+%define STATUS_MEM_VARIABLE_F_COMPUTATION_B     0xF
 
-%define MAIN_MEM_VARIABLE_DIV_REMINDER        0x8
-%define MAIN_MEM_VARIABLE_DIV_DIVIDEND        0x8
-%define MAIN_MEM_VARIABLE_DIV_DIVISOR         0x9
-%define MAIN_MEM_VARIABLE_DIV_QUOTIENT        0xA
-%define MAIN_MEM_VARIABLE_INV_P_SIGN          0xB
+%define MAIN_MEM_VARIABLE_INV_P_SIGN            0x7
+%define MAIN_MEM_VARIABLE_DIV_REMINDER          0x8
+%define MAIN_MEM_VARIABLE_DIV_DIVIDEND          0x8
+%define MAIN_MEM_VARIABLE_DIV_DIVISOR           0x9
+%define MAIN_MEM_VARIABLE_DIV_QUOTIENT          0xA
 
 clearMemory:
   FIM r0, 0x80
@@ -94,6 +101,8 @@ clearVarFromStatusCharMemory:
 # INPUT:
 #   acc - variable number (06..0B)
 #   rr0, rr1, rr2, rr3 - variable content
+# NOTES:
+#   clears carry flag
 storeVarToMainMemory:
   XCH rr4
   CLB
@@ -120,7 +129,7 @@ storeVarToMainMemory:
 # OUTPUT:
 #   rr0, rr1, rr2, rr3 - variable content
 # SIDE EFFECTS:
-#   CLEARS CARRY FLAG
+#   clears carry flag
 loadVarFromMainMemory:
   XCH rr4
   CLB

@@ -4,10 +4,15 @@
 %include "add16.i4040"
 %include "sub16.i4040"
 
+# INPUT:
+#   STATUS_MEM_VARIABLE_MODULUS
+#   STATUS_MEM_VARIABLE_A
+# OUTPUT:
+#   STATUS_MEM_VARIABLE_A_INV
 # NOTES:
 #   uses all registers in both banks
 computeInvertedA:
-  LDM $STATUS_MEM_VARIABLE_A
+  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_A
   JMS loadVarFromStatusCharMemory                             # rr0..rr3 = A
 
   LD rr0

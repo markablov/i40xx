@@ -1,0 +1,58 @@
+%include "memory.i4040"
+%include "addMod.i4040"
+%include "div16.i4040"
+
+# INPUT:
+#   rr15 - variable number for first term and for result
+#   rr14 - variable number for second term
+#   memStatusCharVar[rr15] - first term (a)
+#   memStatusCharVar[rr14] - second term (b)
+# OUTPUT:
+#   memStatusCharVar[rr15] - result
+# VARIABLES:
+#   rr8..rr11 - multipliedA = (a * step) % mod
+#   rr0'..rr3' - currentMultiplier = b / (2 ^ step)
+mulMod:
+  LD rr15
+  JMS loadVarFromStatusCharMemory
+  JMS cloneRegVarFrom0to4            # multipliedA = a
+  SB1
+  LD rr14
+  JMS loadVarFromStatusCharMemory    # currentMultiplier = b
+  SB0
+  LD rr15
+  JMS clearVarFromStatusCharMemory   # res = 0
+  SB1
+mulMod_loop:
+  CLB
+  LD rr0
+  SB0
+  FIM r3, 0x10
+  AN6
+  JCN z, mulMod_skipResultUpdate     # if (currentMultiplier & 1 === 0)
+  LD rr15
+  JMS loadVarFromStatusCharMemory
+  JMS addMod
+  LD rr15
+  JMS storeVarToStatusCharMemory     # res = (res + multipliedA) % mod
+mulMod_skipResultUpdate:
+  LD rr8
+  XCH rr0
+  LD rr9
+  XCH rr1
+  LD rr10
+  XCH rr2
+  LD rr11
+  XCH rr3
+  JMS addMod
+  JMS cloneRegVarFrom0to4            # multipliedA = (multipliedA + multipliedA) % mod
+  SB1
+  JMS divBy2                         # currentMultiplier = currentMultiplier / 2
+  LD rr0
+  ADD rr1
+  ADD rr2
+  ADD rr3
+  JCN nz, mulMod_loop
+  JCN c, mulMod_loop                 # if (currentMultiplier !== 0)
+  SB0
+  BBL 0

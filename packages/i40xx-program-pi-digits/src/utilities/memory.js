@@ -22,3 +22,7 @@ export const writeValueToMainChars = (value, memory, regIdx, bankIdx = 0) => (
 export const writeValueToStatusChars = (value, memory, regIdx, bankIdx = 0) => (
   writeValueToChars(value, getRegister(memory, bankIdx, regIdx).status, 4)
 );
+
+export const VARIABLES = Object.freeze({
+  STATUS_MEM_VARIABLE_MODULUS: 0xD,
+});
