@@ -1,5 +1,5 @@
 %include "memory.i4040"
-%include "mulMod.i4040"
+%include "mulMod_binary_fast.i4040"
 %include "shiftMulti.i4040"
 
 # INPUT:
@@ -46,4 +46,99 @@ powerMod_skipResultUpdate:
   JCN nz, powerMod_loop
 powerMod_ret:
   CLC
+  BBL 0
+
+# INPUT:
+#   STATUS_MEM_VARIABLE_CURRENT_PRIME - base
+#   rr6 - exponent
+# OUTPUT:
+#   STATUS_MEM_VARIABLE_F_COMPUTATION_FK
+# VARIABLES:
+#   STATUS_MEM_VARIABLE_MOD_POWER_BASE - poweredBase
+modularPowerForCurrentPrimeByExp:
+  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_FK
+  JMS clearVarFromStatusCharMemory
+  LDM 0x1
+  WR0                                                  # res = 1
+
+  LD rr6
+  JCN z, modularPowerForCurrentPrimeByExp_return       # if (exp === 0)
+
+  LDM $STATUS_MEM_VARIABLE_CURRENT_PRIME
+  JMS loadVarFromStatusCharMemory
+  LDM $STATUS_MEM_VARIABLE_MOD_POWER_BASE
+  JMS storeVarToStatusCharMemory                       # poweredBase = currentPrime
+
+  LD rr6
+  WRM                                                  # exponent = rr6
+
+  LDM 0x1
+  AN6
+  JCN z, modularPowerForCurrentPrimeByExp_skipBit0     # if ((exp >> 0) & 0x1)
+
+  LDM $STATUS_MEM_VARIABLE_MOD_POWER_BASE
+  XCH rr14
+  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_FK
+  XCH rr15
+  JMS mulMod                                           # res = (res * poweredBase) % m
+
+modularPowerForCurrentPrimeByExp_skipBit0:
+  LDM $STATUS_MEM_VARIABLE_MOD_POWER_BASE
+  XCH rr14
+  LDM $STATUS_MEM_VARIABLE_MOD_POWER_BASE
+  XCH rr15
+  JMS mulMod                                           # poweredBase = (poweredBase * poweredBase) % m
+
+  RDM
+  XCH rr6
+  LDM 0x2
+  AN6
+  JCN z, modularPowerForCurrentPrimeByExp_skipBit1     # if ((exp >> 1) & 0x1)
+
+  LDM $STATUS_MEM_VARIABLE_MOD_POWER_BASE
+  XCH rr14
+  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_FK
+  XCH rr15
+  JMS mulMod                                           # res = (res * poweredBase) % m
+
+modularPowerForCurrentPrimeByExp_skipBit1:
+  LDM $STATUS_MEM_VARIABLE_MOD_POWER_BASE
+  XCH rr14
+  LDM $STATUS_MEM_VARIABLE_MOD_POWER_BASE
+  XCH rr15
+  JMS mulMod                                           # poweredBase = (poweredBase * poweredBase) % m
+
+  RDM
+  XCH rr6
+  LDM 0x4
+  AN6
+  JCN z, modularPowerForCurrentPrimeByExp_skipBit2     # if ((exp >> 2) & 0x1)
+
+  LDM $STATUS_MEM_VARIABLE_MOD_POWER_BASE
+  XCH rr14
+  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_FK
+  XCH rr15
+  JMS mulMod                                           # res = (res * poweredBase) % m
+
+modularPowerForCurrentPrimeByExp_skipBit2:
+  LDM $STATUS_MEM_VARIABLE_MOD_POWER_BASE
+  XCH rr14
+  LDM $STATUS_MEM_VARIABLE_MOD_POWER_BASE
+  XCH rr15
+  JMS mulMod                                           # poweredBase = (poweredBase * poweredBase) % m
+
+  RDM
+  XCH rr6
+  LDM 0x8
+  AN6
+  JCN z, modularPowerForCurrentPrimeByExp_skipBit3     # if ((exp >> 3) & 0x1)
+
+  LDM $STATUS_MEM_VARIABLE_MOD_POWER_BASE
+  XCH rr14
+  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_FK
+  XCH rr15
+  JMS mulMod                                           # res = (res * poweredBase) % m
+
+modularPowerForCurrentPrimeByExp_skipBit3:
+modularPowerForCurrentPrimeByExp_return:
   BBL 0

@@ -5,6 +5,7 @@ export const runWithProfiler = (system, labelsOffsets, progressTrackingPC) => {
   const labelByOffset = Object.fromEntries(Object.entries(labelsOffsets).map(([name, offset]) => [offset, name]));
 
   const stacktraces = new Map();
+  const functionCalls = new Map();
   const currentStack = [];
   let currentSP = 0;
   let iters = 0;
@@ -20,8 +21,11 @@ export const runWithProfiler = (system, labelsOffsets, progressTrackingPC) => {
     }
 
     if (currentSP < registers.sp) {
+      const functionName = labelByOffset[registers.pc] || 'unknown';
+      functionCalls.set(functionName, (functionCalls.get(functionName) || 0) + 1);
+
       currentStack.push({
-        name: labelByOffset[registers.pc] || 'unknown',
+        name: functionName,
         entranceCycle: system.instructionCycles,
         subroutinesExecutionCycles: 0n,
       });
@@ -41,5 +45,5 @@ export const runWithProfiler = (system, labelsOffsets, progressTrackingPC) => {
     }
   }
 
-  return stacktraces;
+  return { stacktraces, functionCalls };
 };

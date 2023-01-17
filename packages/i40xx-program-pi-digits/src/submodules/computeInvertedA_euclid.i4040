@@ -131,12 +131,15 @@ computeInvertedA_result_positive:
   RD0
   WRM
   INC rr1
+  SRC r0
   RD1
   WRM
   INC rr1
+  SRC r0
   RD2
   WRM
   INC rr1
+  SRC r0
   RD3
   WRM                                                         # divisor = current prime
 
