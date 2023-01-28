@@ -32,7 +32,9 @@ const insertPaddingsIntoSourceCode = (sourceCode, paddings, bytecodeOffsets, sou
 /*
  * Simply compile provided code
  */
-const compileOnce = (sourceCode) => {
+const compileOnce = (sourceCode, options = {}) => {
+  const { returnSourceCode = true } = options;
+
   const { tokens, errors: lexerErrors } = asmLexer.tokenize(sourceCode.toLowerCase());
   if (lexerErrors.length) {
     return { errors: lexerErrors };
@@ -49,7 +51,9 @@ const compileOnce = (sourceCode) => {
     })),
     labelsOffsets,
     errors: asmParser.errors,
-    sourceCode: insertPaddingsIntoSourceCode(sourceCode, paddings, labelsOffsets, asmParser.labels),
+    ...(returnSourceCode && {
+      sourceCode: insertPaddingsIntoSourceCode(sourceCode, paddings, labelsOffsets, asmParser.labels),
+    }),
   };
 };
 
@@ -71,15 +75,17 @@ const getPaddingCountToFixJumpIssues = (error, labelsOffsets) => {
  * Compile provided code with extra options:
  *   - allow to rearrange code to avoid i40xx jump limitations (short jump to another ROM page, for example)
  */
-const compile = (sourceCode, { tryRearrange = false } = {}) => {
+const compile = (sourceCode, options = {}) => {
+  const { tryRearrange = false } = options;
+
   if (tryRearrange === false) {
-    return compileOnce(sourceCode);
+    return compileOnce(sourceCode, options);
   }
 
   let rearrangedCode = sourceCode;
 
   for (let attempts = 0; attempts < MAX_ATTEMPTS_TO_REARRANGE_CODE - 1; attempts++) {
-    const compilerResults = compileOnce(rearrangedCode);
+    const compilerResults = compileOnce(rearrangedCode, options);
     const { functions, errors, labelsOffsets } = compilerResults;
     const errorCode = errors[0]?.code;
     if (!['cond_jump_from_edge', 'short_jump_another_page'].includes(errorCode)) {
@@ -96,7 +102,7 @@ const compile = (sourceCode, { tryRearrange = false } = {}) => {
     rearrangedCode = `${compilablePart}\n${'  NOP\n'.repeat(paddingCount)}\n${paddedPart}`;
   }
 
-  return compileOnce(rearrangedCode);
+  return compileOnce(rearrangedCode, options);
 };
 
 module.exports = compile;
