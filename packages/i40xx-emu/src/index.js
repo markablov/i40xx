@@ -51,7 +51,11 @@ class System {
   }
 
   isFinished() {
-    return this.#terminated || !this.#rom.isAddressValid(this.#cpu.registers.pc);
+    return (
+      this.#terminated
+      || !this.#rom.isAddressValid(this.#cpu.registers.pc)
+      || this.#cpu.halted
+    );
   }
 
   terminate() {

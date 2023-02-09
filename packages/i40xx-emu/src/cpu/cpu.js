@@ -3,6 +3,8 @@ import CPUPins, { SYNC, D0, D1, D2, D3, CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3 } fro
 const STACK_DEPTH = 7;
 
 class CPU {
+  halted = false;
+
   registers = {
     acc: 0,
     carry: 0,
@@ -157,6 +159,10 @@ class CPU {
   }
 
   #executeAtX3(opr, opa) {
+    if (this.halted) {
+      return this.registers.pc;
+    }
+
     switch (opr) {
       case 0x0:
         switch (opa) {
@@ -164,6 +170,13 @@ class CPU {
            * NOP instruction (No Operation)
            */
           case 0x0:
+            break;
+
+          /*
+           * HLT instruction
+           */
+          case 0x1:
+            this.halted = true;
             break;
 
           /*
@@ -529,7 +542,7 @@ class CPU {
   }
 
   #executeAtX2(opr, opa) {
-    if (this.isExecutingTwoCycleOperation()) {
+    if (this.isExecutingTwoCycleOperation() || this.halted) {
       return;
     }
 
@@ -552,7 +565,7 @@ class CPU {
   }
 
   #executeAtX1(opr, opa) {
-    if (this.isExecutingTwoCycleOperation()) {
+    if (this.isExecutingTwoCycleOperation() || this.halted) {
       return;
     }
 
