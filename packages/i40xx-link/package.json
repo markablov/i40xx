@@ -1,0 +1,22 @@
+{
+  "name": "i40xx-link",
+  "version": "1.0.0",
+  "author": "Mark Ablovatskii <mark.ablov@gmail.com>",
+  "license": "MIT",
+  "description": "Linker for Intel 4004/4040 CPUs from bytecode and symbols to ROM binary",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules npx jest",
+    "lint": "eslint ./src"
+  },
+  "type": "module",
+  "jest": {
+    "testPathIgnorePatterns": [
+      "/data/"
+    ]
+  },
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "json5": "^2.2.3"
+  }
+}

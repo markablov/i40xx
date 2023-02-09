@@ -1,0 +1,25 @@
+{
+  sourceMap: [
+    { line: -1, romOffset: 0 },
+    { line: 2, romOffset: 2 },
+    { line: 3, romOffset: 4 },
+    { line: 4, romOffset: 6 },
+    { line: 5, romOffset: 7 },
+    { line: 7, romOffset: 9 },
+    { line: 8, romOffset: 11 },
+    { line: 9, romOffset: 13 },
+    { line: 10, romOffset: 14 },
+    { line: 12, romOffset: 16 },
+    { line: 14, romOffset: 17 },
+    { line: 15, romOffset: 19 },
+    { line: 17, romOffset: 21 },
+    { line: 18, romOffset: 22 },
+    { line: 21, romOffset: 23 },
+    { line: 24, romOffset: 24 },
+    { line: 27, romOffset: 25 },
+  ],
+  rom: [
+    0x40, 0x02, 0x50, 0x17, 0x14, 0x09, 0xD1, 0x40, 0x11, 0x50, 0x18, 0x14, 0x10, 0xD2, 0x40, 0x11,      // +0x00
+    0xD0, 0x14, 0x15, 0x50, 0x19, 0xB0, 0xC0, 0xC0, 0xC0, 0xC0,                                          // +0x10
+  ],
+}
