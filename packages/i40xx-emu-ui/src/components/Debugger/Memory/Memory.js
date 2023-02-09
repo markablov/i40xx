@@ -40,18 +40,17 @@ class Memory extends Component {
               <div className="memoryBank">
                 {
                   registers.map((reg, regIdx) => (
-                    <>
+                    <div key={`ram-bank-${bankIdx}-reg-${regIdx}`}>
                       {
                         (regIdx && regIdx % 4 === 0)
-                          ? <div key={`ram-bank-${bankIdx}-sep-${regIdx}`} className="registerSeparator" />
+                          ? <div className="registerSeparator" />
                           : null
                       }
                       <Register
-                        key={`ram-bank-${bankIdx}-reg-${regIdx}`}
                         data={reg}
                         selectedCharacter={selectedRegister === regIdx ? selectedCharacter : undefined}
                       />
-                    </>
+                    </div>
                   ))
                 }
               </div>
