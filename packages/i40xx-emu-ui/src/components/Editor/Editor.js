@@ -29,7 +29,10 @@ class Editor extends Component {
   };
 
   componentDidMount() {
-    editorStore.replace({ editor: this.editor });
+    editorStore.update((state) => {
+      state.editor = this.editor;
+    });
+
     this.setupEditor();
     this.editor.setValue(Editor.#load() || SampleCode, -1);
   }

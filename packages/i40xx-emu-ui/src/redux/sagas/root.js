@@ -1,9 +1,10 @@
-import { takeLatest, take, select } from 'redux-saga/effects';
+import { takeLatest, take } from 'redux-saga/effects';
 
 import * as Actions from '../constants.js';
 import compile from '../../services/compiler.js';
 import { run } from '../../services/emulator.js';
 import editorStore from '../../stores/editorStore.js';
+import emulatorStore from '../../stores/emulatorStore.js';
 
 function* buildAndRun({ payload: { mode, sourceCode } }) {
   compile(sourceCode);
@@ -13,9 +14,7 @@ function* buildAndRun({ payload: { mode, sourceCode } }) {
     return;
   }
 
-  const { initialRAM } = yield select();
-
-  run(dump, mode, initialRAM);
+  run(dump, mode, emulatorStore.getRawState().initialRAM);
 
   editorStore.getRawState().editor.focus();
 }
