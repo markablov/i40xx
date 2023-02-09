@@ -7,14 +7,12 @@ import 'ace-builds/src-noconflict/theme-monokai';
 import 'ace-builds/src-noconflict/ext-searchbox';
 import { Button } from 'react-bulma-components';
 
-import GutterRenderer from './GutterRenderer.js';
 import OffsetCalculator from './OffsetCalculator/OffsetCalculator.js';
 import AssemblyMode from './AssemblyMode/AssemblyMode.js';
-import BankSeparatorRenderer from './BankSeparatorRenderer.js';
 import SampleCode from './SampleCode.js';
-import setEditorRefAction from '../../redux/actions/setEditorRef.js';
 import setBreakpointsAction from '../../redux/actions/setBreakpoints.js';
 import { stepInto, stepOver, continueExec } from '../../services/emulator.js';
+import editorStore from '../../stores/editorStore.js';
 
 import './Editor.css';
 
@@ -31,9 +29,7 @@ class Editor extends Component {
   };
 
   componentDidMount() {
-    const { setEditorRef } = this.props;
-
-    setEditorRef(this.editor);
+    editorStore.replace({ editor: this.editor });
     this.setupEditor();
     this.editor.setValue(Editor.#load() || SampleCode, -1);
   }
@@ -46,27 +42,9 @@ class Editor extends Component {
 
   handleSave = () => this.#save();
 
-  setupROMOffsets(editor, session) {
+  setupROMOffsets(editor) {
     const offsetCalculator = new OffsetCalculator(editor);
-    const gutterRenderer = new GutterRenderer(editor, offsetCalculator);
-    const bankSeparatorRenderer = new BankSeparatorRenderer(editor, offsetCalculator);
-
     this.setState({ offsetCalculator });
-
-    // we want to show ROM offset for instructions, so need to change
-    // gutter with line numbers to custom renderer
-    // (gutter annotations / decorations adds just css class, but don't change text)
-    editor.renderer.$gutterLayer.$renderer = gutterRenderer;
-    editor.on('changeSelection', () => gutterRenderer.update());
-    gutterRenderer.update();
-
-    session.on('change', (delta) => {
-      if (offsetCalculator.update(delta)) {
-        bankSeparatorRenderer.updateSeparatorPositions();
-        gutterRenderer.update();
-      }
-      bankSeparatorRenderer.updateOnEditorChange(delta);
-    });
   }
 
   setupEditor() {
@@ -94,6 +72,11 @@ class Editor extends Component {
       }
 
       return e.preventDefault();
+    });
+
+    editor.renderer.setOptions({
+      fixedWidthGutter: true,
+      showPrintMargin: false,
     });
 
     this.setupShortcuts(editor);
@@ -246,12 +229,11 @@ Editor.propTypes = {
   }).isRequired,
 
   setBreakpoints: PropTypes.func.isRequired,
-  setEditorRef: PropTypes.func.isRequired,
 };
 
 const mapFn = connect(
   ({ breakpoints, compilerErrors, emulator }) => ({ breakpoints, compilerErrors, emulator }),
-  { setBreakpoints: setBreakpointsAction, setEditorRef: setEditorRefAction },
+  { setBreakpoints: setBreakpointsAction },
 );
 
 export default mapFn(Editor);

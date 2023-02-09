@@ -3,6 +3,7 @@ import { takeLatest, take, select } from 'redux-saga/effects';
 import * as Actions from '../constants.js';
 import compile from '../../services/compiler.js';
 import { run } from '../../services/emulator.js';
+import editorStore from '../../stores/editorStore.js';
 
 function* buildAndRun({ payload: { mode, sourceCode } }) {
   compile(sourceCode);
@@ -12,11 +13,11 @@ function* buildAndRun({ payload: { mode, sourceCode } }) {
     return;
   }
 
-  const { editor, initialRAM } = yield select();
+  const { initialRAM } = yield select();
 
   run(dump, mode, initialRAM);
 
-  editor.focus();
+  editorStore.getRawState().editor.focus();
 }
 
 function* rootSaga() {

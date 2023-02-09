@@ -3,7 +3,10 @@ module.exports = {
     browser: true,
     node: true,
   },
-  extends: 'airbnb',
+  extends: [
+    'airbnb',
+    'plugin:react/jsx-runtime',
+  ],
   globals: {
     process: true,
   },

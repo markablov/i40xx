@@ -5,7 +5,6 @@ const defaultState = {
   compilerErrors: [],
   compiling: false,
   dump: null,
-  editor: null,
   emulator: {
     IOLog: [],
     mode: 'run',
@@ -14,18 +13,19 @@ const defaultState = {
     running: false,
   },
   initialRAM: null,
+  sourceMap: null,
 };
 
 export default (stateArg, { payload, type }) => {
   const state = stateArg || defaultState;
 
   switch (type) {
-    case Actions.SET_EDITOR_REF:
-      return { ...state, editor: payload };
     case Actions.START_COMPILATION:
       return { ...state, compiling: true };
     case Actions.FINISH_COMPILATION:
-      return { ...state, compilerErrors: payload.errors, compiling: false, dump: payload.dump };
+      return {
+        ...state, compilerErrors: payload.errors, compiling: false, dump: payload.dump, sourceMap: payload.sourceMap,
+      };
     case Actions.UPDATE_EMULATOR_STATE:
       return { ...state, emulator: { ...state.emulator, ...payload } };
     case Actions.SET_BREAKPOINTS:
