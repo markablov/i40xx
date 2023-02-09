@@ -1,14 +1,25 @@
-import parse from 'i40xx-asm';
+import compile from 'i40xx-asm';
+import { buildRom } from 'i40xx-link';
 
 onmessage = ({ data: sourceCode }) => {
-  const { data, errors } = parse(sourceCode);
+  const { blocks, errors } = compile(sourceCode);
+  if (errors.length) {
+    postMessage({
+      dump: null,
+      errors: errors.map(({ column, line, message, token }) => ({
+        column: token ? token.startColumn : column,
+        row: (token ? token.startLine : line) - 1,
+        text: message,
+      })),
+      sourceMap: null,
+    });
+    return;
+  }
 
-  postMessage({
-    dump: data,
-    errors: errors.map(({ column, line, message, token }) => ({
-      column: token ? token.startColumn : column,
-      row: (token ? token.startLine : line) - 1,
-      text: message,
-    })),
-  });
+  try {
+    const { rom, sourceMap } = buildRom(blocks);
+    postMessage({ dump: rom, errors: [], sourceMap });
+  } catch (err) {
+    postMessage({ dump: null, errors: [{ column: 1, row: 1, text: err.message }], sourceMap: null });
+  }
 };
