@@ -71,6 +71,7 @@ module.exports = {
     ],
     'import/extensions': 'off',
     'no-bitwise': 'off',
+    'no-multi-spaces': ['error', { ignoreEOLComments: true }],
   },
   overrides: [],
 };

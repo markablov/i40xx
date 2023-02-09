@@ -1,0 +1,27 @@
+main:
+  JMS firstCheck
+  JCN z, main_cont1
+  LDM 0x1
+  JUN main_return             # error code = 0x1
+main_cont1:
+  JMS secondCheck
+  JCN z, main_cont2
+  LDM 0x2
+  JUN main_return             # error code = 0x2
+main_cont2:
+  LDM 0x0                     # success
+main_return:
+  JCN z, main_skip_cleanup    # if operation was successful, no need to clean-up
+  JMS cleanup
+main_skip_cleanup:
+  XCH rr0                     # rr0 = error code (0x0 means no error)
+  BBL 0
+
+firstCheck:
+  BBL 0
+
+secondCheck:
+  BBL 0
+
+cleanup:
+  BBL 0
