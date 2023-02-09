@@ -14,7 +14,7 @@ const transformSourceCode = (sourceCode, { defines }) => sourceCode.replace(
 /*
  * Opens assembly source code and returns preprocessed listing
  */
-export function preprocessFile(filePath) {
+export function preprocessFile(filePath, { processDefinesOnly = false } = {}) {
   const unvisited = [filePath];
   const sourceCodeFiles = new Map();
   const defines = new Map();
@@ -40,6 +40,10 @@ export function preprocessFile(filePath) {
         defines.set(identifier, replacement);
       }
     }
+  }
+
+  if (processDefinesOnly) {
+    return transformSourceCode(sourceCodeFiles.get(filePath), { defines });
   }
 
   return [...sourceCodeFiles.values()].map((sourceCode) => transformSourceCode(sourceCode, { defines })).join('\n');

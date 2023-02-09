@@ -17,7 +17,7 @@ const RomPages = class RomPages {
 
   #currentPageOffset = 0;
 
-  #pages = 0;
+  #pages = [];
 
   #blocksRomOffsets = new Map();
 
