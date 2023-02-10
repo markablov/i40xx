@@ -81,13 +81,13 @@ const createGutterClickHandler = (session) => (e) => {
   const { row } = e.getDocumentPosition();
   if (session.getBreakpoints()[row]) {
     editorStore.update((state) => {
-      state.breakpoints.delete(row);
+      state.breakpoints.delete(row + 1);
     });
 
     session.clearBreakpoint(row);
   } else {
     editorStore.update((state) => {
-      state.breakpoints.add(row);
+      state.breakpoints.add(row + 1);
     });
 
     session.setBreakpoint(row);

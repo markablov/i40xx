@@ -1,4 +1,6 @@
 import emulatorStore from '../stores/emulatorStore.js';
+import compilerStore from '../stores/compilerStore.js';
+import editorStore from '../stores/editorStore.js';
 
 const worker = new Worker(new URL('../workers/emulator/emulator.js', import.meta.url), { type: 'module' });
 
@@ -37,6 +39,18 @@ worker.onmessage = ({ data: { command, error, ...rest } }) => {
   }
 };
 
+const convertBreakpointsFromLineToOffset = (lineBreakpoints) => {
+  const { romOffsetBySourceCodeMap } = compilerStore.getRawState();
+  return new Set([...lineBreakpoints].map((line) => romOffsetBySourceCodeMap.get(line)));
+};
+
+editorStore.subscribe(
+  (state) => state.breakpoints,
+  (breakpoints) => {
+    worker.postMessage({ breakpoints: convertBreakpointsFromLineToOffset(breakpoints), command: 'breakpoints' });
+  },
+);
+
 const run = (dump, mode = 'run') => {
   emulatorStore.update((state) => {
     state.isRunning = true;
@@ -45,7 +59,13 @@ const run = (dump, mode = 'run') => {
     state.IOLog = [];
   });
 
-  worker.postMessage({ command: 'run', dump, mode, ramDump: emulatorStore.getRawState().initialRam });
+  worker.postMessage({
+    breakpoints: convertBreakpointsFromLineToOffset(editorStore.getRawState().breakpoints),
+    command: 'run',
+    dump,
+    mode,
+    ramDump: emulatorStore.getRawState().initialRam,
+  });
 };
 
 const stop = () => {
@@ -60,12 +80,8 @@ const stepOver = () => {
   worker.postMessage({ command: 'stepOver' });
 };
 
-const setBreakpoints = (breakpoints) => {
-  worker.postMessage({ breakpoints, command: 'breakpoints' });
-};
-
 const continueExec = () => {
   worker.postMessage({ command: 'continue' });
 };
 
-export default { continueExec, run, setBreakpoints, stepInto, stepOver, stop };
+export default { continueExec, run, stepInto, stepOver, stop };

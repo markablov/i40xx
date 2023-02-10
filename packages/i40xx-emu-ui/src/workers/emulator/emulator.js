@@ -1,7 +1,7 @@
 import Emulator from 'i40xx-emu';
 
 let system;
-let breakpoints = {};
+let breakpoints = new Set();
 
 const sendState = () => {
   postMessage({
@@ -31,7 +31,7 @@ const commands = {
     while (!system.isFinished()) {
       system.instruction();
 
-      if (breakpoints[system.registers.pc]) {
+      if (breakpoints.has(system.registers.pc)) {
         sendState();
         return;
       }
@@ -47,10 +47,12 @@ const commands = {
     postMessage({ command: 'finish' });
   },
 
-  run: async ({ dump, mode, ramDump }) => {
+  run: async ({ breakpoints: inputBreakpoints, dump, mode, ramDump }) => {
     if (mode !== 'debug' && mode !== 'run') {
       throw 'Unknown emulator mode';
     }
+
+    breakpoints = inputBreakpoints || new Set();
 
     system = new Emulator({
       ramDump,
