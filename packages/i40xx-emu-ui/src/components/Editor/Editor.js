@@ -1,242 +1,187 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import { useCallback, useRef } from 'react';
 import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-javascript';
 import 'ace-builds/src-noconflict/theme-monokai';
 import 'ace-builds/src-noconflict/ext-searchbox';
 import { Button } from 'react-bulma-components';
 
-import OffsetCalculator from './OffsetCalculator/OffsetCalculator.js';
 import AssemblyMode from './AssemblyMode/AssemblyMode.js';
 import SampleCode from './SampleCode.js';
-import setBreakpointsAction from '../../redux/actions/setBreakpoints.js';
-import { stepInto, stepOver, continueExec } from '../../services/emulator.js';
+import emulator from '../../services/emulator.js';
 import editorStore from '../../stores/editorStore.js';
+import emulatorStore from '../../stores/emulatorStore.js';
+import compilerStore from '../../stores/compilerStore.js';
 
 import './Editor.css';
 
-class Editor extends Component {
-  static isDebugMode(emulator) {
-    return emulator && emulator.running && emulator.mode === 'debug';
-  }
+/*
+ * Handle for save operation
+ */
+const handleSave = (editor) => (editor ? localStorage.setItem('source_code', editor.getValue()) : null);
 
-  static #load = () => localStorage.getItem('source_code');
-
-  state = {
-    editorRef: React.createRef(),
-    executingLine: undefined,
-  };
-
-  componentDidMount() {
-    editorStore.update((state) => {
-      state.editor = this.editor;
-    });
-
-    this.setupEditor();
-    this.editor.setValue(Editor.#load() || SampleCode, -1);
-  }
-
-  shouldComponentUpdate() {
-    // Editor have no props or state, except external compilerErrors
-    // so we don't want ever to re-render component
-    return false;
-  }
-
-  handleSave = () => this.#save();
-
-  setupROMOffsets(editor) {
-    const offsetCalculator = new OffsetCalculator(editor);
-    this.setState({ offsetCalculator });
-  }
-
-  setupEditor() {
-    const { editor } = this;
-    const session = editor.getSession();
-
-    editor.$blockScrolling = Infinity;
-
-    session.setMode(new AssemblyMode());
-    session.setTabSize(2);
-
-    editor.on('guttermousedown', (e) => {
-      const { offsetCalculator } = this.state;
-      const { breakpoints, setBreakpoints } = this.props;
-
-      const { row } = e.getDocumentPosition();
-      const offset = offsetCalculator.offset(row);
-      if (session.getBreakpoints()[row]) {
-        session.clearBreakpoint(row);
-        delete breakpoints[offset];
-        setBreakpoints(breakpoints);
-      } else {
-        session.setBreakpoint(row);
-        setBreakpoints({ ...breakpoints, [offset]: true });
-      }
-
-      return e.preventDefault();
-    });
-
-    editor.renderer.setOptions({
-      fixedWidthGutter: true,
-      showPrintMargin: false,
-    });
-
-    this.setupShortcuts(editor);
-    this.setupROMOffsets(editor, session);
-  }
-
-  setupShortcuts(editor) {
-    // ACE editor already have Ctrl+D to remove line, but i prefer Ctrl+Y
-    editor.commands.addCommand({
-      bindKey: { mac: 'Command-Y', win: 'Ctrl-Y' },
-      exec: () => editor.removeLines(),
-      multiSelectAction: 'forEachLine',
-      name: 'removeline2',
-      scrollIntoView: 'cursor',
-    });
-
-    editor.commands.addCommand({
-      bindKey: { mac: 'F7', win: 'F7' },
-      exec: () => {
-        const { emulator } = this.props;
-
-        if (Editor.isDebugMode(emulator)) {
-          stepInto();
-        }
-      },
-      multiSelectAction: 'forEach',
-      name: 'emulatorStepInto',
-      readOnly: true,
-      scrollIntoView: 'cursor',
-    });
-
-    editor.commands.addCommand({
-      bindKey: { mac: 'F8', win: 'F8' },
-      exec: () => {
-        const { emulator } = this.props;
-
-        if (Editor.isDebugMode(emulator)) {
-          stepOver();
-        }
-      },
-      multiSelectAction: 'forEach',
-      name: 'emulatorStepOver',
-      readOnly: true,
-      scrollIntoView: 'cursor',
-    });
-
-    editor.commands.addCommand({
-      bindKey: { mac: 'F9', win: 'F9' },
-      exec: () => {
-        const { emulator } = this.props;
-
-        if (Editor.isDebugMode(emulator)) {
-          continueExec();
-        }
-      },
-      multiSelectAction: 'forEach',
-      name: 'emulatorContinue',
-      readOnly: true,
-    });
-
-    editor.commands.addCommand({
-      bindKey: { mac: 'Cmd-S', win: 'Ctrl-S' },
-      exec: () => this.handleSave(),
-      multiSelectAction: 'forEach',
-      name: 'save',
-    });
-  }
-
-  static getDerivedStateFromProps({ compilerErrors, emulator }, { editorRef, executingLine, offsetCalculator }) {
-    const editor = editorRef.current && editorRef.current.editor;
-    if (!editor) {
-      return null;
-    }
-
-    const session = editor.getSession();
-
-    // show compilation errors
-    if (compilerErrors && compilerErrors.length) {
-      session.setAnnotations(compilerErrors.map((error) => ({ ...error, type: 'error' })));
-      return null;
-    }
-
-    const debugMode = Editor.isDebugMode(emulator);
-
-    // during debug, editor should be on read-only state
-    const currentReadOnly = editor.getReadOnly();
-    const expectedReadOnly = debugMode === true;
-    if (currentReadOnly !== expectedReadOnly) {
-      editor.setReadOnly(expectedReadOnly);
-    }
-
-    if (debugMode) {
-      const row = offsetCalculator.row(emulator.registers.pc);
-      if (!executingLine || executingLine.row !== row) {
-        if (executingLine) {
-          session.removeMarker(executingLine.id);
-        }
-        const highlighted = session.highlightLines(row, row);
-        editor.moveCursorTo(row, 0);
-        editor.clearSelection();
-        if (!editor.isRowFullyVisible(row)) {
-          editor.scrollToLine(row);
-        }
-        return { executingLine: { id: highlighted.id, row } };
-      }
-    } else if (executingLine) {
-      session.removeMarker(executingLine.id);
-      return { executingLine: null };
-    }
-
-    return null;
-  }
-
-  get editor() {
-    const { editorRef: { current: { editor } } } = this.state;
-    return editor;
-  }
-
-  #save = () => localStorage.setItem('source_code', this.editor.getValue());
-
-  render() {
-    const { editorRef } = this.state;
-
-    return (
-      <>
-        <AceEditor ref={editorRef} height="1024px" mode="text" name="editor" theme="monokai" width="auto" />
-        <div className="buttons">
-          <Button color="success" onClick={this.handleSave}>Save</Button>
-        </div>
-      </>
-    );
-  }
-}
-
-Editor.propTypes = {
-  breakpoints: PropTypes.objectOf(PropTypes.bool).isRequired,
-
-  compilerErrors: PropTypes.arrayOf(PropTypes.shape({
-    column: PropTypes.number,
-    row: PropTypes.number,
-    text: PropTypes.string,
-  })).isRequired,
-
-  emulator: PropTypes.shape({
-    mode: PropTypes.string,
-    registers: PropTypes.shape({
-      pc: PropTypes.number,
-    }),
-    running: PropTypes.bool,
-  }).isRequired,
-
-  setBreakpoints: PropTypes.func.isRequired,
+/*
+ * Checks if emulator is running and in debug mode
+ */
+const isDebugging = () => {
+  const { isRunning, runningMode } = emulatorStore.getRawState();
+  return isRunning && runningMode === 'debug';
 };
 
-const mapFn = connect(
-  ({ breakpoints, compilerErrors, emulator }) => ({ breakpoints, compilerErrors, emulator }),
-  { setBreakpoints: setBreakpointsAction },
-);
+/*
+ * Configure shortcuts for editor
+ */
+const setupEditorShortcuts = (editor) => {
+  // ACE editor already have Ctrl+D to remove line, but i prefer Ctrl+Y
+  editor.commands.addCommand({
+    bindKey: { mac: 'Command-Y', win: 'Ctrl-Y' },
+    exec: () => editor.removeLines(),
+    multiSelectAction: 'forEachLine',
+    name: 'removeline2',
+    scrollIntoView: 'cursor',
+  });
 
-export default mapFn(Editor);
+  editor.commands.addCommand({
+    bindKey: { mac: 'F7', win: 'F7' },
+    exec: () => isDebugging() && emulator.stepInto(),
+    multiSelectAction: 'forEach',
+    name: 'emulatorStepInto',
+    readOnly: true,
+    scrollIntoView: 'cursor',
+  });
+
+  editor.commands.addCommand({
+    bindKey: { mac: 'F8', win: 'F8' },
+    exec: () => isDebugging() && emulator.stepOver(),
+    multiSelectAction: 'forEach',
+    name: 'emulatorStepOver',
+    readOnly: true,
+    scrollIntoView: 'cursor',
+  });
+
+  editor.commands.addCommand({
+    bindKey: { mac: 'F9', win: 'F9' },
+    exec: () => isDebugging() && emulator.continueExec(),
+    multiSelectAction: 'forEach',
+    name: 'emulatorContinue',
+    readOnly: true,
+  });
+
+  editor.commands.addCommand({
+    bindKey: { mac: 'Cmd-S', win: 'Ctrl-S' },
+    exec: () => handleSave(editor),
+    multiSelectAction: 'forEach',
+    name: 'save',
+  });
+};
+
+/*
+ * Creates handler for clicks on gutter (to set/unset breakpoints)
+ */
+const createGutterClickHandler = (session) => (e) => {
+  const { row } = e.getDocumentPosition();
+  if (session.getBreakpoints()[row]) {
+    editorStore.update((state) => {
+      state.breakpoints.delete(row);
+    });
+
+    session.clearBreakpoint(row);
+  } else {
+    editorStore.update((state) => {
+      state.breakpoints.add(row);
+    });
+
+    session.setBreakpoint(row);
+  }
+
+  return e.preventDefault();
+};
+
+/*
+ * Subscribes to changes, caused by emulator and process them accordingly
+ *   (updates currently executed line, shows errors, etc...)
+ */
+const handleEmulatorUpdates = (editor, session) => {
+  compilerStore.subscribe(
+    (state) => state.errors,
+    (errors) => session.setAnnotations((errors || []).map((error) => ({ ...error, type: 'error' }))),
+  );
+
+  emulatorStore.subscribe(
+    (state) => state.isRunning,
+    (isRunning, state) => {
+      Object.values(session.getMarkers() || {}).forEach(({ id }) => session.removeMarker(id));
+      editor.setReadOnly(isRunning && state.runningMode === 'debug');
+    },
+  );
+
+  emulatorStore.subscribe(
+    (state) => state.registers.pc,
+    (pc, state) => {
+      if (!state.isRunning || state.runningMode !== 'debug') {
+        return;
+      }
+
+      // remove previous line highlight
+      Object.values(session.getMarkers() || {}).forEach(({ id }) => session.removeMarker(id));
+
+      const line = compilerStore.getRawState().sourceCodeLineByRomOffsetMap.get(pc);
+      if (line === undefined || line === -1) {
+        return;
+      }
+
+      const row = line - 1;
+      session.highlightLines(row, row);
+      editor.moveCursorTo(row, 0);
+      editor.clearSelection();
+      if (!editor.isRowFullyVisible(row)) {
+        editor.scrollToLine(row);
+      }
+    },
+  );
+};
+
+/*
+ * Configure settings for ACE editor
+ */
+const setupEditor = (editor) => {
+  const session = editor.getSession();
+  session.setMode(new AssemblyMode());
+  session.setTabSize(2);
+
+  editor.renderer.setOptions({ fixedWidthGutter: true, showPrintMargin: false });
+
+  editor.$blockScrolling = Infinity;
+  editor.on('guttermousedown', createGutterClickHandler(session));
+  editor.setValue(localStorage.getItem('source_code') || SampleCode, -1);
+
+  setupEditorShortcuts(editor);
+  handleEmulatorUpdates(editor, session);
+};
+
+export default function Editor() {
+  const editorRef = useRef(null);
+
+  const setEditorRef = useCallback((node) => {
+    if (!node) {
+      return;
+    }
+
+    const { editor } = node;
+    editorRef.current = editor;
+    editorStore.update((state) => {
+      state.editor = editor;
+      state.breakpoints = new Set();
+    });
+
+    setupEditor(editor);
+  }, []);
+
+  return (
+    <>
+      <AceEditor ref={setEditorRef} height="1024px" mode="text" name="editor" theme="monokai" width="auto" />
+      <div className="buttons">
+        <Button color="success" onClick={() => handleSave(editorRef?.current)}>Save</Button>
+      </div>
+    </>
+  );
+}

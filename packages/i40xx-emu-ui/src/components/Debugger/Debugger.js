@@ -1,18 +1,49 @@
-import { useSelector, useDispatch } from 'react-redux';
 import { Button, Notification, Columns, Table, Tag } from 'react-bulma-components';
 
 import { pad, padHex } from '../../utilities/string.js';
-import buildAndRun from '../../redux/actions/buildAndRun.js';
 import FramedBox from '../UI/FramedBox/FramedBox.js';
-import { stop, stepInto, stepOver, continueExec } from '../../services/emulator.js';
+import emulator from '../../services/emulator.js';
+import compile from '../../services/compiler.js';
 import editorStore from '../../stores/editorStore.js';
+import compilerStore from '../../stores/compilerStore.js';
+import emulatorStore from '../../stores/emulatorStore';
+
+/*
+ * Compile source code into ROM image and run this image inside emulator
+ */
+const buildAndRun = (editor, runningMode) => {
+  const unsubscribe = compilerStore.subscribe(
+    (state) => state.isCompiling,
+    (isCompiling, state) => {
+      if (isCompiling) {
+        return;
+      }
+
+      unsubscribe();
+
+      if (!state.errors?.length) {
+        emulator.run(state.romDump, runningMode);
+        editor.focus();
+      }
+    },
+  );
+
+  compile(editor.getValue());
+};
 
 export default function Debugger() {
-  const dispatch = useDispatch();
-  const emulator = useSelector((state) => state.emulator);
   const editor = editorStore.useState((state) => state.editor);
+  const isCompiling = compilerStore.useState((state) => state.isCompiling);
+  const { emulatorError, isRunning, registers, runningMode, selectedRamBank } = emulatorStore.useState(
+    (state) => ({
+      emulatorError: state.error,
+      isRunning: state.isRunning,
+      registers: state.registers,
+      runningMode: state.runningMode,
+      selectedRamBank: state.selectedRamBank,
+    }),
+  );
 
-  const { error, mode, registers, running, selectedBank } = emulator;
   const stack = registers.stack || [];
   const registerPairs = (registers.indexBanks || []).map((indexBank) => indexBank.reduce(
     (acc, reg, idx, ar) => (idx % 2 ? [...acc, [ar[idx - 1], reg]] : acc),
@@ -21,18 +52,18 @@ export default function Debugger() {
 
   return (
     <>
-      { emulator.error && <Notification color="danger">{error}</Notification> }
+      { emulatorError && <Notification color="danger">{emulatorError}</Notification> }
       <div className="buttons">
-        <Button color="success" disabled={running} onClick={() => dispatch(buildAndRun(editor.getValue(), 'run'))}>
+        <Button color="success" disabled={isCompiling || isRunning} onClick={() => buildAndRun(editor, 'run')}>
           Build & Run
         </Button>
-        <Button color="info" disabled={running} onClick={() => dispatch(buildAndRun(editor.getValue(), 'debug'))}>
+        <Button color="info" disabled={isCompiling || isRunning} onClick={() => buildAndRun(editor, 'debug')}>
           Build & Debug
         </Button>
-        { running && <Button color="danger" onClick={() => stop()}>Stop</Button> }
-        { running && (mode === 'debug') && <Button onClick={() => stepOver()}>Step over</Button> }
-        { running && (mode === 'debug') && <Button onClick={() => stepInto()}>Step into</Button> }
-        { running && (mode === 'debug') && <Button onClick={() => continueExec()}>Continue</Button> }
+        { isRunning && <Button color="danger" onClick={() => emulator.stop()}>Stop</Button> }
+        { isRunning && (runningMode === 'debug') && <Button onClick={() => emulator.stepOver()}>Step over</Button> }
+        { isRunning && (runningMode === 'debug') && <Button onClick={() => emulator.stepInto()}>Step into</Button> }
+        { isRunning && (runningMode === 'debug') && <Button onClick={() => emulator.continueExec()}>Continue</Button> }
       </div>
       <Columns>
         <Columns.Column size={3}>
@@ -48,7 +79,7 @@ export default function Debugger() {
                   <td><Tag>CY</Tag></td>
                 </tr>
                 <tr>
-                  <td>{padHex(selectedBank || 0, 2) }</td>
+                  <td>{padHex(selectedRamBank || 0, 2) }</td>
                   <td><Tag>Mem bank</Tag></td>
                 </tr>
                 <tr>

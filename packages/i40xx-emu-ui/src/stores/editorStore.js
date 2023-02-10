@@ -1,3 +1,9 @@
 import { Store } from 'pullstate';
+import { enableMapSet } from 'immer';
 
-export default new Store({ editor: null });
+enableMapSet();
+
+export default new Store({
+  breakpoints: new Set(),
+  editor: null,
+});

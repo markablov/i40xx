@@ -21,7 +21,7 @@ class System {
     this.#ram = new RAM(
       this.#cpu.pins,
       ramDump,
-      ({ chip, data }) => ramOutputHandler?.({ address: `${this.selectedBank}:${chip}`, data, type: 'RAM' }),
+      ({ chip, data }) => ramOutputHandler?.({ address: `${this.selectedRamBank}:${chip}`, data, type: 'RAM' }),
     );
 
     // initial tick to set SYNC signal and on next tick it would be A1 stage and first machine cycle
@@ -70,7 +70,7 @@ class System {
     return this.#ram.banks;
   }
 
-  get selectedBank() {
+  get selectedRamBank() {
     return RAM.getBankNoFromPinsData(this.#cpu.registers.ramControl);
   }
 

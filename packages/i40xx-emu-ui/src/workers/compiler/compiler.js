@@ -11,7 +11,7 @@ onmessage = ({ data: sourceCode }) => {
         row: (token ? token.startLine : line) - 1,
         text: message,
       })),
-      sourceMap: null,
+      sourceMap: [],
     });
     return;
   }
@@ -20,6 +20,6 @@ onmessage = ({ data: sourceCode }) => {
     const { rom, sourceMap } = buildRom(blocks);
     postMessage({ dump: rom, errors: [], sourceMap });
   } catch (err) {
-    postMessage({ dump: null, errors: [{ column: 1, row: 1, text: err.message }], sourceMap: null });
+    postMessage({ dump: null, errors: [{ column: 1, row: 1, text: err.message }], sourceMap: [] });
   }
 };

@@ -1,22 +1,14 @@
-import React from 'react';
-import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 import { Notification } from 'react-bulma-components';
 
-function CompilerInfo({ compilerErrors }) {
+import compilerStore from '../stores/compilerStore.js';
+
+export default function CompilerInfo() {
+  const compilerErrors = compilerStore.useState((state) => state.errors);
   return compilerErrors?.length
     ? (
       <Notification color="danger">
-        {compilerErrors.map(({ text }) => <div>{text}</div>)}
+        {compilerErrors.map(({ text }, idx) => <div key={`compiler-error-${idx}`}>{text}</div>)}
       </Notification>
     )
     : null;
 }
-
-CompilerInfo.propTypes = {
-  compilerErrors: PropTypes.arrayOf(PropTypes.shape({ text: PropTypes.string })).isRequired,
-};
-
-const mapFn = connect(({ compilerErrors }) => ({ compilerErrors }));
-
-export default mapFn(CompilerInfo);

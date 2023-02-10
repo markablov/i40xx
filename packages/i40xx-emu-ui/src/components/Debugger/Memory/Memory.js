@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Form } from 'react-bulma-components';
 
 import emulatorStore from '../../../stores/emulatorStore.js';
@@ -10,13 +9,16 @@ import './Memory.css';
 
 export default function Memory() {
   const [uploadedRAMDumpName, setUploadedRAMDumpName] = useState('');
-  const { ram, selectedBank } = useSelector((state) => state.emulator);
+  const { ram, selectedRamBank } = emulatorStore.useState((state) => ({
+    ram: state.ram,
+    selectedRamBank: state.selectedRamBank,
+  }));
 
   const uploadRAMDump = async (file) => {
     const dump = await file.text();
 
     emulatorStore.update((state) => {
-      state.initialRAM = JSON.parse(dump);
+      state.initialRam = JSON.parse(dump);
     });
 
     setUploadedRAMDumpName(file.name);
@@ -33,7 +35,7 @@ export default function Memory() {
       </div>
       {
         ram.map(({ registers, selectedCharacter, selectedRegister }, bankIdx) => (
-          <FramedBox key={`ram-bank-${bankIdx}`} narrow active={selectedBank === bankIdx} title={`Bank #${bankIdx}`}>
+          <FramedBox key={`ram-bank-${bankIdx}`} narrow active={selectedRamBank === bankIdx} title={`Bank #${bankIdx}`}>
             <div className="memoryBank">
               {
                 registers.map((reg, regIdx) => (

@@ -3,8 +3,14 @@ import Emulator from 'i40xx-emu';
 let system;
 let breakpoints = {};
 
-const sendState = () =>
-  postMessage({ command: 'state', ram: system.memory, registers: system.registers, selectedBank: system.selectedBank });
+const sendState = () => {
+  postMessage({
+    command: 'state',
+    ram: system.memory,
+    registers: system.registers,
+    selectedRamBank: system.selectedRamBank,
+  });
+};
 
 /*
  * Interrupt execution loop to check if there is some messages into channel
