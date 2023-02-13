@@ -11,6 +11,10 @@ const RomPages = class RomPages {
     return Math.trunc(address / RomPages.BYTES_PER_ROM_PAGE);
   }
 
+  static getPageOffsetFromAddress(address) {
+    return address % RomPages.BYTES_PER_ROM_PAGE;
+  }
+
   #currentPage = 0;
 
   #currentPageOffset = 0;
@@ -56,7 +60,7 @@ const RomPages = class RomPages {
     }
 
     const absoluteAddress = RomPages.getAbsoluteAddress(this.#currentPage, this.#currentPageOffset);
-    this.#blocksRomOffsets.set(blockIdx, { page: this.#currentPage, offset: this.#currentPageOffset });
+    this.#blocksRomOffsets.set(blockIdx, absoluteAddress);
 
     const blockSize = block.bytecode.length;
     const freeSpaceInCurrentPage = RomPages.BYTES_PER_ROM_PAGE - this.#currentPageOffset;
@@ -66,6 +70,7 @@ const RomPages = class RomPages {
       return absoluteAddress;
     }
 
+    this.#pages[this.#currentPage].set(block.bytecode.slice(0, freeSpaceInCurrentPage), this.#currentPageOffset);
     this.goToNextPage();
 
     let blockOffset = freeSpaceInCurrentPage;
@@ -94,13 +99,15 @@ const RomPages = class RomPages {
    *   include highest 4bit of address.
    */
   updateEncodedAddress(blockIdx, addressOffset, referencedBlockIdx, referencedInstructionOffset, isShort) {
-    const { page, offset } = this.#blocksRomOffsets.get(blockIdx);
-    const { page: refPage, offset: refBlockOffset } = this.#blocksRomOffsets.get(referencedBlockIdx);
-    const address = RomPages.getAbsoluteAddress(refPage, refBlockOffset + referencedInstructionOffset);
-    const absoluteOffset = offset + addressOffset;
-    this.#pages[page][absoluteOffset] = address & 0xFF;
+    const absoluteBlockAddress = this.#blocksRomOffsets.get(blockIdx);
+    const absoluteTargetBlockAddress = this.#blocksRomOffsets.get(referencedBlockIdx);
+    const targetAddress = absoluteTargetBlockAddress + referencedInstructionOffset;
+    const absoluteAddressOffset = absoluteBlockAddress + addressOffset;
+    const pageWithAddress = this.#pages[RomPages.getPageFromAddress(absoluteAddressOffset)];
+    const pageOffsetWithAddress = RomPages.getPageOffsetFromAddress(absoluteAddressOffset);
+    pageWithAddress[pageOffsetWithAddress] = targetAddress & 0xFF;
     if (!isShort) {
-      this.#pages[page][absoluteOffset - 1] = this.#pages[page][absoluteOffset - 1] | (address >> 8);
+      pageWithAddress[pageOffsetWithAddress - 1] = pageWithAddress[pageOffsetWithAddress - 1] | (targetAddress >> 8);
     }
   }
 
