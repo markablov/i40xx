@@ -1,5 +1,3 @@
-import { getPermutations } from './utilities/combinatorics.js';
-
 const RomPages = class RomPages {
   static ROM_PAGES_COUNT = 0xF;
 
@@ -30,6 +28,13 @@ const RomPages = class RomPages {
     this.#currentPageOffset = 0;
     if (this.#currentPage >= RomPages.ROM_PAGES_COUNT) {
       throw Error("Couldn't fit all codeblocks into ROM!");
+    }
+  }
+
+  addSingleBytePadding() {
+    this.#currentPageOffset++;
+    if (this.#currentPageOffset === RomPages.BYTES_PER_ROM_PAGE) {
+      this.goToNextPage();
     }
   }
 
@@ -166,30 +171,37 @@ const getCoupledBlocksIndexes = (blocks, firstBlockIdx) => {
  * Returns true if it was possible to do
  */
 const placeCodeBlock = (blocks, attemptedBlockIdx, romPages, sourceMap) => {
-  // callee blocks could be rearranged as well, but should not be a lot of variants to check
-  const placementVariants = getPermutations(getCoupledBlocksIndexes(blocks, attemptedBlockIdx));
-  for (const placementVariant of placementVariants) {
-    const blocksRelativeRomOffsets = new Map();
+  const coupledBlocks = getCoupledBlocksIndexes(blocks, attemptedBlockIdx);
+  const queue = [{ prefix: [], suffix: coupledBlocks }];
+  while (queue.length) {
+    const { prefix, suffix } = queue.pop();
+    if (!suffix.length) {
+      const blocksRelativeRomOffsets = new Map();
 
-    let offset = romPages.usedSpaceInPage;
-    for (const blockIdx of placementVariant) {
-      blocksRelativeRomOffsets.set(blockIdx, offset);
-      offset += blocks[blockIdx].bytecode.length;
-    }
-
-    if (!checkPlacementVariant(blocks, blocksRelativeRomOffsets, attemptedBlockIdx)) {
-      continue;
-    }
-
-    for (const blockIdx of placementVariant) {
-      const block = blocks[blockIdx];
-      const romAddress = romPages.appendBlock(block, blockIdx);
-      for (const { instructionOffset, line } of block.sourceCodeLines) {
-        sourceMap.push({ romOffset: romAddress + instructionOffset, line });
+      let offset = romPages.usedSpaceInPage;
+      for (const blockIdx of prefix) {
+        blocksRelativeRomOffsets.set(blockIdx, offset);
+        offset += blocks[blockIdx].bytecode.length;
       }
+
+      if (!checkPlacementVariant(blocks, blocksRelativeRomOffsets, attemptedBlockIdx)) {
+        continue;
+      }
+
+      for (const blockIdx of prefix) {
+        const block = blocks[blockIdx];
+        const romAddress = romPages.appendBlock(block, blockIdx);
+        for (const { instructionOffset, line } of block.sourceCodeLines) {
+          sourceMap.push({ romOffset: romAddress + instructionOffset, line });
+        }
+      }
+
+      return true;
     }
 
-    return true;
+    for (const [elementIdx, nextElementForPrefix] of suffix.entries()) {
+      queue.push({ prefix: [...prefix, nextElementForPrefix], suffix: suffix.filter((_, idx) => elementIdx !== idx) });
+    }
   }
 
   return false;
@@ -244,7 +256,7 @@ const fillRomWithBlocks = (blocks, sortedPrimaryBlocks, romPages, sourceMap) => 
     }
 
     if (!hasAnyCodeBlockFit) {
-      romPages.goToNextPage();
+      romPages.addSingleBytePadding();
     }
   }
 };
