@@ -129,23 +129,24 @@ const RomPages = class RomPages {
  *  - caller instruction should not be at last two words on the ROM page
  *  - caller instruction and callee block first instruction should be on the same ROM page
  */
-const checkPlacementVariant = (blocks, blocksRomOffsets, callerBlockIdx) => {
-  const callerBlockRomOffset = blocksRomOffsets.get(callerBlockIdx);
+const checkPlacementVariant = (blocks, blocksRomOffsets, blocksPlacement) => {
+  for (const blockIdx of blocksPlacement) {
+    const callerBlockRomOffset = blocksRomOffsets.get(blockIdx);
+    for (const { addressOffset, refBlockIdx, refInstructionOffset, isShort } of blocks[blockIdx].references) {
+      if (!isShort) {
+        continue;
+      }
 
-  for (const { addressOffset, refBlockIdx, refInstructionOffset, isShort } of blocks[callerBlockIdx].references) {
-    if (!isShort) {
-      continue;
-    }
+      const absoluteOffset = callerBlockRomOffset + (addressOffset - 1);
+      if ((absoluteOffset % RomPages.BYTES_PER_ROM_PAGE) >= (RomPages.BYTES_PER_ROM_PAGE - 1)) {
+        return false;
+      }
 
-    const absoluteOffset = callerBlockRomOffset + (addressOffset - 1);
-    if ((absoluteOffset % RomPages.BYTES_PER_ROM_PAGE) >= (RomPages.BYTES_PER_ROM_PAGE - 1)) {
-      return false;
-    }
-
-    const callerRomPage = RomPages.getPageFromAddress(absoluteOffset);
-    const calleeRomPage = RomPages.getPageFromAddress(blocksRomOffsets.get(refBlockIdx) + refInstructionOffset);
-    if (callerRomPage !== calleeRomPage) {
-      return false;
+      const callerRomPage = RomPages.getPageFromAddress(absoluteOffset);
+      const calleeRomPage = RomPages.getPageFromAddress(blocksRomOffsets.get(refBlockIdx) + refInstructionOffset);
+      if (callerRomPage !== calleeRomPage) {
+        return false;
+      }
     }
   }
 
@@ -184,18 +185,19 @@ const placeCodeBlock = (blocks, attemptedBlockIdx, romPages, sourceMap) => {
     const { prefix, suffix } = queue.pop();
     if (!suffix.length) {
       const blocksRelativeRomOffsets = new Map();
+      const blocksPlacement = prefix;
 
       let offset = romPages.usedSpaceInPage;
-      for (const blockIdx of prefix) {
+      for (const blockIdx of blocksPlacement) {
         blocksRelativeRomOffsets.set(blockIdx, offset);
         offset += blocks[blockIdx].bytecode.length;
       }
 
-      if (!checkPlacementVariant(blocks, blocksRelativeRomOffsets, attemptedBlockIdx)) {
+      if (!checkPlacementVariant(blocks, blocksRelativeRomOffsets, blocksPlacement)) {
         continue;
       }
 
-      for (const blockIdx of prefix) {
+      for (const blockIdx of blocksPlacement) {
         const block = blocks[blockIdx];
         const romAddress = romPages.appendBlock(block, blockIdx);
         for (const { instructionOffset, line } of block.sourceCodeLines) {
