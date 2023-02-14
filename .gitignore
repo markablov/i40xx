@@ -10,3 +10,7 @@ dist
 
 # dumps
 *.dump
+
+# caches
+*.cache
+.cache

@@ -1,3 +1,7 @@
+import * as fs from 'node:fs';
+
+const MINIMAL_BLOCKS_SET_TO_CACHE = 3;
+
 const RomPages = class RomPages {
   static ROM_PAGES_COUNT = 0xF;
 
@@ -174,12 +178,112 @@ const getCoupledBlocksIndexes = (blocks, firstBlockIdx) => {
 };
 
 /*
+ * Returns placement for set of coupled blocks if it's present in cache
+ */
+const getCachedPlacementForCoupledBlocks = (placementCache, blocks, coupledBlockIndexes) => {
+  const cacheSection = placementCache[coupledBlockIndexes.length];
+  if (!cacheSection) {
+    return null;
+  }
+
+  for (const cacheEntry of cacheSection) {
+    const { coupledBlocks, offset: cachedOffset } = cacheEntry;
+    const placement = new Array(coupledBlockIndexes.length);
+    for (const blockIdx of coupledBlockIndexes) {
+      const block = blocks[blockIdx];
+      const similarCacheBlocks = coupledBlocks[`${block.references.length}, ${block.bytecode.length}`];
+      const matchingCacheBlock = similarCacheBlocks.find(
+        ({ references: refs, placementPosition }) => (
+          block.references.every((ref) => refs[`${ref.addressOffset}, ${ref.refInstructionOffset}`] === ref.isShort)
+          && placement[placementPosition] === undefined
+        ),
+      );
+
+      if (!matchingCacheBlock) {
+        break;
+      }
+
+      placement[matchingCacheBlock.placementPosition] = blockIdx;
+    }
+
+    if (placement.includes(undefined)) {
+      continue;
+    }
+
+    cacheEntry.inUse = true;
+    return { placement, offset: cachedOffset };
+  }
+
+  return null;
+};
+
+/*
+ * Update cache by known good placement
+ */
+const insertCachedPlacementForCoupledBlocks = (placementCache, blocks, pageOffset, placement) => {
+  const cacheSection = placementCache[placement.length] || (placementCache[placement.length] = []);
+
+  const coupledBlocks = {};
+  for (const [placementPosition, blockIdx] of placement.entries()) {
+    const { references, bytecode } = blocks[blockIdx];
+    const key = `${references.length}, ${bytecode.length}`;
+    (coupledBlocks[key] || (coupledBlocks[key] = [])).push({
+      placementPosition,
+      references: Object.fromEntries(
+        references.map((ref) => [`${ref.addressOffset}, ${ref.refInstructionOffset}`, ref.isShort]),
+      ),
+    });
+  }
+
+  cacheSection.push({ coupledBlocks, offset: pageOffset, inUse: true });
+};
+
+/*
+ * Append blocks to RAM, following provided placement
+ */
+const appendBlocksAccordingPlacement = (placement, blocks, romPages, sourceMap) => {
+  for (const blockIdx of placement) {
+    const block = blocks[blockIdx];
+    const romAddress = romPages.appendBlock(block, blockIdx);
+    for (const { instructionOffset, line } of block.sourceCodeLines) {
+      sourceMap.push({ romOffset: romAddress + instructionOffset, line });
+    }
+  }
+};
+
+/*
  * Tries to place code block into ROM
  *
  * Returns true if it was possible to do
+ *
+ * Allows to use cache for block sets placements in format:
+ *    {
+ *      [coupledBlocks.length]: [
+ *        {
+ *          coupledBlocks: {
+ *            [block.references.length, blockSize]: [
+ *              { placementPosition, references: { [addressOffset, refInstructionOffset]: isShort } },
+ *            ],
+ *          },
+ *          offset,
+ *        },
+ *      ]
+ *    }
  */
-const placeCodeBlock = (blocks, attemptedBlockIdx, romPages, sourceMap) => {
+const placeCodeBlock = (blocks, attemptedBlockIdx, romPages, sourceMap, placementCache) => {
+  const pageOffset = romPages.usedSpaceInPage;
   const coupledBlocks = getCoupledBlocksIndexes(blocks, attemptedBlockIdx);
+  if (coupledBlocks.length >= MINIMAL_BLOCKS_SET_TO_CACHE) {
+    const cachedPlacement = getCachedPlacementForCoupledBlocks(placementCache, blocks, coupledBlocks);
+    if (cachedPlacement) {
+      if (cachedPlacement.offset !== pageOffset) {
+        return false;
+      }
+      appendBlocksAccordingPlacement(cachedPlacement.placement, blocks, romPages, sourceMap);
+      return true;
+    }
+  }
+
   const queue = [{ prefix: [], suffix: coupledBlocks }];
   while (queue.length) {
     const { prefix, suffix } = queue.pop();
@@ -187,7 +291,7 @@ const placeCodeBlock = (blocks, attemptedBlockIdx, romPages, sourceMap) => {
       const blocksRelativeRomOffsets = new Map();
       const blocksPlacement = prefix;
 
-      let offset = romPages.usedSpaceInPage;
+      let offset = pageOffset;
       for (const blockIdx of blocksPlacement) {
         blocksRelativeRomOffsets.set(blockIdx, offset);
         offset += blocks[blockIdx].bytecode.length;
@@ -197,14 +301,10 @@ const placeCodeBlock = (blocks, attemptedBlockIdx, romPages, sourceMap) => {
         continue;
       }
 
-      for (const blockIdx of blocksPlacement) {
-        const block = blocks[blockIdx];
-        const romAddress = romPages.appendBlock(block, blockIdx);
-        for (const { instructionOffset, line } of block.sourceCodeLines) {
-          sourceMap.push({ romOffset: romAddress + instructionOffset, line });
-        }
+      if (coupledBlocks.length >= MINIMAL_BLOCKS_SET_TO_CACHE) {
+        insertCachedPlacementForCoupledBlocks(placementCache, blocks, pageOffset, blocksPlacement);
       }
-
+      appendBlocksAccordingPlacement(blocksPlacement, blocks, romPages, sourceMap);
       return true;
     }
 
@@ -253,11 +353,13 @@ const updateAddressesInBytecode = (blocks, romPages) => {
 /*
  * Try to place all code blocks into ROM in some kind of optimal manner
  */
-const fillRomWithBlocks = (blocks, sortedPrimaryBlocks, romPages, sourceMap) => {
+const fillRomWithBlocks = (blocks, sortedPrimaryBlocks, romPages, sourceMap, cacheFile) => {
+  const placementCache = cacheFile && (fs.existsSync(cacheFile) ? JSON.parse(fs.readFileSync(cacheFile, 'utf-8')) : {});
+
   while (sortedPrimaryBlocks.size) {
     let hasAnyCodeBlockFit = false;
     for (const codeBlock of sortedPrimaryBlocks) {
-      if (placeCodeBlock(blocks, codeBlock.idx, romPages, sourceMap)) {
+      if (placeCodeBlock(blocks, codeBlock.idx, romPages, sourceMap, placementCache)) {
         sortedPrimaryBlocks.delete(codeBlock);
         hasAnyCodeBlockFit = true;
         break;
@@ -267,6 +369,16 @@ const fillRomWithBlocks = (blocks, sortedPrimaryBlocks, romPages, sourceMap) => 
     if (!hasAnyCodeBlockFit) {
       romPages.addSingleBytePadding();
     }
+  }
+
+  if (cacheFile) {
+    const updatedPlacementCache = Object.fromEntries(
+      Object.entries(placementCache)
+        .map(([key, section]) => [key, section.filter(({ inUse }) => inUse).map(({ inUse, ...rest }) => rest)])
+        .filter(([, section]) => section.length),
+    );
+
+    fs.writeFileSync(cacheFile, JSON.stringify(updatedPlacementCache, undefined, 2));
   }
 };
 
@@ -312,12 +424,12 @@ const fillRomWithFixedBlocks = (blocks, romPages, sourceMap) => {
  *   fixedLocation: { page, offset },
  * }
  */
-export function buildRom(codeBlocks) {
+export function buildRom(codeBlocks, { cacheFile } = {}) {
   const sourceMap = [];
   const romPages = new RomPages();
 
   fillRomWithFixedBlocks(codeBlocks, romPages, sourceMap);
-  fillRomWithBlocks(codeBlocks, getSortedPrimaryBlocks(codeBlocks), romPages, sourceMap);
+  fillRomWithBlocks(codeBlocks, getSortedPrimaryBlocks(codeBlocks), romPages, sourceMap, cacheFile);
   updateAddressesInBytecode(codeBlocks, romPages);
 
   return { sourceMap, rom: romPages.rom, romSize: romPages.romSize };
