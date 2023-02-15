@@ -1,5 +1,3 @@
-import * as fs from 'node:fs';
-
 const MINIMAL_BLOCKS_SET_TO_CACHE = 3;
 
 const RomPages = class RomPages {
@@ -113,6 +111,15 @@ const RomPages = class RomPages {
     if (!isShort) {
       pageWithAddress[pageOffsetWithAddress - 1] = pageWithAddress[pageOffsetWithAddress - 1] | (targetAddress >> 8);
     }
+  }
+
+  getAbsoluteAddressFromBlockOffset(blockIdx, offset) {
+    const absoluteBlockAddress = this.#blocksRomOffsets.get(blockIdx);
+    if (absoluteBlockAddress === undefined) {
+      return null;
+    }
+
+    return absoluteBlockAddress + offset;
   }
 
   get usedSpaceInPage() {
@@ -353,9 +360,7 @@ const updateAddressesInBytecode = (blocks, romPages) => {
 /*
  * Try to place all code blocks into ROM in some kind of optimal manner
  */
-const fillRomWithBlocks = (blocks, sortedPrimaryBlocks, romPages, sourceMap, cacheFile) => {
-  const placementCache = cacheFile && (fs.existsSync(cacheFile) ? JSON.parse(fs.readFileSync(cacheFile, 'utf-8')) : {});
-
+const fillRomWithBlocks = (blocks, sortedPrimaryBlocks, romPages, sourceMap, placementCache) => {
   while (sortedPrimaryBlocks.size) {
     let hasAnyCodeBlockFit = false;
     for (const codeBlock of sortedPrimaryBlocks) {
@@ -371,15 +376,17 @@ const fillRomWithBlocks = (blocks, sortedPrimaryBlocks, romPages, sourceMap, cac
     }
   }
 
-  if (cacheFile) {
+  if (placementCache) {
     const updatedPlacementCache = Object.fromEntries(
       Object.entries(placementCache)
         .map(([key, section]) => [key, section.filter(({ inUse }) => inUse).map(({ inUse, ...rest }) => rest)])
         .filter(([, section]) => section.length),
     );
 
-    fs.writeFileSync(cacheFile, JSON.stringify(updatedPlacementCache, undefined, 2));
+    return { placementCache: updatedPlacementCache };
   }
+
+  return { placementCache: null };
 };
 
 /*
@@ -413,7 +420,7 @@ const fillRomWithFixedBlocks = (blocks, romPages, sourceMap) => {
 };
 
 /*
- * Returns { rom, sourceMap }
+ * Returns { rom, sourceMap, symbols }
  *
  * Expects code blocks in format:
  * {
@@ -424,13 +431,27 @@ const fillRomWithFixedBlocks = (blocks, romPages, sourceMap) => {
  *   fixedLocation: { page, offset },
  * }
  */
-export function buildRom(codeBlocks, { cacheFile } = {}) {
+export function buildRom(codeBlocks, blockAddressedSymbols, { placementCache: cache } = {}) {
   const sourceMap = [];
   const romPages = new RomPages();
 
   fillRomWithFixedBlocks(codeBlocks, romPages, sourceMap);
-  fillRomWithBlocks(codeBlocks, getSortedPrimaryBlocks(codeBlocks), romPages, sourceMap, cacheFile);
+  const primaryBlocks = getSortedPrimaryBlocks(codeBlocks);
+  const { placementCache: newCache } = fillRomWithBlocks(codeBlocks, primaryBlocks, romPages, sourceMap, cache);
   updateAddressesInBytecode(codeBlocks, romPages);
 
-  return { sourceMap, rom: romPages.rom, romSize: romPages.romSize };
+  return {
+    placementCache: newCache,
+    sourceMap,
+    rom: romPages.rom,
+    romSize: romPages.romSize,
+    symbols: blockAddressedSymbols
+      .map(
+        ({ label, blockIdx, instructionOffset }) => ({
+          label,
+          romAddress: romPages.getAbsoluteAddressFromBlockOffset(blockIdx, instructionOffset),
+        }),
+      )
+      .filter(({ romAddress }) => romAddress !== null),
+  };
 }
