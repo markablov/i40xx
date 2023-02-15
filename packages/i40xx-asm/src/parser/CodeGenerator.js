@@ -164,7 +164,11 @@ class CodeGenerator {
       this.#instructions[instructionIdx].refInstructionIdx = refInstructionIdx;
     }
 
-    return { instructions: this.#instructions, fixedLocations: this.#fixedLocations };
+    return {
+      instructions: this.#instructions,
+      fixedLocations: this.#fixedLocations,
+      symbols: [...this.#labelToInstructionMap.entries()].map(([label, instructionIdx]) => ({ label, instructionIdx })),
+    };
   }
 
   clear() {

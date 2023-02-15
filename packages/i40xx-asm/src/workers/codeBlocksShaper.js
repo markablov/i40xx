@@ -138,7 +138,7 @@ const getEntrypointBlock = (blocks) => {
   return block;
 };
 
-const formBlocksFromInstructions = (fixedLocations, instructions) => {
+const formBlocksFromInstructions = (fixedLocations, instructions, symbols) => {
   const blocks = [];
   const instructionsMap = new Array(instructions.length);
 
@@ -178,7 +178,10 @@ const formBlocksFromInstructions = (fixedLocations, instructions) => {
     transformRefsToBlockReferences(blocks, block, instructionsMap);
   }
 
-  return blocks;
+  return {
+    blocks,
+    symbols: symbols.map(({ label, instructionIdx }) => ({ label, ...instructionsMap[instructionIdx] })),
+  };
 };
 
 module.exports = {

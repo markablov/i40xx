@@ -17,8 +17,9 @@ const compile = (sourceCode) => {
   }
 
   try {
-    const { fixedLocations, instructions } = parsingResult;
-    return { blocks: formBlocksFromInstructions(fixedLocations, instructions), errors: [] };
+    const { fixedLocations, instructions, symbols: instructionAddressedSymbols } = parsingResult;
+    const { blocks, symbols } = formBlocksFromInstructions(fixedLocations, instructions, instructionAddressedSymbols);
+    return { blocks, symbols, errors: [] };
   } catch (err) {
     return { blocks: [], errors: [err] };
   }
