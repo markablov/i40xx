@@ -2,7 +2,7 @@ import compile from 'i40xx-asm';
 import { buildRom } from 'i40xx-link';
 
 onmessage = ({ data: sourceCode }) => {
-  const { blocks, errors } = compile(sourceCode);
+  const { blocks, errors, symbols: blockAddressedSymbols } = compile(sourceCode);
   if (errors.length) {
     postMessage({
       dump: null,
@@ -17,7 +17,7 @@ onmessage = ({ data: sourceCode }) => {
   }
 
   try {
-    const { rom, sourceMap } = buildRom(blocks);
+    const { rom, sourceMap } = buildRom(blocks, blockAddressedSymbols);
     postMessage({ dump: rom, errors: [], sourceMap });
   } catch (err) {
     postMessage({ dump: null, errors: [{ column: 1, row: 1, text: err.message }], sourceMap: [] });
