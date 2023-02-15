@@ -143,7 +143,7 @@ const formBlocksFromInstructions = (fixedLocations, instructions, symbols) => {
   const instructionsMap = new Array(instructions.length);
 
   for (const { instructionIdx, romPage, romOffset } of fixedLocations) {
-    const { block: fixedBlock } = createCodeBlock(
+    const { block: fixedBlock, isNew } = createCodeBlock(
       blocks,
       instructionIdx,
       instructions,
@@ -151,7 +151,10 @@ const formBlocksFromInstructions = (fixedLocations, instructions, symbols) => {
       romPage,
       romOffset,
     );
-    blocks.push(fixedBlock);
+
+    if (isNew) {
+      blocks.push(fixedBlock);
+    }
   }
 
   const entrypointBlock = getEntrypointBlock(blocks);
