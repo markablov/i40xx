@@ -1,0 +1,224 @@
+__location(00:0x10)
+div4x4_1:
+  XCH rr12
+  LDM 0x0
+  XCH rr13
+  BBL 0
+
+# INPUT:
+#   acc - dividend
+#   rr10 - divisor
+#   rr11 - 0x0
+# OUTPUT:
+#   rr12 - quotient
+#   rr13 - reminder
+__location(00:0x18)
+div4x4:
+  JIN r5
+
+__location(00:0x20)
+div4x4_2:
+  RAR
+  XCH rr12
+  TCC
+  XCH rr13
+  BBL 0
+
+__location(00:0x30)
+div4x4_3:
+  FIM r6, 0x00
+  SUB rr10
+  JCN nc, div4x4_3567_ret_compensate
+  INC rr12
+  CLC
+  SUB rr10
+  JCN c, div4x4_3_continue
+  ADD rr10
+  XCH rr13
+  CLC
+  BBL 0
+
+__location(00:0x40)
+div4x4_4:
+  RAR
+  XCH rr12
+  TCC
+  XCH rr13
+  LD rr12
+  RAR
+  XCH rr12
+  JCN c, div4x4_4_update_reminder
+  BBL 0
+
+__location(00:0x4A)
+div4x4_4_update_reminder:
+  LDM 0x1
+  ADD rr13
+  XCH rr13
+  BBL 0
+
+__location(00:0x50)
+div4x4_5:
+  FIM r6, 0x00
+  SUB rr10
+  JCN nc, div4x4_3567_ret_compensate
+  INC rr12
+  CLC
+  SUB rr10
+  JCN c, div4x4_35_continue
+  ADD rr10
+  XCH rr13
+  CLC
+  BBL 0
+
+__location(00:0x60)
+div4x4_6:
+  FIM r6, 0x00
+  SUB rr10
+  JCN nc, div4x4_3567_ret_compensate
+  INC rr12
+  CLC
+  SUB rr10
+  JCN nc, div4x4_3567_ret_compensate
+  INC rr12
+  CLC
+  XCH rr13
+  BBL 0
+
+__location(00:0x70)
+div4x4_7:
+  FIM r6, 0x00
+  SUB rr10
+  JCN nc, div4x4_3567_ret_compensate
+  INC rr12
+  CLC
+  SUB rr10
+  JCN nc, div4x4_3567_ret_compensate
+  INC rr12
+  CLC
+  XCH rr13
+  BBL 0
+
+__location(00:0x80)
+div4x4_8:
+  SUB rr10
+  JCN nc, div4x4_89ABCDEF_compensate
+  XCH rr13
+  TCC
+  XCH rr12
+  BBL 0
+
+__location(00:0x88)
+div4x4_3567_ret_compensate:
+  ADD rr10
+  XCH rr13
+  CLC
+  BBL 0
+
+__location(00:0x90)
+div4x4_9:
+  SUB rr10
+  JCN nc, div4x4_89ABCDEF_compensate
+  XCH rr13
+  TCC
+  XCH rr12
+  BBL 0
+
+# gaps are tight, there is just enough space between div4x4_9 and div4x4_A to fit 9 bytes for that routine
+__location(00:0x97)
+div4x4_35_continue:
+  INC rr12
+  CLC
+  SUB rr10
+  JCN nc, div4x4_3567_ret_compensate
+  INC rr12
+  CLC
+  XCH rr13
+  BBL 0
+
+__location(00:0xA0)
+div4x4_A:
+  SUB rr10
+  JCN nc, div4x4_89ABCDEF_compensate
+  XCH rr13
+  TCC
+  XCH rr12
+  BBL 0
+
+# gaps are tight, there is just enough space between div4x4_A and div4x4_B to fit 9 bytes for that routine
+__location(00:0xA7)
+div4x4_3_continue:
+  INC rr12
+  CLC
+  SUB rr10
+  JCN c, div4x4_3_continue2
+  ADD rr10
+  XCH rr13
+  CLC
+  BBL 0
+
+__location(00:0xB0)
+div4x4_B:
+  SUB rr10
+  JCN nc, div4x4_89ABCDEF_compensate
+  XCH rr13
+  TCC
+  XCH rr12
+  BBL 0
+
+# gaps are tight, there is just enough space between div4x4_B and div4x4_C to fit 9 bytes for that routine
+__location(00:0xB7)
+div4x4_3_continue2:
+  INC rr12
+  CLC
+  SUB rr10
+  JCN c, div4x4_35_continue
+  ADD rr10
+  XCH rr13
+  CLC
+  BBL 0
+
+__location(00:0xC0)
+div4x4_C:
+  SUB rr10
+  JCN nc, div4x4_89ABCDEF_compensate
+  XCH rr13
+  TCC
+  XCH rr12
+  BBL 0
+
+__location(00:0xD0)
+div4x4_D:
+  SUB rr10
+  JCN nc, div4x4_89ABCDEF_compensate
+  XCH rr13
+  TCC
+  XCH rr12
+  BBL 0
+
+__location(00:0xE0)
+div4x4_E:
+  SUB rr10
+  JCN nc, div4x4_89ABCDEF_compensate
+  XCH rr13
+  TCC
+  XCH rr12
+  BBL 0
+
+__location(00:0xE8)
+div4x4_89ABCDEF_compensate:
+  CLC
+  ADD rr10
+  XCH rr13
+  CLB
+  XCH rr12
+  BBL 0
+
+__location(00:0xF0)
+div4x4_F:
+  SUB rr10
+  JCN nc, div4x4_89ABCDEF_compensate
+  XCH rr13
+  TCC
+  XCH rr12
+  BBL 0

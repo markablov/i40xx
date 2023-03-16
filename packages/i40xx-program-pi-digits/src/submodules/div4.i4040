@@ -1,0 +1,18 @@
+# INPUT:
+#   acc - dividend
+#   rr11 - divisor
+# OUTPUT:
+#   rr12 - quotient
+#   rr13 - reminder
+div4x4:
+  FIM r6, 0x00
+div4x4_loop:
+  SUB rr11
+  JCN nc, div4x4_return
+  CLC
+  ISZ rr12, div4x4_loop
+div4x4_return:
+  ADD rr11
+  XCH rr13
+  CLC
+  BBL 0
