@@ -1,18 +1,29 @@
 %include "memory.i4040"
 
-__location_short(0x00)
+__location(01:0x00)
 mul4x4_0:
   FIM r6, 0x00                                         # low, high = 0
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x10)
+# INPUT:
+#   acc - first factor (a)
+#   rr10 - second factor
+#   rr11 - 0x0
+# OUTPUT:
+#   rr12 - low word of product
+#   rr13 - high word of product
+__location(01:0x08)
+mul4x4:
+  JIN r5
+
+__location(01:0x10)
 mul4x4_1:
   XCH rr12                                              # low  = a
   LDM 0x0
   XCH rr13                                              # high = 0
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x20)
+__location(01:0x20)
 mul4x4_2:
   XCH rr12
   LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
@@ -24,7 +35,7 @@ mul4x4_2:
   XCH rr13                                              # high = a >> 3
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x30)
+__location(01:0x30)
 mul4x4_3:
   XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_3
@@ -36,7 +47,7 @@ mul4x4_3:
   XCH rr13                                              # high
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x40)
+__location(01:0x40)
 mul4x4_4:
   XCH rr12
   LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_2
@@ -48,7 +59,7 @@ mul4x4_4:
   XCH rr13                                              # high = a >> 2
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x50)
+__location(01:0x50)
 mul4x4_5:
   XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_5
@@ -60,7 +71,7 @@ mul4x4_5:
   XCH rr13                                              # high
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x60)
+__location(01:0x60)
 mul4x4_6:
   XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_6
@@ -72,7 +83,7 @@ mul4x4_6:
   XCH rr13                                              # high
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x70)
+__location(01:0x70)
 mul4x4_7:
   XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_7
@@ -84,7 +95,7 @@ mul4x4_7:
   XCH rr13                                              # high
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x80)
+__location(01:0x80)
 mul4x4_8:
   XCH rr12
   LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
@@ -96,7 +107,7 @@ mul4x4_8:
   XCH rr13                                              # high = a >> 1
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x90)
+__location(01:0x90)
 mul4x4_9:
   XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_9
@@ -108,7 +119,7 @@ mul4x4_9:
   XCH rr13                                              # high
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0xA0)
+__location(01:0xA0)
 mul4x4_A:
   XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_A
@@ -120,8 +131,7 @@ mul4x4_A:
   XCH rr13                                              # high
   BBL $BANK_WITH_VARIABLES
 
-
-__location_short(0xB0)
+__location(01:0xB0)
 mul4x4_B:
   XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_B
@@ -133,7 +143,7 @@ mul4x4_B:
   XCH rr13                                              # high
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0xC0)
+__location(01:0xC0)
 mul4x4_C:
   XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_C
@@ -145,7 +155,7 @@ mul4x4_C:
   XCH rr13                                              # high
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0xD0)
+__location(01:0xD0)
 mul4x4_D:
   XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_D
@@ -157,7 +167,7 @@ mul4x4_D:
   XCH rr13                                              # high
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0xE0)
+__location(01:0xE0)
 mul4x4_E:
   XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_E
@@ -169,8 +179,7 @@ mul4x4_E:
   XCH rr13                                              # high
   BBL $BANK_WITH_VARIABLES
 
-
-__location_short(0xF0)
+__location(01:0xF0)
 mul4x4_F:
   XCH rr12
   LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_F
@@ -181,13 +190,3 @@ mul4x4_F:
   RD3
   XCH rr13                                              # high
   BBL $BANK_WITH_VARIABLES
-
-# INPUT:
-#   acc - first factor (a)
-#   rr10 - second factor
-#   rr11 - 0x0
-# OUTPUT:
-#   rr12 - low word of product
-#   rr13 - high word of product
-mul4x4:
-  JIN r5
