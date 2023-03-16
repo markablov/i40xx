@@ -29,3 +29,39 @@ div8x4_return:
   XCH rr1
   CLC
   BBL 0
+
+# INPUT:
+#   rr13 - high digit of dividend
+#   acc - low digit of dividend
+#   rr10 - divisor
+#   rr11 - 0x0
+# OUTPUT:
+#   rr13 - reminder
+#   rr12 - quotient
+# VARIABLES:
+#   rr6 - low digit of dividend
+# NOTES:
+#   quotient supposed to be single digit, carry flag would be set if it's not
+div8by4to4:
+  XCH rr6
+  CLB
+  XCH rr12
+div8by4to4_loop:
+  LD rr6
+  SUB rr10
+  XCH rr6
+  CMC
+  LD rr13
+  SUB rr11
+  XCH rr13
+  JCN nc, div8by4to4_compensate
+  CLC
+  ISZ rr12, div8by4to4_loop
+  STC
+  BBL 0                                  # overflow!
+div8by4to4_compensate:
+  LD rr6
+  ADD rr10
+  XCH rr13
+  CLC
+  BBL 0

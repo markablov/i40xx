@@ -4,7 +4,7 @@ import Emulator from 'i40xx-emu';
 
 import { compileCodeForTest } from '#utilities/compile.js';
 
-const PROLOGUE_CYCLES_COUNT = 4;
+const PROLOGUE_CYCLES_COUNT = 5;
 
 const runSingleTestStandard = (romDump, value) => {
   const system = new Emulator({ romDump });
@@ -39,10 +39,10 @@ const runSingleTestFast = (romDump, value) => {
 
   return {
     result: {
-      nlz: registers.indexBanks[0][2],
-      shiftDirection0: registers.indexBanks[0][3],
-      msb: registers.indexBanks[0][4],
-      shiftDirection1: registers.indexBanks[0][5],
+      nlz: registers.indexBanks[0][8],
+      shiftDirection0: registers.indexBanks[0][9],
+      msb: registers.indexBanks[0][14],
+      shiftDirection1: registers.indexBanks[0][15],
     },
     elapsed: system.instructionCycles,
   };

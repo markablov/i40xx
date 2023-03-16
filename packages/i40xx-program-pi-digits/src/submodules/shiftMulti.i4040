@@ -35,17 +35,17 @@ shiftLeftVarFromMainMemory_loop:
   XCH rr1
   SRC r0
   RDM
-  XCH rr6
   JMS shift4ByR2                            # rr12 = var[i - 1] >> (4 - s)
   DCL
+  LD rr12
+  XCH rr6
   INC rr1
   SRC r0
   RDM
-  XCH rr6
   JMS shift4ByR1                            # rr13 = var[i] << s
   DCL
   LD rr13
-  ADD rr12
+  ADD rr6
   WRM                                       # var[i] = (var[i] << s) | (var[i - 1] >> (4 - s))
   ISZ rr9, shiftLeftVarFromMainMemory_loop
   LD rr1
@@ -54,7 +54,6 @@ shiftLeftVarFromMainMemory_loop:
   XCH rr1
   SRC r0
   RDM
-  XCH rr6
   JMS shift4ByR1
   DCL
   LD rr13                                   # var[0] = var[0] << s
@@ -84,27 +83,26 @@ shiftRightVarFromMainMemory_loop:
   INC rr1
   SRC r0
   RDM
-  XCH rr6
   JMS shift4ByR2                            # rr13 = var[digitIdx + 1] << (4 - shiftValue)
   DCL
+  LD rr13
+  XCH rr6
   LD rr1
   DAC
   CLC
   XCH rr1
   SRC r0
   RDM
-  XCH rr6
   JMS shift4ByR1                            # rr12 = var[digitIdx] >> shiftValue
   DCL
   LD rr12
-  ADD rr13
+  ADD rr6
   WRM                                       # var[digitIdx] = rr12 | rr13
   INC rr1
   ISZ rr9, shiftRightVarFromMainMemory_loop
 shiftRightVarFromMainMemory_lastDigit:
   SRC r0
   RDM
-  XCH rr6
   JMS shift4ByR1                            # rr12 = var[varDigitsAmount - 1] >> shiftValue
   DCL
   LD rr12

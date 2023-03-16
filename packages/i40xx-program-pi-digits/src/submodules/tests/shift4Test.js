@@ -3,10 +3,11 @@
 import Emulator from 'i40xx-emu';
 
 import { compileCodeForTest } from '#utilities/compile.js';
+import { updateCodeForUseInEmulator, generateRegisterInitialization } from '#utilities/codeGenerator.js';
 
 import RAM_DUMP from './data/ramWithLookupTables.json' assert { type: 'json' };
 
-const PROLOGUE_CYCLES_COUNT = 4;
+const PROLOGUE_CYCLES_COUNT = 5;
 
 const runLeftShiftTestStandard = (romDump, { shiftValue, value }) => {
   const system = new Emulator({ romDump });
@@ -42,7 +43,7 @@ const runLeftShiftTestTable = (romDump, { shiftValue, value }) => {
   const { registers } = system;
   registers.indexBanks[0][2] = shiftValue;
   registers.indexBanks[0][3] = 0x8;
-  registers.indexBanks[0][6] = value;
+  registers.acc = value;
 
   while (!system.isFinished()) {
     system.instruction();
@@ -57,7 +58,7 @@ const runRightShiftTestTable = (romDump, { shiftValue, value }) => {
   const { registers } = system;
   registers.indexBanks[0][4] = shiftValue;
   registers.indexBanks[0][5] = 0x0;
-  registers.indexBanks[0][6] = value;
+  registers.acc = value;
 
   while (!system.isFinished()) {
     system.instruction();
@@ -76,7 +77,7 @@ const runRightShiftTestTable = (romDump, { shiftValue, value }) => {
 
   let sum = 0;
 
-  const { rom: shiftLeftRom } = compileCodeForTest(
+  const { rom: shiftLeftRom, sourceCode: sourceCodeLeft } = compileCodeForTest(
     variant === 'table' ? 'submodules/shift4_table.i4040' : 'submodules/shift4.i4040',
     variant === 'table' ? 'shift4ByR1' : 'shiftLeft',
   );
@@ -88,6 +89,17 @@ const runRightShiftTestTable = (romDump, { shiftValue, value }) => {
       const { result, elapsed } = runLeftShiftTest(shiftLeftRom, { shiftValue, value });
       if (result !== expected) {
         console.log(`Test for left shift failed, value = ${value}, shiftValue = ${shiftValue}, result = ${result}`);
+        if (variant === 'table') {
+          console.log('Code to reproduce:');
+
+          const initializators = [
+            generateRegisterInitialization(2, shiftValue),
+            generateRegisterInitialization(3, 0x8),
+            generateRegisterInitialization(6, value),
+          ];
+
+          console.log(updateCodeForUseInEmulator(sourceCodeLeft, initializators));
+        }
         process.exit(1);
       }
       sum += (Number(elapsed) - PROLOGUE_CYCLES_COUNT);

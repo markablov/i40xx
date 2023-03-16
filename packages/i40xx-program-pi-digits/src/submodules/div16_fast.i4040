@@ -1,0 +1,1016 @@
+%include "memory.i4040"
+%include "div4_fast.i4040"
+%include "shift4_table.i4040"
+%include "mul4_table.i4040"
+%include "nlz_fast.i4040"
+%include "div8.i4040"
+
+# INPUT:
+#   rr9 - variable number in status characters memory for dividend
+#   rr8 - variable number in status characters memory for divisor
+# OUTPUT:
+#   rr0..rr3 - reminder
+#   rr8, rr9, rr14, rr15 - quotient
+# NOTES:
+#   uses all registers
+div16x16:
+  LD rr9
+  JMS loadVarFromStatusCharMemory                # rr0..rr3 = dividend
+
+  LD rr3
+  JCN nz, div16x16_dividend4                     # if (len(dividend) === 4)
+
+  LD rr2
+  JCN nz, div16x16_dividend3                     # if (len(dividend) === 3)
+
+  LD rr1
+  JCN nz, div16x16_dividend2                     # if (len(dividend) === 2)
+
+div16x16_dividend1:
+div16x16_dividend1_divisor1:
+  SRC r4
+  CLB
+  XCH rr11
+  RD0
+  XCH rr10                                       # rr10 = divisor[0]
+  LD rr0
+  JMS div4x4
+  LD rr13
+  XCH rr0                                        # rr0 = dividend[0] % divisor[0]
+  FIM r4, 0x00
+  FIM r7, 0x00
+  LD rr12
+  XCH rr8                                        # rr8 = dividend[0] / divisor[0]
+  BBL 0
+
+div16x16_dividend2:
+  SRC r4
+  RD1
+  JCN nz, div16x16_dividend2_divisor2            # if (len(divisor) === 2)
+div16x16_dividend2_divisor1:
+  RD0
+  XCH rr10                                       # rr10 = divisor[0]
+  CLB
+  XCH rr11
+  LD rr1
+  JMS div4x4                                     # r = dividend[1] % divisor[0]
+  LD rr12
+  XCH rr9                                        # quotient[1] = dividend[1] / divisor[0]
+  LD rr0
+  JMS div8by4to4
+  LD rr12
+  XCH rr8                                        # quotient[0] = [r, dividend[0]] / divisor[0]
+  LD rr13
+  XCH rr0                                        # reminder[0] = [r, dividend[0]] % divisor[0]
+  CLB
+  XCH rr1                                        # reminder[1] = 0x0
+  FIM r7, 0x00
+  BBL 0
+
+div16x16_dividend2_divisor2:
+  XCH rr6                                        # rr6 = divisor[1]
+  RD0
+  XCH rr5                                        # rr5 = divisor[0]
+  FIM r4, 0x00
+  FIM r7, 0x00
+div16x16_dividend2_divisor2_loop:
+  LD rr0
+  SUB rr5
+  XCH rr0
+  CMC
+  LD rr1
+  SUB rr6
+  XCH rr1
+  JCN nc, div16x16_dividend2_divisor2_compensate
+  CLC
+  ISZ rr8, div16x16_dividend2_divisor2_loop
+div16x16_dividend2_divisor2_compensate:
+  LD rr0
+  ADD rr5
+  XCH rr0
+  LD rr1
+  ADD rr6
+  XCH rr1
+  BBL 0
+
+div16x16_dividend3:
+  SRC r4
+  RD2
+  JCN nz, div16x16_dividend3_divisor3            # if (len(divisor) === 3)
+  RD1
+  JCN z, div16x16_dividend3_divisor1             # if (len(divisor) === 1)
+  # need to perform long jump for some code blocks, because whole div16x16 function would not fit into ROM page
+  JUN div16x16_dividend3_divisor2
+div16x16_dividend3_divisor1:
+  XCH rr15
+  RD0
+  XCH rr10                                       # rr10 = divisor[0]
+  CLB
+  XCH rr11
+  LD rr2
+  JMS div4x4                                     # r = dividend[2] % divisor[0]
+  LD rr12
+  XCH rr14                                       # quotient[2] = dividend[2] / divisor[0]
+  LD rr1
+  JMS div8by4to4                                 # r = [r, dividend[1]] % divisor[0]
+  LD rr12
+  XCH rr9                                        # quotient[1] = [r, dividend[1]] / divisor[0]
+  LD rr0
+  JMS div8by4to4                                 # r = [r, dividend[0]] % divisor[0]
+  LD rr12
+  XCH rr8                                        # quotient[0] = [r, dividend[0]] / divisor[0]
+  FIM r0, 0x00                                   # reminder[1] = 0x0
+  LD rr13
+  XCH rr0                                        # reminder[0] = [r, dividend[0]] % divisor[0]
+  XCH rr2                                        # reminder[2] = 0x0
+  BBL 0
+
+div16x16_dividend3_divisor3:
+  XCH rr7                                        # rr7 = divisor[2]
+  RD1
+  XCH rr6                                        # rr6 = divisor[1]
+  RD0
+  XCH rr5                                        # rr5 = divisor[0]
+  FIM r4, 0x00
+  FIM r7, 0x00
+div16x16_dividend3_divisor3_loop:
+  LD rr0
+  SUB rr5
+  XCH rr0
+  CMC
+  LD rr1
+  SUB rr6
+  XCH rr1
+  CMC
+  LD rr2
+  SUB rr7
+  XCH rr2
+  JCN nc, div16x16_dividend3_divisor3_compensate
+  CLC
+  ISZ rr8, div16x16_dividend3_divisor3_loop
+div16x16_dividend3_divisor3_compensate:
+  LD rr0
+  ADD rr5
+  XCH rr0
+  LD rr1
+  ADD rr6
+  XCH rr1
+  LD rr2
+  ADD rr7
+  XCH rr2
+  BBL 0
+
+div16x16_dividend4:
+  SRC r4
+  RD3
+  JCN nz, div16x16_dividend4_divisor4            # if (len(divisor) === 4)
+  RD2
+  JCN nz, div16x16_dividend4_divisor3_trampoline # if (len(divisor) === 3)
+  RD1
+  JCN z, div16x16_dividend4_divisor1             # if (len(divisor) === 1)
+  # need to perform long jump for some code blocks, because whole div16x16 function would not fit into ROM page
+  JUN div16x16_dividend4_divisor2
+div16x16_dividend4_divisor1:
+  RD0
+  XCH rr10                                       # rr10 = divisor[0]
+  CLB
+  XCH rr11
+  LD rr3
+  JMS div4x4                                     # r = dividend[3] % divisor[0]
+  LD rr12
+  XCH rr15                                       # quotient[3] = dividend[3] / divisor[0]
+  LD rr2
+  JMS div8by4to4                                 # r = [r, dividend[2]] % divisor[0]
+  LD rr12
+  XCH rr14                                       # quotient[2] = [r, dividend[2]] / divisor[0]
+  LD rr1
+  JMS div8by4to4                                 # r = [r, dividend[1]] % divisor[0]
+  LD rr12
+  XCH rr9                                        # quotient[1] = [r, dividend[1]] / divisor[0]
+  LD rr0
+  JMS div8by4to4                                 # r = [r, dividend[0]] % divisor[0]
+  LD rr12
+  XCH rr8                                        # quotient[0] = [r, dividend[0]] / divisor[0]
+  FIM r0, 0x00                                   # reminder[1] = 0x0
+  FIM r1, 0x00                                   # [reminder[2], reminder[3]] = 0x0
+  LD rr13
+  XCH rr0                                        # reminder[0] = [r, dividend[0]] % divisor[0]
+  BBL 0
+
+# need to perform long jump for some code blocks, because whole div16x16 function would not fit into ROM page
+div16x16_dividend4_divisor3_trampoline:
+  JUN div16x16_dividend4_divisor3
+
+div16x16_dividend4_divisor4:
+  XCH rr10
+  RD2
+  XCH rr7
+  RD1
+  XCH rr6
+  RD0
+  XCH rr5
+  FIM r4, 0x00
+  FIM r7, 0x00
+div16x16_dividend4_divisor4_loop:
+  LD rr0
+  SUB rr5
+  XCH rr0
+  CMC
+  LD rr1
+  SUB rr6
+  XCH rr1
+  CMC
+  LD rr2
+  SUB rr7
+  XCH rr2
+  CMC
+  LD rr3
+  SUB rr10
+  XCH rr3
+  JCN nc, div16x16_dividend4_divisor4_compensate
+  CLC
+  ISZ rr8, div16x16_dividend4_divisor4_loop
+div16x16_dividend4_divisor4_compensate:
+  LD rr0
+  ADD rr5
+  XCH rr0
+  LD rr1
+  ADD rr6
+  XCH rr1
+  LD rr2
+  ADD rr7
+  XCH rr2
+  LD rr3
+  ADD rr10
+  XCH rr3
+  BBL 0
+
+div16x16_dividend3_divisor2:
+  XCH rr7                                                       # rr7 = divisor[1]
+  RD0
+  XCH rr5                                                       # rr5 = divisor[0]
+  LD rr7
+  JMS nlzAndMSB                                                 # r7 contains input for (x << s) operation, r5 for (x >> (4 - s))
+  JCN z, div16x16_dividend3_divisor2_normalized
+div16x16_dividend3_divisor2_normalize_dividend:
+  LD rr2
+  JMS shift4ByR7
+  LD rr12
+  XCH rr3                                                       # dividend[3] = dividend[2] >> (4 - s)
+  LD rr2
+  JMS shift4ByR4                                                # rr13 = dividend[2] << s
+  LD rr1
+  JMS shift4ByR7                                                # rr12 = dividend[1] >> (4 - s)
+  LD rr12
+  ADD rr13
+  XCH rr2                                                       # dividend[2] = (dividend[2] << s) | (dividend[1] >> (4 - s))
+  LD rr1
+  JMS shift4ByR4                                                # rr13 = dividend[1] << s
+  LD rr0
+  JMS shift4ByR7                                                # rr12 = dividend[0] >> (4 - s)
+  LD rr12
+  ADD rr13
+  XCH rr1                                                       # dividend[1] = (dividend[1] << s) | (dividend[0] >> (4 - s))
+  LD rr0
+  JMS shift4ByR4
+  LD rr13
+  XCH rr0                                                       # dividend[0] = dividend[0] << s
+div16x16_dividend3_divisor2_normalize_divisor:
+  LD rr7
+  JMS shift4ByR4                                                # rr13 = divisor[1] << s
+  LD rr5
+  JMS shift4ByR7                                                # rr12 = divisor[0] >> (4 - s)
+  LD rr12
+  ADD rr13
+  XCH rr7                                                       # divisor[1] = (divisor[1] << s) | (divisor[0] >> (4 - s))
+  LD rr5
+  JMS shift4ByR4
+  LD rr13
+  XCH rr5                                                       # divisor[0] = divisor[0] << s
+div16x16_dividend3_divisor2_normalized:
+  CLB
+  XCH rr11
+  LD rr7
+  XCH rr10
+  LD rr3
+  XCH rr13
+  LD rr2
+  JMS div8by4to4                                                # [qhat, rhat] = [dividend[3], dividend[2]] / divisor[1]
+  LD rr12
+  XCH rr10                                                      # rr10 = qhat
+  LD rr13
+  XCH rr6                                                       # rr6 = rhat
+  JCN c, div16x16_dividend3_divisor2_quotient1_correction       # if (qhat > 0xF)
+div16x16_dividend3_divisor2_quotient1_check:
+  LD rr10
+  JCN z, div16x16_dividend3_divisor2_quotient2                  # if (qhat === 0x0)
+  LD rr5
+  JMS mul4x4                                                    # [rr12, rr13] = qhat * divisor[0]
+  LD rr1
+  SUB rr12
+  CMC
+  LD rr6
+  SUB rr13
+  JCN c, div16x16_dividend3_divisor2_quotient1_mulsub           # if (qhat * divisor[0] <= [dividend[1], rhat])
+div16x16_dividend3_divisor2_quotient1_correction:
+  LD rr10
+  DAC
+  XCH rr10                                                      # qhat = qhat - 1
+  CLC
+  LD rr6
+  ADD rr7
+  XCH rr6                                                       # rhat = rhat + divisor[1]
+  JCN nc, div16x16_dividend3_divisor2_quotient1_check
+  LD rr5
+  JMS mul4x4
+div16x16_dividend3_divisor2_quotient1_mulsub:
+  # rr12/rr13 are intact after previous mul4x4 call, so [p1_lo, p1_hi] = qhat * divisor[0]
+  CLC
+  LD rr1
+  SUB rr12
+  XCH rr1
+  CMC                                                           # [dividend[1], carry1] = dividend[1] - p1_lo
+  LD rr2
+  SUB rr13
+  XCH rr2
+  CMC                                                           # [dividend[2], carry2] = dividend[2] - p1_hi - carry1
+  LD rr3
+  SUB rr11
+  XCH rr3
+  CMC                                                           # dividend[3] = dividend[3] - carry2
+  LD rr7
+  JMS mul4x4                                                    # [p2_lo, p2_hi] = qhat * divisor[1]
+  LD rr2
+  SUB rr12
+  XCH rr2
+  CMC                                                           # [dividend[2], carry3] = dividend[2] - p2_lo
+  LD rr3
+  SUB rr13
+  XCH rr3                                                       # [dividend[3], carry4] = dividend[3] - p2_hi - carry3
+  LD rr10
+  JCN c, div16x16_dividend3_divisor2_quotient2                  # if (!carry4)
+div16x16_dividend3_divisor2_quotient1_compensate:
+  LD rr5
+  ADD rr1
+  XCH rr1                                                       # [dividend[1], carry1] = dividend[1] + divisor[0]
+  LD rr7
+  ADD rr2
+  XCH rr2                                                       # [dividend[2], carry2] = dividend[2] + divisor[1] + carry1
+  LD rr10
+  DAC                                                           # qhat = qhat - 1
+div16x16_dividend3_divisor2_quotient2:
+  XCH rr9                                                       # quotient[1] = qhat
+  CLC
+  LD rr7
+  XCH rr10
+  LD rr2
+  XCH rr13
+  LD rr1
+  JMS div8by4to4                                                # [qhat, rhat] = [dividend[2], dividend[1]] / divisor[1]
+  LD rr12
+  XCH rr10                                                      # rr10 = qhat
+  LD rr13
+  XCH rr6                                                       # rr6 = rhat
+  JCN c, div16x16_dividend3_divisor2_quotient2_correction       # if (qhat > 0xF)
+div16x16_dividend3_divisor2_quotient2_check:
+  LD rr10
+  JCN z, div16x16_dividend3_divisor2_denormalize                # if (qhat === 0x0)
+  LD rr5
+  JMS mul4x4                                                    # [rr12, rr13] = qhat * divisor[0]
+  LD rr0
+  SUB rr12
+  CMC
+  LD rr6
+  SUB rr13
+  JCN c, div16x16_dividend3_divisor2_quotient2_mulsub           # if (qhat * divisor[0] <= [dividend[0], rhat])
+div16x16_dividend3_divisor2_quotient2_correction:
+  LD rr10
+  DAC
+  XCH rr10                                                      # qhat = qhat - 1
+  CLC
+  LD rr6
+  ADD rr7
+  XCH rr6                                                       # rhat = rhat + divisor[1]
+  JCN nc, div16x16_dividend3_divisor2_quotient2_check
+  LD rr5
+  JMS mul4x4
+div16x16_dividend3_divisor2_quotient2_mulsub:
+  # rr12/rr13 are intact after previous mul4x4 call, so [p1_lo, p1_hi] = qhat * divisor[0]
+  CLC
+  LD rr0
+  SUB rr12
+  XCH rr0
+  CMC                                                           # [dividend[0], carry1] = dividend[0] - p1_lo
+  LD rr1
+  SUB rr13
+  XCH rr1
+  CMC                                                           # [dividend[1], carry2] = dividend[1] - p1_hi - carry1
+  LD rr2
+  SUB rr11
+  XCH rr2
+  CMC                                                           # dividend[2] = dividend[2] - carry2
+  LD rr7
+  JMS mul4x4                                                    # [p2_lo, p2_hi] = qhat * divisor[1]
+  LD rr1
+  SUB rr12
+  XCH rr1
+  CMC                                                           # [dividend[1], carry3] = dividend[1] - p2_lo
+  LD rr2
+  SUB rr13
+  XCH rr2                                                       # [dividend[2], carry4] = dividend[2] - p2_hi - carry3
+  LD rr10
+  JCN c, div16x16_dividend3_divisor2_denormalize                # if (!carry4)
+div16x16_dividend3_divisor2_quotient2_compensate:
+  LD rr5
+  ADD rr0
+  XCH rr0                                                       # [dividend[0], carry1] = dividend[0] + divisor[0]
+  LD rr7
+  ADD rr1
+  XCH rr1                                                       # [dividend[1], carry2] = dividend[1] + divisor[1] + carry1
+  LD rr10
+  DAC                                                           # qhat = qhat - 1
+div16x16_dividend3_divisor2_denormalize:
+  CLC
+  XCH rr8                                                       # quotient[0] = qhat
+  JCN z, div16x16_dividend3_divisor2_return
+  XCH rr10                                                      # r5 = input for (x >> s) operation
+  LDM 0x8
+  XCH rr15                                                      # r7 = input for (x << (4 - s)) operation
+  LD rr1
+  JMS shift4ByR7                                                # rr13 = dividend[1] << (4 - s)
+  LD rr0
+  JMS shift4ByR5                                                # rr12 = dividend[0] >> s
+  LD rr12
+  ADD rr13
+  XCH rr0                                                       # reminder[0] = (dividend[0] >> s) | (dividend[1] << (4 - s))
+  LD rr1
+  JMS shift4ByR5
+  LD rr12
+  XCH rr1                                                       # reminder[1] = dividend[1] >> s
+  FIM r1, 0x00                                                  # [reminder[2], reminder[3]] = 0x0
+div16x16_dividend3_divisor2_return:
+  FIM r7, 0x00
+  LDM $BANK_WITH_VARIABLES
+  DCL
+  BBL 0
+
+div16x16_dividend4_divisor3:
+  XCH rr6                                                       # rr6 = divisor[2]
+  RD1
+  XCH rr7                                                       # rr7 = divisor[1]
+  RD0
+  XCH rr5                                                       # rr5 = divisor[0]
+  LD rr6
+  JMS nlzAndMSB                                                 # r7 contains input for (x << s) operation, r5 for (x >> (4 - s))
+  JCN z, div16x16_dividend4_divisor3_normalized
+div16x16_dividend4_divisor3_normalize_dividend:
+  LD rr3
+  JMS shift4ByR7
+  LD rr12
+  XCH rr4                                                       # dividend[4] = dividend[3] >> (4 - s)
+  LD rr3
+  JMS shift4ByR4                                                # rr13 = dividend[3] << s
+  LD rr2
+  JMS shift4ByR7                                                # rr12 = dividend[2] >> (4 - s)
+  LD rr12
+  ADD rr13
+  XCH rr3                                                       # dividend[3] = (dividend[3] << s) | (dividend[2] >> (4 - s))
+  LD rr2
+  JMS shift4ByR4                                                # rr13 = dividend[2] << s
+  LD rr1
+  JMS shift4ByR7                                                # rr12 = dividend[1] >> (4 - s)
+  LD rr12
+  ADD rr13
+  XCH rr2                                                       # dividend[2] = (dividend[2] << s) | (dividend[1] >> (4 - s))
+  LD rr1
+  JMS shift4ByR4                                                # rr13 = dividend[1] << s
+  LD rr0
+  JMS shift4ByR7                                                # rr12 = dividend[0] >> (4 - s)
+  LD rr12
+  ADD rr13
+  XCH rr1                                                       # dividend[1] = (dividend[1] << s) | (dividend[0] >> (4 - s))
+  LD rr0
+  JMS shift4ByR4
+  LD rr13
+  XCH rr0                                                       # dividend[0] = dividend[0] << s
+div16x16_dividend4_divisor3_normalize_divisor:
+  LD rr6
+  JMS shift4ByR4                                                # rr13 = divisor[2] << s
+  LD rr7
+  JMS shift4ByR7                                                # rr12 = divisor[1] >> (4 - s)
+  LD rr12
+  ADD rr13
+  XCH rr6                                                       # divisor[2] = (divisor[2] << s) | (divisor[1] >> (4 - s))
+  LD rr7
+  JMS shift4ByR4                                                # rr13 = divisor[1] << s
+  LD rr5
+  JMS shift4ByR7                                                # rr12 = divisor[0] >> (4 - s)
+  LD rr12
+  ADD rr13
+  XCH rr7                                                       # divisor[1] = (divisor[1] << s) | (divisor[0] >> (4 - s))
+  LD rr5
+  JMS shift4ByR4
+  LD rr13
+  XCH rr5                                                       # divisor[0] = divisor[0] << s
+div16x16_dividend4_divisor3_normalized:
+  LD rr6
+  XCH rr15
+  XCH rr11                                                      # rr11 = 0x0
+  LD rr15
+  XCH rr10
+  LD rr4
+  XCH rr13
+  LD rr3
+  JMS div8by4to4                                                # [qhat, rhat] = [dividend[4], dividend[3]] / divisor[2]
+  LD rr12
+  XCH rr10                                                      # rr10 = qhat
+  LD rr13
+  XCH rr6                                                       # rr6 = rhat
+  JCN c, div16x16_dividend4_divisor3_quotient1_correction       # if (qhat > 0xF)
+div16x16_dividend4_divisor3_quotient1_check:
+  LD rr10
+  JCN z, div16x16_dividend4_divisor3_quotient2                  # if (qhat === 0x0)
+  LD rr7
+  JMS mul4x4                                                    # [rr12, rr13] = qhat * divisor[1]
+  LD rr2
+  SUB rr12
+  CMC
+  LD rr6
+  SUB rr13
+  JCN c, div16x16_dividend4_divisor3_quotient1_mulsub           # if (qhat * divisor[1] <= [dividend[2], rhat])
+div16x16_dividend4_divisor3_quotient1_correction:
+  LD rr10
+  DAC
+  XCH rr10                                                      # qhat = qhat - 1
+  CLC
+  LD rr6
+  ADD rr15
+  XCH rr6                                                       # rhat = rhat + divisor[2]
+  JCN nc, div16x16_dividend4_divisor3_quotient1_check
+div16x16_dividend4_divisor3_quotient1_mulsub:
+  CLC
+  LD rr5
+  JMS mul4x4                                                    # [p2_lo, p2_hi] = qhat * divisor[0]
+  LD rr1
+  SUB rr12
+  XCH rr1
+  CMC                                                           # [dividend[1], carry1] = dividend[1] - p1_lo
+  LD rr2
+  SUB rr13
+  XCH rr2
+  CMC                                                           # [dividend[2], carry2] = dividend[2] - p1_hi - carry1
+  LD rr3
+  SUB rr11
+  XCH rr3
+  CMC                                                           # [dividend[3], carry3] = dividend[3] - carry2
+  LD rr4
+  SUB rr11
+  XCH rr4
+  CMC                                                           # dividend[4] = dividend[4] - carry3
+  LD rr7
+  JMS mul4x4                                                    # [p2_lo, p2_hi] = qhat * divisor[1]
+  LD rr2
+  SUB rr12
+  XCH rr2
+  CMC                                                           # [dividend[2], carry4] = dividend[2] - p2_lo
+  LD rr3
+  SUB rr13
+  XCH rr3                                                       # [dividend[3], carry5] = dividend[3] - p2_hi - carry4
+  CMC
+  LD rr4
+  SUB rr10
+  XCH rr4
+  CMC                                                           # dividend[4] = dividend[4] - carry5
+  LD rr15
+  JMS mul4x4                                                    # [p3_lo, p3_hi] = qhat * divisor[2]
+  LD rr3
+  SUB rr12
+  XCH rr3
+  CMC                                                           # [dividend[3], carry6] = dividend[3] - p3_lo
+  LD rr4
+  SUB rr13
+  XCH rr4                                                       # [dividend[4], carry7] = dividend[4] - p3_hi - carry6
+  LD rr10
+  JCN c, div16x16_dividend4_divisor3_quotient2                  # if (!carry7)
+div16x16_dividend4_divisor3_quotient1_compensate:
+  LD rr5
+  ADD rr1
+  XCH rr1                                                       # [dividend[1], carry1] = dividend[1] + divisor[0]
+  LD rr7
+  ADD rr2
+  XCH rr2                                                       # [dividend[2], carry2] = dividend[2] + divisor[1] + carry1
+  LD rr15
+  ADD rr3
+  XCH rr3                                                       # [dividend[3], carry3] = dividend[3] + divisor[2] + carry2
+  LD rr10
+  DAC                                                           # qhat = qhat - 1
+div16x16_dividend4_divisor3_quotient2:
+  XCH rr9                                                       # quotient[1] = qhat
+  CLC
+  LD rr15
+  XCH rr10
+  LD rr3
+  XCH rr13
+  LD rr2
+  JMS div8by4to4                                                # [qhat, rhat] = [dividend[3], dividend[2]] / divisor[2]
+  LD rr12
+  XCH rr10                                                      # rr10 = qhat
+  LD rr13
+  XCH rr6                                                       # rr6 = rhat
+  JCN c, div16x16_dividend4_divisor3_quotient2_correction       # if (qhat > 0xF)
+div16x16_dividend4_divisor3_quotient2_check:
+  LD rr10
+  JCN z, div16x16_dividend4_divisor3_denormalize                # if (qhat === 0x0)
+  LD rr7
+  JMS mul4x4                                                    # [rr12, rr13] = qhat * divisor[1]
+  LD rr1
+  SUB rr12
+  CMC
+  LD rr6
+  SUB rr13
+  JCN c, div16x16_dividend4_divisor3_quotient2_mulsub           # if (qhat * divisor[1] <= [dividend[1], rhat])
+div16x16_dividend4_divisor3_quotient2_correction:
+  LD rr10
+  DAC
+  XCH rr10                                                      # qhat = qhat - 1
+  CLC
+  LD rr6
+  ADD rr15
+  XCH rr6                                                       # rhat = rhat + divisor[2]
+  JCN nc, div16x16_dividend4_divisor3_quotient2_check
+div16x16_dividend4_divisor3_quotient2_mulsub:
+  CLC
+  LD rr5
+  JMS mul4x4                                                    # [p2_lo, p2_hi] = qhat * divisor[0]
+  LD rr0
+  SUB rr12
+  XCH rr0
+  CMC                                                           # [dividend[0], carry1] = dividend[0] - p1_lo
+  LD rr1
+  SUB rr13
+  XCH rr1
+  CMC                                                           # [dividend[1], carry2] = dividend[1] - p1_hi - carry1
+  LD rr2
+  SUB rr11
+  XCH rr2
+  CMC                                                           # [dividend[2], carry3] = dividend[2] - carry2
+  LD rr3
+  SUB rr11
+  XCH rr3
+  CMC                                                           # dividend[3] = dividend[3] - carry3
+  LD rr7
+  JMS mul4x4                                                    # [p2_lo, p2_hi] = qhat * divisor[1]
+  LD rr1
+  SUB rr12
+  XCH rr1
+  CMC                                                           # [dividend[1], carry4] = dividend[1] - p2_lo
+  LD rr2
+  SUB rr13
+  XCH rr2                                                       # [dividend[2], carry5] = dividend[2] - p2_hi - carry4
+  CMC
+  LD rr3
+  SUB rr11
+  XCH rr3
+  CMC                                                           # dividend[3] = dividend[3] - carry5
+  LD rr15
+  JMS mul4x4                                                    # [p3_lo, p3_hi] = qhat * divisor[2]
+  LD rr2
+  SUB rr12
+  XCH rr2
+  CMC                                                           # [dividend[2], carry6] = dividend[2] - p3_lo
+  LD rr3
+  SUB rr13
+  XCH rr3                                                       # [dividend[3], carry7] = dividend[3] - p3_hi - carry6
+  LD rr10
+  JCN c, div16x16_dividend4_divisor3_denormalize                # if (!carry7)
+div16x16_dividend4_divisor3_quotient2_compensate:
+  LD rr5
+  ADD rr0
+  XCH rr0                                                       # [dividend[0], carry1] = dividend[0] + divisor[0]
+  LD rr7
+  ADD rr1
+  XCH rr1                                                       # [dividend[1], carry2] = dividend[1] + divisor[1] + carry1
+  LD rr15
+  ADD rr2
+  XCH rr2                                                       # dividend[2] = dividend[2] + divisor[2] + carry2
+  LD rr10
+  DAC                                                           # qhat = qhat - 1
+div16x16_dividend4_divisor3_denormalize:
+  CLC
+  XCH rr8                                                       # quotient[0] = qhat
+  JCN z, div16x16_dividend4_divisor3_return
+  XCH rr10                                                      # r5 = input for (x >> s) operation
+  LDM 0x8
+  XCH rr15                                                      # r7 = input for (x << (4 - s)) operation
+  LD rr1
+  JMS shift4ByR7                                                # rr13 = dividend[1] << (4 - s)
+  LD rr0
+  JMS shift4ByR5                                                # rr12 = dividend[0] >> s
+  LD rr12
+  ADD rr13
+  XCH rr0                                                       # reminder[0] = (dividend[0] >> s) | (dividend[1] << (4 - s))
+  LD rr2
+  JMS shift4ByR7                                                # rr13 = dividend[2] << (4 - s)
+  LD rr1
+  JMS shift4ByR5                                                # rr12 = dividend[1] >> s
+  LD rr12
+  ADD rr13
+  XCH rr1                                                       # reminder[1] = (dividend[1] >> s) | (dividend[2] << (4 - s))
+  LD rr2
+  JMS shift4ByR5
+  LD rr12
+  XCH rr2                                                       # reminder[2] = dividend[2] >> s
+div16x16_dividend4_divisor3_return:
+  FIM r7, 0x00
+  LDM $BANK_WITH_VARIABLES
+  DCL
+  CLB
+  XCH rr3                                                       # reminder[3] = 0x00
+  BBL 0
+
+div16x16_dividend4_divisor2:
+  XCH rr7                                                       # rr7 = divisor[1]
+  RD0
+  XCH rr5                                                       # rr5 = divisor[0]
+  LD rr7
+  JMS nlzAndMSB                                                 # r7 contains input for (x << s) operation, r5 for (x >> (4 - s))
+  JCN z, div16x16_dividend4_divisor2_normalized
+div16x16_dividend4_divisor2_normalize_dividend:
+  LD rr3
+  JMS shift4ByR7
+  LD rr12
+  XCH rr4                                                       # dividend[4] = dividend[3] >> (4 - s)
+  LD rr3
+  JMS shift4ByR4                                                # rr13 = dividend[3] << s
+  LD rr2
+  JMS shift4ByR7                                                # rr12 = dividend[2] >> (4 - s)
+  LD rr12
+  ADD rr13
+  XCH rr3                                                       # dividend[3] = (dividend[3] << s) | (dividend[2] >> (4 - s))
+  LD rr2
+  JMS shift4ByR4                                                # rr13 = dividend[2] << s
+  LD rr1
+  JMS shift4ByR7                                                # rr12 = dividend[1] >> (4 - s)
+  LD rr12
+  ADD rr13
+  XCH rr2                                                       # dividend[2] = (dividend[2] << s) | (dividend[1] >> (4 - s))
+  LD rr1
+  JMS shift4ByR4                                                # rr13 = dividend[1] << s
+  LD rr0
+  JMS shift4ByR7                                                # rr12 = dividend[0] >> (4 - s)
+  LD rr12
+  ADD rr13
+  XCH rr1                                                       # dividend[1] = (dividend[1] << s) | (dividend[0] >> (4 - s))
+  LD rr0
+  JMS shift4ByR4
+  LD rr13
+  XCH rr0                                                       # dividend[0] = dividend[0] << s
+div16x16_dividend4_divisor2_normalize_divisor:
+  LD rr7
+  JMS shift4ByR4                                                # rr13 = divisor[1] << s
+  LD rr5
+  JMS shift4ByR7                                                # rr12 = divisor[0] >> (4 - s)
+  LD rr12
+  ADD rr13
+  XCH rr7                                                       # divisor[1] = (divisor[1] << s) | (divisor[0] >> (4 - s))
+  LD rr5
+  JMS shift4ByR4
+  LD rr13
+  XCH rr5                                                       # divisor[0] = divisor[0] << s
+  LD rr14
+  XCH rr15                                                      # rr15 = MSB of divisor
+div16x16_dividend4_divisor2_normalized:
+  XCH rr11                                                      # rr11 = 0x0 (either from previous value of rr15 or from NLZ check)
+  LD rr7
+  XCH rr10
+  LD rr4
+  XCH rr13
+  LD rr3
+  JMS div8by4to4                                                # [qhat, rhat] = [dividend[4], dividend[3]] / divisor[2]
+  LD rr12
+  XCH rr10                                                      # rr10 = qhat
+  LD rr13
+  XCH rr6                                                       # rr6 = rhat
+  JCN c, div16x16_dividend4_divisor2_quotient1_correction       # if (qhat > 0xF)
+div16x16_dividend4_divisor2_quotient1_check:
+  LD rr10
+  JCN z, div16x16_dividend4_divisor2_quotient2                  # if (qhat === 0x0)
+  LD rr5
+  JMS mul4x4                                                    # [rr12, rr13] = qhat * divisor[0]
+  LD rr2
+  SUB rr12
+  CMC
+  LD rr6
+  SUB rr13
+  JCN c, div16x16_dividend4_divisor2_quotient1_mulsub           # if (qhat * divisor[1] <= [dividend[2], rhat])
+div16x16_dividend4_divisor2_quotient1_correction:
+  LD rr10
+  DAC
+  XCH rr10                                                      # qhat = qhat - 1
+  CLC
+  LD rr6
+  ADD rr7
+  XCH rr6                                                       # rhat = rhat + divisor[1]
+  JCN nc, div16x16_dividend4_divisor2_quotient1_check
+div16x16_dividend4_divisor2_quotient1_mulsub:
+  CLC
+  LD rr5
+  JMS mul4x4                                                    # [p1_lo, p1_hi] = qhat * divisor[0]
+  LD rr2
+  SUB rr12
+  XCH rr2
+  CMC                                                           # [dividend[2], carry1] = dividend[2] - p1_lo
+  LD rr3
+  SUB rr13
+  XCH rr3
+  CMC                                                           # [dividend[3], carry2] = dividend[3] - p1_hi - carry1
+  LD rr4
+  SUB rr11
+  XCH rr4
+  CMC                                                           # dividend[4] = dividend[4] - carry2
+  LD rr7
+  JMS mul4x4                                                    # [p2_lo, p2_hi] = qhat * divisor[1]
+  LD rr3
+  SUB rr12
+  XCH rr3
+  CMC                                                           # [dividend[3], carry3] = dividend[3] - p2_lo
+  LD rr4
+  SUB rr13
+  XCH rr4                                                       # [dividend[4], carry4] = dividend[4] - p2_hi - carry3
+  LD rr10
+  JCN c, div16x16_dividend4_divisor2_quotient2                  # if (!carry4)
+div16x16_dividend4_divisor2_quotient1_compensate:
+  LD rr5
+  ADD rr2
+  XCH rr2                                                       # [dividend[2], carry1] = dividend[2] + divisor[0]
+  LD rr7
+  ADD rr3
+  XCH rr3                                                       # [dividend[3], carry2] = dividend[3] + divisor[1] + carry1
+  LD rr10
+  DAC                                                           # qhat = qhat - 1
+div16x16_dividend4_divisor2_quotient2:
+  XCH rr14                                                      # quotient[2] = qhat
+  CLC
+  LD rr7
+  XCH rr10
+  LD rr3
+  XCH rr13
+  LD rr2
+  JMS div8by4to4                                                # [qhat, rhat] = [dividend[3], dividend[2]] / divisor[1]
+  LD rr12
+  XCH rr10                                                      # rr10 = qhat
+  LD rr13
+  XCH rr6                                                       # rr6 = rhat
+  JCN c, div16x16_dividend4_divisor2_quotient2_correction       # if (qhat > 0xF)
+div16x16_dividend4_divisor2_quotient2_check:
+  LD rr10
+  JCN z, div16x16_dividend4_divisor2_quotient3                  # if (qhat === 0x0)
+  LD rr5
+  JMS mul4x4                                                    # [rr12, rr13] = qhat * divisor[0]
+  LD rr1
+  SUB rr12
+  CMC
+  LD rr6
+  SUB rr13
+  JCN c, div16x16_dividend4_divisor2_quotient2_mulsub           # if (qhat * divisor[0] <= [dividend[1], rhat])
+div16x16_dividend4_divisor2_quotient2_correction:
+  LD rr10
+  DAC
+  XCH rr10                                                      # qhat = qhat - 1
+  CLC
+  LD rr6
+  ADD rr7
+  XCH rr6                                                       # rhat = rhat + divisor[1]
+  JCN nc, div16x16_dividend4_divisor2_quotient2_check
+div16x16_dividend4_divisor2_quotient2_mulsub:
+  CLC
+  LD rr5
+  JMS mul4x4                                                    # [p1_lo, p1_hi] = qhat * divisor[0]
+  LD rr1
+  SUB rr12
+  XCH rr1
+  CMC                                                           # [dividend[1], carry1] = dividend[1] - p1_lo
+  LD rr2
+  SUB rr13
+  XCH rr2
+  CMC                                                           # [dividend[2], carry2] = dividend[2] - p1_hi - carry1
+  LD rr3
+  SUB rr11
+  XCH rr3
+  CMC                                                           # dividend[3] = dividend[3] - carry2
+  LD rr7
+  JMS mul4x4                                                    # [p2_lo, p2_hi] = qhat * divisor[1]
+  LD rr2
+  SUB rr12
+  XCH rr2
+  CMC                                                           # [dividend[2], carry3] = dividend[2] - p2_lo
+  LD rr3
+  SUB rr13
+  XCH rr3                                                       # [dividend[3], carry4] = dividend[3] - p2_hi - carry3
+  LD rr10
+  JCN c, div16x16_dividend4_divisor2_quotient3                  # if (!carry4)
+div16x16_dividend4_divisor2_quotient2_compensate:
+  LD rr5
+  ADD rr1
+  XCH rr1                                                       # [dividend[1], carry1] = dividend[1] + divisor[0]
+  LD rr7
+  ADD rr2
+  XCH rr2                                                       # [dividend[2], carry2] = dividend[2] + divisor[1] + carry1
+  LD rr10
+  DAC                                                           # qhat = qhat - 1
+div16x16_dividend4_divisor2_quotient3:
+  XCH rr9                                                      # quotient[1] = qhat
+  CLC
+  LD rr7
+  XCH rr10
+  LD rr2
+  XCH rr13
+  LD rr1
+  JMS div8by4to4                                                # [qhat, rhat] = [dividend[2], dividend[1]] / divisor[1]
+  LD rr12
+  XCH rr10                                                      # rr10 = qhat
+  LD rr13
+  XCH rr6                                                       # rr6 = rhat
+  JCN c, div16x16_dividend4_divisor2_quotient3_correction       # if (qhat > 0xF)
+div16x16_dividend4_divisor2_quotient3_check:
+  LD rr10
+  JCN z, div16x16_dividend4_divisor2_denormalize                # if (qhat === 0x0)
+  LD rr5
+  JMS mul4x4                                                    # [rr12, rr13] = qhat * divisor[0]
+  LD rr0
+  SUB rr12
+  CMC
+  LD rr6
+  SUB rr13
+  JCN c, div16x16_dividend4_divisor2_quotient3_mulsub           # if (qhat * divisor[0] <= [dividend[0], rhat])
+div16x16_dividend4_divisor2_quotient3_correction:
+  LD rr10
+  DAC
+  XCH rr10                                                      # qhat = qhat - 1
+  CLC
+  LD rr6
+  ADD rr7
+  XCH rr6                                                       # rhat = rhat + divisor[1]
+  JCN nc, div16x16_dividend4_divisor2_quotient3_check
+div16x16_dividend4_divisor2_quotient3_mulsub:
+  CLC
+  LD rr5
+  JMS mul4x4                                                    # [p1_lo, p1_hi] = qhat * divisor[0]
+  LD rr0
+  SUB rr12
+  XCH rr0
+  CMC                                                           # [dividend[0], carry1] = dividend[0] - p1_lo
+  LD rr1
+  SUB rr13
+  XCH rr1
+  CMC                                                           # [dividend[1], carry2] = dividend[1] - p1_hi - carry1
+  LD rr2
+  SUB rr11
+  XCH rr2
+  CMC                                                           # dividend[2] = dividend[2] - carry2
+  LD rr7
+  JMS mul4x4                                                    # [p2_lo, p2_hi] = qhat * divisor[1]
+  LD rr1
+  SUB rr12
+  XCH rr1
+  CMC                                                           # [dividend[1], carry3] = dividend[1] - p2_lo
+  LD rr2
+  SUB rr13
+  XCH rr2                                                       # [dividend[2], carry4] = dividend[2] - p2_hi - carry3
+  LD rr10
+  JCN c, div16x16_dividend4_divisor2_denormalize                # if (!carry4)
+div16x16_dividend4_divisor2_quotient3_compensate:
+  LD rr5
+  ADD rr0
+  XCH rr0                                                       # [dividend[0], carry1] = dividend[0] + divisor[0]
+  LD rr7
+  ADD rr1
+  XCH rr1                                                       # [dividend[1], carry2] = dividend[1] + divisor[1] + carry1
+  LD rr10
+  DAC                                                           # qhat = qhat - 1
+div16x16_dividend4_divisor2_denormalize:
+  CLC
+  XCH rr8                                                       # quotient[0] = qhat
+  JCN z, div16x16_dividend4_divisor2_return
+  XCH rr10                                                      # r5 = input for (x >> s) operation
+  LDM 0x8
+  XCH rr5
+  LD rr15
+  XCH rr4                                                       # r2 = input for (x << (4 - s)) operation
+  LD rr1
+  JMS shift4ByR2                                                # rr13 = dividend[1] << (4 - s)
+  LD rr0
+  JMS shift4ByR5                                                # rr12 = dividend[0] >> s
+  LD rr12
+  ADD rr13
+  XCH rr0                                                       # reminder[0] = (dividend[0] >> s) | (dividend[1] << (4 - s))
+  LD rr1
+  JMS shift4ByR5
+  LD rr12
+  XCH rr1                                                       # reminder[1] = dividend[1] >> s
+div16x16_dividend4_divisor2_return:
+  FIM r1, 0x00                                                  # reminder[2] = 0x00, reminder[3] = 0x00
+  FIM r7, 0x00
+  LDM $BANK_WITH_VARIABLES
+  DCL
+  BBL 0

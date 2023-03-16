@@ -3,87 +3,122 @@
 %define SHIFT_DIRECTION_RIGHT   0x0
 %define SHIFT_DIRECTION_LEFT    0x8
 
-__location_short(0x00)
-
 # INPUT:
 #   rr2 - shift value
 #   rr3 - 0x0 for right shift or 0x8 for left shift
-#   rr6 - value
+#   acc - value
 # OUTPUT:
 #   rr12 or rr13 - shifted value, depends on shift direction
+__location(02:0x00)
 shift4ByR1:
+  XCH rr12
   JIN r1
 
 # INPUT:
 #   rr4 - shift value
 #   rr5 - 0x0 for right shift or 0x8 for left shift
-#   rr6 - value
+#   acc - value
 # OUTPUT:
 #   rr12 or rr13 - shifted value, depends on shift direction
+__location(02:0x02)
 shift4ByR2:
+  XCH rr12
   JIN r2
 
-__location_short(0x10)
+# INPUT:
+#   rr10 - shift value
+#   rr11 - 0x0 for right shift or 0x8 for left shift
+#   acc - value
+# OUTPUT:
+#   rr12 or rr13 - shifted value, depends on shift direction
+__location(02:0x04)
+shift4ByR5:
+  XCH rr12
+  JIN r5
+
+# INPUT:
+#   rr14 - shift value
+#   rr15 - 0x0 for right shift or 0x8 for left shift
+#   acc - value
+# OUTPUT:
+#   rr12 or rr13 - shifted value, depends on shift direction
+__location(02:0x06)
+shift4ByR7:
+  XCH rr12
+  JIN r7
+
+# INPUT:
+#   rr8 - shift value
+#   rr9 - 0x0 for right shift or 0x8 for left shift
+#   acc - value
+# OUTPUT:
+#   rr12 or rr13 - shifted value, depends on shift direction
+__location(02:0x08)
+shift4ByR4:
+  XCH rr12
+  JIN r4
+
+__location(02:0x10)
 shift_right_1:
   LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
   DCL
-  SRC r3
+  SRC r6
   RD2
   XCH rr12
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x18)
+__location(02:0x18)
 shift_left_1:
   LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
   DCL
-  SRC r3
+  SRC r6
   RD0
   XCH rr13
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x20)
+__location(02:0x20)
 shift_right_2:
   LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_2
   DCL
-  SRC r3
+  SRC r6
   RD1
   XCH rr12
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x28)
+__location(02:0x28)
 shift_left_2:
   LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_2
   DCL
-  SRC r3
+  SRC r6
   RD0
   XCH rr13
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x30)
+__location(02:0x30)
 shift_right_3:
   LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
   DCL
-  SRC r3
+  SRC r6
   RD3
   XCH rr12
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x38)
+__location(02:0x38)
 shift_left_3:
   LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
   DCL
-  SRC r3
+  SRC r6
   RD1
   XCH rr13
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x40)
+__location(02:0x40)
 shift_right_4:
   LDM 0x0
   XCH rr12
   BBL $BANK_WITH_VARIABLES
 
-__location_short(0x48)
+__location(02:0x48)
 shift_left_4:
   LDM 0x0
   XCH rr13
