@@ -105,12 +105,18 @@ const RomPages = class RomPages {
     const absoluteTargetBlockAddress = this.#blocksRomOffsets.get(referencedBlockIdx);
     const targetAddress = absoluteTargetBlockAddress + referencedInstructionOffset;
     const absoluteAddressOffset = absoluteBlockAddress + addressOffset;
-    const pageWithAddress = this.#pages[RomPages.getPageFromAddress(absoluteAddressOffset)];
-    const pageOffsetWithAddress = RomPages.getPageOffsetFromAddress(absoluteAddressOffset);
-    pageWithAddress[pageOffsetWithAddress] = targetAddress & 0xFF;
-    if (!isShort) {
-      pageWithAddress[pageOffsetWithAddress - 1] = pageWithAddress[pageOffsetWithAddress - 1] | (targetAddress >> 8);
+    const pageWithLowPartOfAddress = this.#pages[RomPages.getPageFromAddress(absoluteAddressOffset)];
+    const pageOffsetWithLowPartOfAddress = RomPages.getPageOffsetFromAddress(absoluteAddressOffset);
+    pageWithLowPartOfAddress[pageOffsetWithLowPartOfAddress] = targetAddress & 0xFF;
+    if (isShort) {
+      return;
     }
+
+    // to handle cases when instruction placed at XX:0xFF location, we need to re-evaluate page number and offsets
+    const pageWithHighPartOfAddress = this.#pages[RomPages.getPageFromAddress(absoluteAddressOffset - 1)];
+    const pageOffsetWithHighPartOfAddress = RomPages.getPageOffsetFromAddress(absoluteAddressOffset - 1);
+    const instruction = pageWithHighPartOfAddress[pageOffsetWithHighPartOfAddress];
+    pageWithHighPartOfAddress[pageOffsetWithHighPartOfAddress] = instruction | (targetAddress >> 8);
   }
 
   getAbsoluteAddressFromBlockOffset(blockIdx, offset) {
