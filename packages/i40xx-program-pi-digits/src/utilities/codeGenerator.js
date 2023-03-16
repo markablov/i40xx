@@ -1,17 +1,42 @@
+const toHexByte = (val) => val.toString(16).toUpperCase().padStart(2, '0');
+
 /*
- * Updates source code with preamble that contains initialization code to seed registers and memory with values
+ * Updates source code to be more usable inside browser emulator GUI
+ *   - adds preamble that contains initialization code to seed registers and memory with values
+ *   - put ROM location directives to help linker to arrange code blocks
  */
-export const addInitializationWithTestValues = (sourceCode, initializators) => {
-  const preparationRoutineStartPos = sourceCode.indexOf('prepareTestData:');
-  return `
-${sourceCode.substring(0, preparationRoutineStartPos)}
+export const updateCodeForUseInEmulator = (sourceCode, initializators, sourceMap, symbols) => {
+  const lines = sourceCode.split('\n');
 
-prepareTestData:
-${initializators.flat().map((line) => `  ${line}`).join('\n')}
-  BBL 0
+  if (sourceMap && symbols) {
+    for (const [idx, line] of lines.entries()) {
+      if (line.match(/^\s*__location/)) {
+        lines[idx] = undefined;
+      }
+    }
 
-end:
-  `;
+    const offsetToLineMap = new Map(sourceMap.map(({ line, romOffset }) => [romOffset, line - 1]));
+    const insertedDirectives = new Set();
+    for (const { romAddress } of symbols) {
+      if (insertedDirectives.has(romAddress)) {
+        continue;
+      }
+      const lineNo = offsetToLineMap.get(romAddress) - 1;
+      lines[lineNo] = `\n__location(${toHexByte(romAddress >> 8)}:0x${toHexByte(romAddress & 0xFF)})\n${lines[lineNo]}`;
+      insertedDirectives.add(romAddress);
+    }
+  }
+
+  lines.push(
+    '__location(00:0x00)',
+    '  JUN prepareTestData',
+    '',
+    'prepareTestData:',
+    ...initializators.flat().map((line) => `  ${line}`),
+    '  JUN entrypoint',
+  );
+
+  return lines.filter(Boolean).join('\n');
 };
 
 /*

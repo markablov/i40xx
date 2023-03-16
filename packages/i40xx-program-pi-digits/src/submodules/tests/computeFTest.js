@@ -7,7 +7,7 @@ import { compileCodeForTest } from '#utilities/compile.js';
 import { writeValueToMainChars, writeValueToStatusChars, VARIABLES } from '#utilities/memory.js';
 
 import {
-  addInitializationWithTestValues, generateMemoryBankSwitch, generateMemoryMainCharactersInitialization,
+  updateCodeForUseInEmulator, generateMemoryBankSwitch, generateMemoryMainCharactersInitialization,
   generateMemoryStatusCharactersInitialization,
 } from '#utilities/codeGenerator.js';
 
@@ -340,7 +340,7 @@ const testUpdateB = () => {
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_B, hexToHWNumber(b)),
         generateMemoryMainCharactersInitialization(VARIABLES.MAIN_MEM_VARIABLE_DIV_DIVISOR, hexToHWNumber(a)),
       ];
-      console.log(addInitializationWithTestValues(sourceCode, initializators));
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators));
       process.exit(1);
     }
   }
@@ -518,7 +518,7 @@ const testUpdateA = () => {
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_A, hexToHWNumber(A)),
         generateMemoryMainCharactersInitialization(VARIABLES.MAIN_MEM_VARIABLE_DIV_DIVISOR, hexToHWNumber(a)),
       ];
-      console.log(addInitializationWithTestValues(sourceCode, initializators));
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators));
       process.exit(1);
     }
   }
@@ -602,7 +602,7 @@ const testUpdateF = () => {
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, hexToHWNumber(a)),
         generateMemoryMainCharactersInitialization(VARIABLES.MAIN_MEM_VARIABLE_DIV_DIVISOR, hexToHWNumber(a)),
       ];
-      console.log(addInitializationWithTestValues(sourceCode, initializators));
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators));
       process.exit(1);
     }
   }

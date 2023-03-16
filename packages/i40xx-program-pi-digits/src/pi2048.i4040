@@ -126,3 +126,7 @@ main:
 main_done:
   JUN main_done
   BBL 0
+
+__location(00:00)
+entrypoint:
+  JUN main

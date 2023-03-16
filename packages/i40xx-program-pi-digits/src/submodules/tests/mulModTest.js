@@ -7,7 +7,7 @@ import { compileCodeForTest } from '#utilities/compile.js';
 import { writeValueToMainChars, writeValueToStatusChars, VARIABLES } from '#utilities/memory.js';
 
 import {
-  addInitializationWithTestValues, generateMemoryBankSwitch, generateMemoryStatusCharactersInitialization,
+  updateCodeForUseInEmulator, generateMemoryBankSwitch, generateMemoryStatusCharactersInitialization,
   generateRegisterInitialization, generateMemoryMainCharactersInitialization,
 } from '#utilities/codeGenerator.js';
 
@@ -90,7 +90,7 @@ const TESTS = [
         generateRegisterInitialization(15, 0x3),
       ];
 
-      console.log(addInitializationWithTestValues(sourceCode, initializators));
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators));
       process.exit(1);
     }
 

@@ -8,7 +8,7 @@ import { writeValueToMainChars } from '#utilities/memory.js';
 
 import RAM_DUMP from './data/ramWithLookupTables.json' assert { type: 'json' };
 
-const PROLOGUE_CYCLES_COUNT = 4;
+const PROLOGUE_CYCLES_COUNT = 5;
 
 const runSingleTestMulti = (romDump, { a, b }) => {
   const system = new Emulator({ romDump, ramDump: RAM_DUMP });

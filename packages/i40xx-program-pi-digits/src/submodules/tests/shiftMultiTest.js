@@ -7,7 +7,7 @@ import { compileCodeForTest } from '#utilities/compile.js';
 import { writeValueToMainChars } from '#utilities/memory.js';
 
 import {
-  addInitializationWithTestValues, generateMemoryBankSwitch, generateMemoryMainCharactersInitialization,
+  updateCodeForUseInEmulator, generateMemoryBankSwitch, generateMemoryMainCharactersInitialization,
   generateRegisterInitialization,
 } from '#utilities/codeGenerator.js';
 
@@ -105,7 +105,7 @@ const TESTS_RIGHT = [
         generateRegisterInitialization(5, 0),
       ];
 
-      console.log(addInitializationWithTestValues(sourceCodeLeft, initializators));
+      console.log(updateCodeForUseInEmulator(sourceCodeLeft, initializators));
       process.exit(1);
     }
   }
@@ -134,7 +134,7 @@ const TESTS_RIGHT = [
         generateRegisterInitialization(6, hwValue.length - 1),
       ];
 
-      console.log(addInitializationWithTestValues(sourceCodeRight, initializators));
+      console.log(updateCodeForUseInEmulator(sourceCodeRight, initializators));
       process.exit(1);
     }
   }

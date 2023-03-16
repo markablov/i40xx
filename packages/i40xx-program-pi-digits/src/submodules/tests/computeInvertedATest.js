@@ -7,7 +7,7 @@ import { compileCodeForTest } from '#utilities/compile.js';
 import { writeValueToMainChars, writeValueToStatusChars } from '#utilities/memory.js';
 
 import {
-  addInitializationWithTestValues, generateMemoryBankSwitch, generateMemoryStatusCharactersInitialization,
+  updateCodeForUseInEmulator, generateMemoryBankSwitch, generateMemoryStatusCharactersInitialization,
 } from '#utilities/codeGenerator.js';
 
 import RAM_DUMP from './data/ramWithLookupTables.json' assert { type: 'json' };
@@ -2566,7 +2566,7 @@ const TESTS = [
           generateMemoryStatusCharactersInitialization(0xA, hexToHWNumber(input.A)),
         ];
 
-        console.log(addInitializationWithTestValues(sourceCode, initializators));
+        console.log(updateCodeForUseInEmulator(sourceCode, initializators));
       }
       process.exit(1);
     }

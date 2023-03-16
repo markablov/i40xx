@@ -7,7 +7,7 @@ import * as fs from 'node:fs';
 import { hexToHWNumber, hwNumberToHex } from '#utilities/numbers.js';
 import { compileCodeForTest } from '#utilities/compile.js';
 import { writeValueToMainChars, writeValueToStatusChars } from '#utilities/memory.js';
-import { addInitializationWithTestValues, generateMemoryBankSwitch } from '#utilities/codeGenerator.js';
+import { updateCodeForUseInEmulator, generateMemoryBankSwitch } from '#utilities/codeGenerator.js';
 
 import TESTS from './data/updateDigitsChunksTestData.json' assert { type: 'json' };
 
@@ -72,7 +72,7 @@ const test = () => {
       console.log(`Test failed, first difference is on position ${digitPosition}: expected = ${expected[firstDiffIdx]}, received = ${result[firstDiffIdx]}!`);
       console.log('Code to reproduce (with initial memory dump stored at ram.json):');
 
-      const emuCode = addInitializationWithTestValues(sourceCode, [generateMemoryBankSwitch(0x07)]);
+      const emuCode = updateCodeForUseInEmulator(sourceCode, [generateMemoryBankSwitch(0x07)]);
       const { sourceCode: rearrangedEmuCode, errors } = compile(emuCode, { tryRearrange: true });
       if (errors.length) {
         console.log('COULD NOT COMPILE CODE FOR EMULATOR!');
