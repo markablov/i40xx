@@ -1,3 +1,5 @@
+%include "memory.i4040"
+
 # INPUT:
 #   rr0..rr3 - first addend (a)
 #   rr8..rr11 - second addend (b)
