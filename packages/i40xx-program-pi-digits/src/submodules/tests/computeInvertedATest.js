@@ -12,6 +12,8 @@ import {
 
 import RAM_DUMP from './data/ramWithLookupTables.json' assert { type: 'json' };
 
+const PROLOGUE_CYCLES_COUNT = 5n;
+
 const runSingleTestEuler = (romDump, { vmax, A, m, a }) => {
   const system = new Emulator({ romDump, ramDump: RAM_DUMP });
   const { memory, registers } = system;
@@ -36,14 +38,14 @@ const runSingleTestEuclid = (romDump, { A, m }) => {
 
   registers.ramControl = 0b1110;
 
-  writeValueToStatusChars(hexToHWNumber(m), memory, 0x07, 7);
+  writeValueToStatusChars(hexToHWNumber(m), memory, 0x0D, 7);
   writeValueToStatusChars(hexToHWNumber(A), memory, 0x0A, 7);
 
   while (!system.isFinished()) {
     system.instruction();
   }
 
-  return { result: hwNumberToHex(memory[7].registers[0x03].status), elapsed: system.instructionCycles };
+  return { result: hwNumberToHex(memory[7].registers[0x08].status), elapsed: system.instructionCycles };
 };
 
 const TESTS = [
@@ -2562,7 +2564,7 @@ const TESTS = [
         console.log('Code to reproduce:');
         const initializators = [
           generateMemoryBankSwitch(0x7),
-          generateMemoryStatusCharactersInitialization(0x7, hexToHWNumber(input.m)),
+          generateMemoryStatusCharactersInitialization(0xD, hexToHWNumber(input.m)),
           generateMemoryStatusCharactersInitialization(0xA, hexToHWNumber(input.A)),
         ];
 
@@ -2571,7 +2573,7 @@ const TESTS = [
       process.exit(1);
     }
 
-    sum += elapsed;
+    sum += (elapsed - PROLOGUE_CYCLES_COUNT);
   }
 
   console.log(`Avg: ${sum / BigInt(TESTS.length)} cycles`);
