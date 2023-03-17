@@ -205,7 +205,7 @@ const getCachedPlacementForCoupledBlocks = (placementCache, blocks, coupledBlock
     for (const blockIdx of coupledBlockIndexes) {
       const block = blocks[blockIdx];
       const similarCacheBlocks = coupledBlocks[`${block.references.length}, ${block.bytecode.length}`];
-      const matchingCacheBlock = similarCacheBlocks.find(
+      const matchingCacheBlock = similarCacheBlocks?.find(
         ({ references: refs, placementPosition }) => (
           block.references.every((ref) => refs[`${ref.addressOffset}, ${ref.refInstructionOffset}`] === ref.isShort)
           && placement[placementPosition] === undefined
@@ -286,7 +286,7 @@ const appendBlocksAccordingPlacement = (placement, blocks, romPages, sourceMap) 
 const placeCodeBlock = (blocks, attemptedBlockIdx, romPages, sourceMap, placementCache) => {
   const pageOffset = romPages.usedSpaceInPage;
   const coupledBlocks = getCoupledBlocksIndexes(blocks, attemptedBlockIdx);
-  if (coupledBlocks.length >= MINIMAL_BLOCKS_SET_TO_CACHE) {
+  if (placementCache && coupledBlocks.length >= MINIMAL_BLOCKS_SET_TO_CACHE) {
     const cachedPlacement = getCachedPlacementForCoupledBlocks(placementCache, blocks, coupledBlocks);
     if (cachedPlacement) {
       if (cachedPlacement.offset !== pageOffset) {
@@ -314,7 +314,7 @@ const placeCodeBlock = (blocks, attemptedBlockIdx, romPages, sourceMap, placemen
         continue;
       }
 
-      if (coupledBlocks.length >= MINIMAL_BLOCKS_SET_TO_CACHE) {
+      if (placementCache && coupledBlocks.length >= MINIMAL_BLOCKS_SET_TO_CACHE) {
         insertCachedPlacementForCoupledBlocks(placementCache, blocks, pageOffset, blocksPlacement);
       }
       appendBlocksAccordingPlacement(blocksPlacement, blocks, romPages, sourceMap);
