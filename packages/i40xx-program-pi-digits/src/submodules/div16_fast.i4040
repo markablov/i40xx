@@ -6,8 +6,8 @@
 %include "div8.i4040"
 
 # INPUT:
-#   rr9 - variable number in status characters memory for dividend
 #   rr8 - variable number in status characters memory for divisor
+#   rr9 - variable number in status characters memory for dividend
 # OUTPUT:
 #   rr0..rr3 - reminder
 #   rr8, rr9, rr14, rr15 - quotient
@@ -91,6 +91,7 @@ div16x16_dividend2_divisor2_compensate:
   LD rr1
   ADD rr6
   XCH rr1
+  CLC
   BBL 0
 
 div16x16_dividend3:
@@ -158,6 +159,7 @@ div16x16_dividend3_divisor3_compensate:
   LD rr2
   ADD rr7
   XCH rr2
+  CLC
   BBL 0
 
 div16x16_dividend4:
@@ -243,6 +245,7 @@ div16x16_dividend4_divisor4_compensate:
   LD rr3
   ADD rr10
   XCH rr3
+  CLC
   BBL 0
 
 div16x16_dividend3_divisor2:
