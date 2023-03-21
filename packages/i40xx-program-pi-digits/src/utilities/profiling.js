@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 
-export const runWithProfiler = (system, labelsOffsets, progressTrackingPC) => {
+export const runWithProfiler = (system, symbols, progressTrackingPC) => {
   const { registers } = system;
-  const labelByOffset = Object.fromEntries(Object.entries(labelsOffsets).map(([name, offset]) => [offset, name]));
+  const labelByOffset = Object.fromEntries(symbols.map(({ label, romAddress }) => [romAddress, label]));
 
   const stacktraces = new Map();
   const functionCalls = new Map();
