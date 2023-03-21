@@ -450,8 +450,8 @@ div16x16_dividend3_divisor2_denormalize:
   JMS shift4ByR5
   LD rr12
   XCH rr1                                                       # reminder[1] = dividend[1] >> s
-  FIM r1, 0x00                                                  # [reminder[2], reminder[3]] = 0x0
 div16x16_dividend3_divisor2_return:
+  FIM r1, 0x00                                                  # reminder[2] = 0x00, reminder[3] = 0x00
   FIM r7, 0x00
   LDM $BANK_WITH_VARIABLES
   DCL
