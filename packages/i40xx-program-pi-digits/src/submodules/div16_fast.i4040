@@ -583,7 +583,7 @@ div16x16_dividend4_divisor3_quotient1_mulsub:
   XCH rr3                                                       # [dividend[3], carry5] = dividend[3] - p2_hi - carry4
   CMC
   LD rr4
-  SUB rr10
+  SUB rr11
   XCH rr4
   CMC                                                           # dividend[4] = dividend[4] - carry5
   LD rr15
