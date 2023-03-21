@@ -71,6 +71,12 @@ const runSingleTestStandard = (romDump, { divisor, dividend }) => {
 };
 
 const TESTS = [
+  // TEST CASES FROM DISCOVERED BUGS
+  { input: { dividend: '0x19A1', divisor: '0x19' }, expected: { quotient: '0x106', reminder: '0xB' } },
+  { input: { dividend: '0x19A1', divisor: '0xCE' }, expected: { quotient: '0x1F', reminder: '0xAF' } },
+  { input: { dividend: '0x800', divisor: '0x89' }, expected: { quotient: '0xE', reminder: '0x82' } },
+  { input: { dividend: '0x183D', divisor: '0x164' }, expected: { quotient: '0x11', reminder: '0x99' } },
+  // RANDOM
   { input: { dividend: '0xC', divisor: '0x7' }, expected: { quotient: '0x1', reminder: '0x5' } },
   { input: { dividend: '0xB', divisor: '0x4' }, expected: { quotient: '0x2', reminder: '0x3' } },
   { input: { dividend: '0xA', divisor: '0x9' }, expected: { quotient: '0x1', reminder: '0x1' } },
