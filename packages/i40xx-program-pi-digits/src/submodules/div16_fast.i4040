@@ -463,6 +463,8 @@ div16x16_dividend4_divisor3:
   XCH rr7                                                       # rr7 = divisor[1]
   RD0
   XCH rr5                                                       # rr5 = divisor[0]
+  CLB
+  XCH rr4                                                       # dividend[4] = 0
   LD rr6
   JMS nlzAndMSB                                                 # r7 contains input for (x << s) operation, r5 for (x >> (4 - s))
   JCN z, div16x16_dividend4_divisor3_normalized
@@ -735,6 +737,8 @@ div16x16_dividend4_divisor2:
   XCH rr7                                                       # rr7 = divisor[1]
   RD0
   XCH rr5                                                       # rr5 = divisor[0]
+  CLB
+  XCH rr4                                                       # dividend[4] = 0
   LD rr7
   JMS nlzAndMSB                                                 # r7 contains input for (x << s) operation, r5 for (x >> (4 - s))
   JCN z, div16x16_dividend4_divisor2_normalized
@@ -789,7 +793,7 @@ div16x16_dividend4_divisor2_normalized:
   LD rr4
   XCH rr13
   LD rr3
-  JMS div8by4to4                                                # [qhat, rhat] = [dividend[4], dividend[3]] / divisor[2]
+  JMS div8by4to4                                                # [qhat, rhat] = [dividend[4], dividend[3]] / divisor[1]
   LD rr12
   XCH rr10                                                      # rr10 = qhat
   LD rr13
