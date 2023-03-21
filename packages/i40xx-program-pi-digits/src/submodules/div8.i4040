@@ -58,7 +58,11 @@ div8by4to4_loop:
   CLC
   ISZ rr12, div8by4to4_loop
   STC
-  BBL 0                                  # overflow!
+  LD rr10
+  XCH rr13                               # HACK! Because that routine is used by long division only, we can have some non-standard behaviour
+                                         # Presume, that if overflow occurs, quotient is either 0x10 or 0x11 (this comes from Knuth's algorithm D)
+                                         # Then we can return reminder === divisor for cases when we need to have double quotient correction (0x11)
+  BBL 0
 div8by4to4_compensate:
   LD rr6
   ADD rr10
