@@ -1017,7 +1017,8 @@ div16x16_dividend4_divisor2_denormalize:
   XCH rr1                                                       # reminder[1] = dividend[1] >> s
 div16x16_dividend4_divisor2_return:
   FIM r1, 0x00                                                  # reminder[2] = 0x00, reminder[3] = 0x00
-  FIM r7, 0x00
+  CLB
+  XCH rr15
   LDM $BANK_WITH_VARIABLES
   DCL
   BBL 0
