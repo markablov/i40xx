@@ -22,7 +22,7 @@ export const updateCodeForUseInEmulator = (sourceCode, initializators, sourceMap
         continue;
       }
       const lineNo = offsetToLineMap.get(romAddress) - 1;
-      lines[lineNo] = `\n__location(${toHexByte(romAddress >> 8)}:0x${toHexByte(romAddress & 0xFF)})\n${lines[lineNo]}`;
+      lines[lineNo] = `\n__location(0x${toHexByte(romAddress >> 8)}:0x${toHexByte(romAddress & 0xFF)})\n${lines[lineNo]}`;
       insertedDirectives.add(romAddress);
     }
   }
