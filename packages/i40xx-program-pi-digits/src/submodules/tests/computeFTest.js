@@ -4,18 +4,17 @@ import Emulator from 'i40xx-emu';
 
 import { hexToHWNumber, hwNumberToHex } from '#utilities/numbers.js';
 import { compileCodeForTest } from '#utilities/compile.js';
-import { writeValueToMainChars, writeValueToStatusChars, VARIABLES } from '#utilities/memory.js';
+import { writeValueToStatusChars, VARIABLES } from '#utilities/memory.js';
 
 import {
-  updateCodeForUseInEmulator, generateMemoryBankSwitch, generateMemoryMainCharactersInitialization,
-  generateMemoryStatusCharactersInitialization,
+  updateCodeForUseInEmulator, generateMemoryBankSwitch, generateMemoryStatusCharactersInitialization,
 } from '#utilities/codeGenerator.js';
 
 import RAM_DUMP from './data/ramWithLookupTables.json' assert { type: 'json' };
 
 const jsser = (obj) => JSON.stringify(obj);
 
-const runComputeFTest = (romDump, loopIterationCodeOffset, { N, vmax, m, a }) => {
+const runComputeFTest = (romDump, labelOffsetForProgress, { N, vmax, m, a }) => {
   const system = new Emulator({ romDump, ramDump: RAM_DUMP });
   const { memory, registers } = system;
 
@@ -23,13 +22,12 @@ const runComputeFTest = (romDump, loopIterationCodeOffset, { N, vmax, m, a }) =>
   writeValueToStatusChars(hexToHWNumber(a), memory, VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, 7);
   writeValueToStatusChars(hexToHWNumber(N), memory, VARIABLES.STATUS_MEM_VARIABLE_N, 7);
   writeValueToStatusChars([0x0, 0x0, vmax, 0x0], memory, VARIABLES.STATUS_MEM_VARIABLE_V, 7);
-  writeValueToMainChars(hexToHWNumber(a), memory, VARIABLES.MAIN_MEM_VARIABLE_DIV_DIVISOR, 7);
 
   registers.ramControl = 0b1110;
 
   let iters = 0;
   while (!system.isFinished()) {
-    if (registers.pc === loopIterationCodeOffset) {
+    if (registers.pc === labelOffsetForProgress) {
       iters++;
       if (iters % 100 === 0) {
         console.log(`  Function inner loop iterations executed: ${iters} / ${parseInt(N, 16)}...`);
@@ -55,7 +53,7 @@ const runUpdateBTest = (romDump, { m, v, k, b, a }) => {
   writeValueToStatusChars([0x0, 0x0, 0x0, v], memory, VARIABLES.STATUS_MEM_VARIABLE_V, 7);
   writeValueToStatusChars(hexToHWNumber(k), memory, VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_K, 7);
   writeValueToStatusChars(hexToHWNumber(b), memory, VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_B, 7);
-  writeValueToMainChars(hexToHWNumber(a), memory, VARIABLES.MAIN_MEM_VARIABLE_DIV_DIVISOR, 7);
+  writeValueToStatusChars(hexToHWNumber(a), memory, VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, 7);
 
   registers.ramControl = 0b1110;
 
@@ -77,7 +75,7 @@ const runUpdateATest = (romDump, { m, v, k, A, a }) => {
   writeValueToStatusChars([0x0, 0x0, 0x0, v], memory, VARIABLES.STATUS_MEM_VARIABLE_V, 7);
   writeValueToStatusChars(hexToHWNumber(k), memory, VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_K, 7);
   writeValueToStatusChars(hexToHWNumber(A), memory, VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_A, 7);
-  writeValueToMainChars(hexToHWNumber(a), memory, VARIABLES.MAIN_MEM_VARIABLE_DIV_DIVISOR, 7);
+  writeValueToStatusChars(hexToHWNumber(a), memory, VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, 7);
 
   registers.ramControl = 0b1110;
 
@@ -102,7 +100,6 @@ const runUpdateFTest = (romDump, { k, f, v, vmax, m, b, A, a }) => {
   writeValueToStatusChars(hexToHWNumber(b), memory, VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_B, 7);
   writeValueToStatusChars(hexToHWNumber(m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS, 7);
   writeValueToStatusChars(hexToHWNumber(a), memory, VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, 7);
-  writeValueToMainChars(hexToHWNumber(a), memory, VARIABLES.MAIN_MEM_VARIABLE_DIV_DIVISOR, 7);
 
   registers.ramControl = 0b1110;
 
@@ -154,17 +151,17 @@ const COMPUTE_F_TESTS = [
 const testComputeF = () => {
   console.log('Testing computeF routine...');
 
-  const { rom, labelsOffsets } = compileCodeForTest('submodules/computeF.i4040', 'computeF');
+  const { rom, symbols } = compileCodeForTest('submodules/computeF.i4040', 'computeF');
 
+  const labelOffsetForProgress = symbols.find(({ label }) => label === 'computef_loop').romAddress;
   let sum = 0n;
   for (const [idx, { input, expected }] of COMPUTE_F_TESTS.entries()) {
     console.log(`Run test ${idx + 1} / ${COMPUTE_F_TESTS.length} : ${jsser(input)}...`);
-    const { result, elapsed } = runComputeFTest(rom, labelsOffsets.computef_loop, input);
+    const { result, elapsed } = runComputeFTest(rom, labelOffsetForProgress, input);
     if (parseInt(expected, 16) !== parseInt(result, 16)) {
       console.log(`Test failed, input = ${jsser(input)}, expected = ${expected}, result = ${result}`);
       process.exit(1);
     }
-    console.log(`Test passed, output = ${result}`);
     sum += elapsed;
   }
 
@@ -319,12 +316,13 @@ const UPDATE_B_TESTS = [
   { input: { k: '0x106C', v: 0, m: '0x33AD', b: '0x5B6', a: '0x33AD' }, expected: { b: '0x1F38', v: 0 } },
   { input: { k: '0x14F4', v: 0, m: '0x341B', b: '0x5F3', a: '0x341B' }, expected: { b: '0x1710', v: 0 } },
   { input: { k: '0x135B', v: 0, m: '0x349D', b: '0x91F', a: '0x349D' }, expected: { b: '0x36', v: 0 } },
+  { input: { k: '0x731', v: 1, m: '0x107', b: '0x45', a: '0x107' }, expected: { b: '0xDC', v: 0 } },
 ];
 
 const testUpdateB = () => {
   console.log('Testing updateB routine...');
 
-  const { sourceCode, rom } = compileCodeForTest('submodules/computeF.i4040', 'updateB');
+  const { sourceCode, rom, sourceMap, symbols } = compileCodeForTest('submodules/computeF.i4040', 'updateB');
   for (const [idx, { input, expected }] of UPDATE_B_TESTS.entries()) {
     console.log(`Run test ${idx + 1} / ${UPDATE_B_TESTS.length} : ${jsser(input)}...`);
     const result = runUpdateBTest(rom, input);
@@ -338,9 +336,9 @@ const testUpdateB = () => {
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_V, [0x0, 0x0, 0x0, v]),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_K, hexToHWNumber(k)),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_B, hexToHWNumber(b)),
-        generateMemoryMainCharactersInitialization(VARIABLES.MAIN_MEM_VARIABLE_DIV_DIVISOR, hexToHWNumber(a)),
+        generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, hexToHWNumber(a)),
       ];
-      console.log(updateCodeForUseInEmulator(sourceCode, initializators));
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
       process.exit(1);
     }
   }
@@ -349,6 +347,8 @@ const testUpdateB = () => {
 };
 
 const UPDATE_A_TESTS = [
+  { input: { k: '0x8C5', v: 0, m: '0x1189', A: '0x42', a: '0x43' }, expected: { A: '0x42', v: 2 } },
+  { input: { k: '0x65', v: 0, m: '0x1189', A: '0x10C1', a: '0x43' }, expected: { A: '0xF31', v: 1 } },
   { input: { k: '0x938', v: 2, m: '0xE89', A: '0x918', a: '0x3D' }, expected: { A: '0x5A0', v: 2 } },
   { input: { k: '0xB8', v: 1, m: '0xC7', A: '0xA9', a: '0xC7' }, expected: { A: '0x86', v: 1 } },
   { input: { k: '0xD2F', v: 0, m: '0x463', A: '0x1A8', a: '0x463' }, expected: { A: '0xAC', v: 0 } },
@@ -502,7 +502,7 @@ const UPDATE_A_TESTS = [
 const testUpdateA = () => {
   console.log('Testing updateA routine...');
 
-  const { sourceCode, rom } = compileCodeForTest('submodules/computeF.i4040', 'updateA');
+  const { sourceCode, rom, symbols, sourceMap } = compileCodeForTest('submodules/computeF.i4040', 'updateA');
   for (const [idx, { input, expected }] of UPDATE_A_TESTS.entries()) {
     console.log(`Run test ${idx + 1} / ${UPDATE_A_TESTS.length} : ${jsser(input)}...`);
     const result = runUpdateATest(rom, input);
@@ -516,9 +516,9 @@ const testUpdateA = () => {
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_V, [0x0, 0x0, 0x0, v]),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_K, hexToHWNumber(k)),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_A, hexToHWNumber(A)),
-        generateMemoryMainCharactersInitialization(VARIABLES.MAIN_MEM_VARIABLE_DIV_DIVISOR, hexToHWNumber(a)),
+        generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, hexToHWNumber(a)),
       ];
-      console.log(updateCodeForUseInEmulator(sourceCode, initializators));
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
       process.exit(1);
     }
   }
@@ -527,6 +527,7 @@ const testUpdateA = () => {
 };
 
 const UPDATE_F_TESTS = [
+  { input: { k: '0x13F4', f: '0x5A1', v: 1, vmax: 1, m: '0x2231', b: '0x228', A: '0x221', a: '0x2231' }, expected: { f: '0x1B48' } },
   { input: { k: '0x863', f: '0xA3', v: 1, vmax: 1, m: '0x10D', b: '0xD2', A: '0x7', a: '0x10D' }, expected: { f: '0xD' } },
   { input: { k: '0x27C', f: '0x72', v: 1, vmax: 1, m: '0x15D', b: '0x59', A: '0x5A', a: '0x15D' }, expected: { f: '0x8A' } },
   { input: { k: '0x8BF', f: '0xF8', v: 1, vmax: 1, m: '0x557', b: '0x133', A: '0x397', a: '0x557' }, expected: { f: '0x1C8' } },
@@ -583,7 +584,7 @@ const UPDATE_F_TESTS = [
 const testUpdateF = () => {
   console.log('Testing updateF routine...');
 
-  const { sourceCode, rom } = compileCodeForTest('submodules/computeF.i4040', 'updateF');
+  const { sourceCode, rom, sourceMap, symbols } = compileCodeForTest('submodules/computeF.i4040', 'updateF');
   for (const [idx, { input, expected }] of UPDATE_F_TESTS.entries()) {
     console.log(`Run test ${idx + 1} / ${UPDATE_F_TESTS.length} : ${jsser(input)}...`);
     const result = runUpdateFTest(rom, input);
@@ -600,9 +601,8 @@ const testUpdateF = () => {
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_B, hexToHWNumber(b)),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS, hexToHWNumber(m)),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, hexToHWNumber(a)),
-        generateMemoryMainCharactersInitialization(VARIABLES.MAIN_MEM_VARIABLE_DIV_DIVISOR, hexToHWNumber(a)),
       ];
-      console.log(updateCodeForUseInEmulator(sourceCode, initializators));
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
       process.exit(1);
     }
   }

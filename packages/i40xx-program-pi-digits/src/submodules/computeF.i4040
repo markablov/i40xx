@@ -1,6 +1,6 @@
 %include "memory.i4040"
 %include "mulMulti.i4040"
-%include "divMulti.i4040"
+%include "div16_fast.i4040"
 %include "mulMod_binary_fast.i4040"
 %include "powerMod.i4040"
 %include "addMod.i4040"
@@ -41,7 +41,7 @@ computeMaxVAndM_loop:
 #   STATUS_MEM_VARIABLE_V
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_K
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_B
-#   MAIN_MEM_VARIABLE_DIV_DIVISOR
+#   STATUS_MEM_VARIABLE_CURRENT_PRIME
 # OUTPUT:
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_B
 #   STATUS_MEM_VARIABLE_V
@@ -50,16 +50,34 @@ computeMaxVAndM_loop:
 updateB:
   LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_K
   JMS loadVarFromStatusCharMemory
+
+  FIM r4, $STATUS_MEM_VARIABLE_CURRENT_PRIME . $STATUS_MEM_VARIABLE_DIGIT_B_COMPUTATION_COEF
+  SRC r4
+  RD0
+  STC                                           # calculate a - k - 1 to have check (a - k <= 0), otherwise we need to test result for 0
+  SUB rr0
+  CMC
+  RD1
+  SUB rr1
+  CMC
+  RD2
+  SUB rr2
+  CMC
+  RD3
+  SUB rr3
+  JCN nc, updateB_cont                          # if (a <= k)
+
+  FIM r7, $STATUS_MEM_VARIABLE_F_COMPUTATION_K . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_B
+  JMS mulMod                                     # b = (b * k) % m
+  BBL 0
+
+updateB_cont:
   LDM $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF
   JMS storeVarToStatusCharMemory                 # bCoef = k
 
 updateB_loop:
-  LDM $MAIN_MEM_VARIABLE_DIV_DIVIDEND
-  JMS storeVarToMainMemory
-  JMS divMWxMW                                   # bCoef / a
+  JMS div16x16                                   # bCoef / a
 
-  LDM $MAIN_MEM_VARIABLE_DIV_REMINDER
-  JMS loadVarFromMainMemory
   LD rr0
   ADD rr1
   ADD rr2
@@ -67,24 +85,41 @@ updateB_loop:
   JCN c, updateB_return
   JCN nz, updateB_return                         # if bCoef % a !== 0
 
-  LDM $MAIN_MEM_VARIABLE_DIV_QUOTIENT
-  JMS loadVarFromMainMemory
-  LDM $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF
-  JMS storeVarToStatusCharMemory                 # bCoef = bCoef / a
+  FIM r2, $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF . 0
+  SRC r2
+  LD rr8
+  WR0
+  LD rr9
+  WR1
+  LD rr14
+  WR2
+  LD rr15
+  WR3                                            # bCoef = bCoef / a
 
   FIM r3, $STATUS_MEM_VARIABLE_V . 0
   SRC r3
   RD3
-  DAC
+  DAC                                            # carry flag is set, but it's useful for (bCoef <= a) comparison instead of (bCoef < a)
   WR3                                            # v--
 
-  JUN updateB_loop
+  FIM r3, $STATUS_MEM_VARIABLE_CURRENT_PRIME . $STATUS_MEM_VARIABLE_DIGIT_B_COMPUTATION_COEF
+  SRC r3
+  RD0
+  SUB rr8
+  CMC
+  RD1
+  SUB rr9
+  CMC
+  RD2
+  SUB rr14
+  CMC
+  RD3
+  SUB rr15
+  FIM r4, $STATUS_MEM_VARIABLE_CURRENT_PRIME . $STATUS_MEM_VARIABLE_DIGIT_B_COMPUTATION_COEF
+  JCN nc, updateB_loop                          # if (bCoef >= a)
 
 updateB_return:
-  LDM $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF
-  XCH rr14
-  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_B
-  XCH rr15
+  FIM r7, $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_B
   JMS mulMod                                     # b = (b * bCoef) % m
   BBL 0
 
@@ -93,7 +128,7 @@ updateB_return:
 #   STATUS_MEM_VARIABLE_V
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_K
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_A
-#   MAIN_MEM_VARIABLE_DIV_DIVISOR
+#   STATUS_MEM_VARIABLE_CURRENT_PRIME
 # OUTPUT:
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_A
 #   STATUS_MEM_VARIABLE_V
@@ -134,18 +169,27 @@ updateA:
   WR2
   XCH rr2
   LD rr3
-  SUB rr5
+  SUB rr5                                                # carry flag is set, but it's useful for (ACoef <= a) comparison instead of (ACoef < a)
   WR3
-  XCH rr3
-  CLC                                                    # rr0..rr3 = ACoef = 2 * k - 1
+  XCH rr3                                                # ACoef = 2 * k - 1
 
+  FIM r4, $STATUS_MEM_VARIABLE_CURRENT_PRIME . $STATUS_MEM_VARIABLE_DIGIT_A_COMPUTATION_COEF
+  SRC r4
+  RD0
+  SUB rr0
+  CMC
+  RD1
+  SUB rr1
+  CMC
+  RD2
+  SUB rr2
+  CMC
+  RD3
+  SUB rr3
+  JCN c, updateA_return                                  # if (a > ACoef)
 updateA_loop:
-  LDM $MAIN_MEM_VARIABLE_DIV_DIVIDEND
-  JMS storeVarToMainMemory
-  JMS divMWxMW                                           # ACoef / a
+  JMS div16x16                                           # ACoef / a
 
-  LDM $MAIN_MEM_VARIABLE_DIV_REMINDER
-  JMS loadVarFromMainMemory
   LD rr0
   ADD rr1
   ADD rr2
@@ -153,10 +197,16 @@ updateA_loop:
   JCN c, updateA_return
   JCN nz, updateA_return                                 # if ACoef % a !== 0
 
-  LDM $MAIN_MEM_VARIABLE_DIV_QUOTIENT
-  JMS loadVarFromMainMemory
-  LDM $STATUS_MEM_VARIABLE_A_COMPUTATION_COEF
-  JMS storeVarToStatusCharMemory                         # ACoef = ACoef / a
+  FIM r2, $STATUS_MEM_VARIABLE_A_COMPUTATION_COEF . 0
+  SRC r2
+  LD rr8
+  WR0
+  LD rr9
+  WR1
+  LD rr14
+  WR2
+  LD rr15
+  WR3                                                    # ACoef = ACoef / a
 
   FIM r3, $STATUS_MEM_VARIABLE_V . 0
   SRC r3
@@ -164,13 +214,25 @@ updateA_loop:
   IAC
   WR3                                                    # v++
 
-  JUN updateA_loop
+  FIM r3, $STATUS_MEM_VARIABLE_CURRENT_PRIME . $STATUS_MEM_VARIABLE_DIGIT_A_COMPUTATION_COEF
+  SRC r3
+  RD0
+  STC                                                    # calculate a - ACoef - 1 to have check (a - ACoef <= 0), otherwise we need to test result for 0
+  SUB rr8
+  CMC
+  RD1
+  SUB rr9
+  CMC
+  RD2
+  SUB rr14
+  CMC
+  RD3
+  SUB rr15
+  FIM r4, $STATUS_MEM_VARIABLE_CURRENT_PRIME . $STATUS_MEM_VARIABLE_DIGIT_A_COMPUTATION_COEF
+  JCN nc, updateA_loop                                   # if (ACoef >= a)
 
 updateA_return:
-  LDM $STATUS_MEM_VARIABLE_A_COMPUTATION_COEF
-  XCH rr14
-  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_A
-  XCH rr15
+  FIM r7, $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_A
   JMS mulMod                                             # A = (A * ACoef) % m
   BBL 0
 
@@ -182,7 +244,6 @@ updateA_return:
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_B
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_K
 #   STATUS_MEM_VARIABLE_CURRENT_PRIME
-#   MAIN_MEM_VARIABLE_DIV_DIVISOR
 # OUTPUT:
 #   STATUS_MEM_VARIABLE_F
 updateF:
@@ -199,24 +260,15 @@ updateF:
 
   JMS modularPowerForCurrentPrimeByExp           # fk = (a ^ (vmax - v)) mod m
 
-  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_B
-  XCH rr14
-  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_FK
-  XCH rr15
+  FIM r7, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
   JMS mulMod                                     # fk = (fk * b) mod m
 
-  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_K
-  XCH rr14
-  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_FK
-  XCH rr15
+  FIM r7, $STATUS_MEM_VARIABLE_F_COMPUTATION_K . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
   JMS mulMod                                     # fk = (fk * k) mod m
 
   JMS computeInvertedA                           # A_inv = (A ^ (-1)) mod m
 
-  LDM $STATUS_MEM_VARIABLE_A_INV
-  XCH rr14
-  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_FK
-  XCH rr15
+  FIM r7, $STATUS_MEM_VARIABLE_A_INV . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
   JMS mulMod                                     # fk = (fk * A_inv) mod m
 
   JMS addMod_fPlusFk                             # f = (f + fk) mod m
@@ -261,6 +313,7 @@ computeF:
   WR3                                                 # v = 0
 
 computeF_loop:
+  CLC
   JMS updateB
   JMS updateA
   JMS updateF
