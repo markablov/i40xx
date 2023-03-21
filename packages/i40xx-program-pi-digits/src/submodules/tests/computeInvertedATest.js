@@ -49,6 +49,12 @@ const runSingleTestEuclid = (romDump, { A, m }) => {
 };
 
 const TESTS = [
+  // TEST CASES FROM DISCOVERED BUGS
+  { input: { A: '0x221', vmax: 1, m: '0x2231', a: '0x2231' }, expected: '0x212' },
+  { input: { A: '0x19', vmax: 8, m: '0x19A1', a: '0x3' }, expected: '0x93A' },
+  { input: { A: '0xCE', vmax: 8, m: '0x19A1', a: '0x3' }, expected: '0xE0F' },
+  { input: { A: '0x183D', vmax: 8, m: '0x19A1', a: '0x3' }, expected: '0x8B6' },
+  // RANDOM
   { input: { A: '0x3B1', vmax: 3, m: '0x533', a: '0xB' }, expected: '0x4CF' },
   { input: { A: '0x132', vmax: 3, m: '0x533', a: '0xB' }, expected: '0x2C5' },
   { input: { A: '0x255', vmax: 3, m: '0x533', a: '0xB' }, expected: '0x88' },
@@ -2546,7 +2552,7 @@ const TESTS = [
     process.exit(0);
   }
 
-  const { rom, sourceCode } = compileCodeForTest(
+  const { rom, sourceCode, sourceMap, symbols } = compileCodeForTest(
     variant === 'euler' ? 'submodules/computeInvertedA_euler.i4040' : 'submodules/computeInvertedA_euclid.i4040',
     'computeInvertedA',
   );
@@ -2568,7 +2574,7 @@ const TESTS = [
           generateMemoryStatusCharactersInitialization(0xA, hexToHWNumber(input.A)),
         ];
 
-        console.log(updateCodeForUseInEmulator(sourceCode, initializators));
+        console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
       }
       process.exit(1);
     }
