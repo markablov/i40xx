@@ -6,7 +6,7 @@
 
 # INPUT:
 #   STATUS_MEM_VARIABLE_MODULUS
-#   STATUS_MEM_VARIABLE_A
+#   STATUS_MEM_VARIABLE_F_COMPUTATION_A
 # OUTPUT:
 #   STATUS_MEM_VARIABLE_A_INV
 # NOTES:
@@ -17,7 +17,7 @@ computeInvertedA:
 
   LD rr0
   DAC
-  CMC
+  CLC
   JCN nz, computeInvertedA_nonTrivialA
   LD rr1
   JCN nz, computeInvertedA_nonTrivialA
@@ -60,7 +60,7 @@ computeInvertedA_loop:
 
   LD rr0
   DAC
-  CMC
+  CLC
   JCN nz, computeInvertedA_loop_continue
   LD rr1
   JCN nz, computeInvertedA_loop_continue
