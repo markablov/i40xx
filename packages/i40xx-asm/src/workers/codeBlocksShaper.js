@@ -114,10 +114,10 @@ const createCodeBlock = (blocks, firstInstructionIdx, instructions, instructions
  * If we don't have entrypoint specified (by marking instruction with fixed location 0x00:0x00), then we need to create
  *   JUN instruction as entrypoint to instruction #0 from source code.
  */
-const getEntrypointBlock = (blocks) => {
+const createEntrypointBlock = (blocks) => {
   const existingBlock = blocks.find(({ fixedLocation }) => fixedLocation.page === 0 && fixedLocation.offset === 0);
   if (existingBlock) {
-    return existingBlock;
+    return;
   }
 
   const { block } = createCodeBlock(
@@ -135,7 +135,23 @@ const getEntrypointBlock = (blocks) => {
   );
 
   blocks.push(block);
-  return block;
+};
+
+/*
+ * Return initial list of starting instructions, that could be part of new blocks
+ */
+const getReferencedInstructionsFromFixedBlocks = (fixedBlocks, instructionsMap) => {
+  const instructionIndexes = new Set();
+
+  for (const { references } of fixedBlocks) {
+    for (const { refInstructionIdx } of references) {
+      if (!instructionsMap[refInstructionIdx]) {
+        instructionIndexes.add(refInstructionIdx);
+      }
+    }
+  }
+
+  return [...instructionIndexes];
 };
 
 const formBlocksFromInstructions = (fixedLocations, instructions, symbols) => {
@@ -157,10 +173,11 @@ const formBlocksFromInstructions = (fixedLocations, instructions, symbols) => {
     }
   }
 
-  const entrypointBlock = getEntrypointBlock(blocks);
-  const blocksQueue = entrypointBlock.references.map(({ refInstructionIdx }) => refInstructionIdx);
-  while (blocksQueue.length) {
-    const instructionIdx = blocksQueue.shift();
+  createEntrypointBlock(blocks);
+
+  const instructionsToFormBlocks = getReferencedInstructionsFromFixedBlocks(blocks, instructionsMap);
+  while (instructionsToFormBlocks.length) {
+    const instructionIdx = instructionsToFormBlocks.shift();
 
     const { block, isNew } = createCodeBlock(blocks, instructionIdx, instructions, instructionsMap);
     if (isNew) {
@@ -168,7 +185,7 @@ const formBlocksFromInstructions = (fixedLocations, instructions, symbols) => {
     }
 
     // always need to re-scan references, because even already existing blocks could be extended
-    blocksQueue.push(
+    instructionsToFormBlocks.push(
       ...(
         block.references
           .map(({ refInstructionIdx }) => refInstructionIdx)
