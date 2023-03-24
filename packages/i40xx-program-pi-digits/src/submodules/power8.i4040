@@ -1,0 +1,116 @@
+%include "memory.i4040"
+%include "mul4_table.i4040"
+
+__location(03:0x00)
+# routine is 15 bytes long
+powerCurrentPrime_exp2_4bit:
+  RD0
+  XCH rr10
+  LD rr10
+  JMS mul4x4
+  DCL
+  SRC r0
+  LD rr12
+  WR0
+  LD rr13
+  WR1
+  CLB
+  WR2
+  WR3
+  BBL 0
+
+__location(03:0x10)
+powerCurrentPrime_exp3:
+  FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_3 . 3
+  RAL
+  SUB rr11
+  XCH rr11
+  BBL 0
+
+# we need to do execute some common code after specific routines for exponent values
+# so we can't just do JIN from main function, or otherwise we would not gain control back
+__location(03:0x18)
+powerCurrentPrime_trampoline:
+  JIN r3
+
+__location(03:0x20)
+powerCurrentPrime_exp4:
+  FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_4 . 3
+  RAL
+  SUB rr11
+  XCH rr11
+  BBL 0
+
+__location(03:0x30)
+  FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_5 . 8
+  BBL 0
+
+__location(03:0x40)
+  FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_6 . 0
+  BBL 0
+
+__location(03:0x50)
+  FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_7 . 0
+  BBL 0
+
+# INPUT:
+#   STATUS_MEM_VARIABLE_CURRENT_PRIME - base
+#   acc - (exponent - 1), so it would have range [1..6]
+#   rr7 - 0
+# OUTPUT:
+#   STATUS_MEM_VARIABLE_F_COMPUTATION_FK
+powerCurrentPrime:
+  FIM r5, $STATUS_MEM_VARIABLE_CURRENT_PRIME . 0
+  FIM r0, $STATUS_MEM_VARIABLE_F_COMPUTATION_FK . 0
+  SRC r5
+  DAC
+  JCN z, powerCurrentPrime_exp2
+  XCH rr6                                        # rr6 = exponent - 2
+  RD0
+  JMS powerCurrentPrime_trampoline
+  SRC r5
+  RDM
+  SRC r0
+  WR0
+  INC rr11
+  SRC r5
+  RDM
+  SRC r0
+  WR1
+  INC rr11
+  SRC r5
+  RDM
+  SRC r0
+  WR2
+  INC rr11
+  SRC r5
+  RDM
+  SRC r0
+  WR3
+  BBL 0
+
+powerCurrentPrime_exp2:
+  RD1
+  JCN z, powerCurrentPrime_exp2_4bit
+  FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_2 . 3
+  RD0
+  RAL
+  SUB rr11
+  XCH rr11
+  SRC r5
+  RDM
+  SRC r0
+  WR0
+  INC rr11
+  SRC r5
+  RDM
+  SRC r0
+  WR1
+  INC rr11
+  SRC r5
+  RDM
+  SRC r0
+  WR2
+  CLB
+  WR3
+  BBL 0

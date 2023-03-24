@@ -49,6 +49,11 @@ export const generateRegisterInitialization = (regNo, value) => [
 ];
 
 /*
+ * Generate instructions to seed register with value
+ */
+export const generateAccumulatorInitialization = (value) => [`LDM ${value}`];
+
+/*
  * Generate instructions to seed main characters in memory location with specified value
  */
 export const generateMemoryMainCharactersInitialization = (memoryRegNo, values) => {
