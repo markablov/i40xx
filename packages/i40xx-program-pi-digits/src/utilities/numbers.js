@@ -36,6 +36,7 @@ export const hexToHWNumber = (hex) => (
  *
  * Data is stored as little-endian numbers [least significant digit, ..., most significant digit]
  */
-export const numToHWNumber = (num) => (
-  num.toString(16).split('').reverse().map((char) => parseInt(char, 16))
-);
+export const numToHWNumber = (num, size) => [
+  ...num.toString(16).split('').reverse().map((char) => parseInt(char, 16)),
+  ...(size ? Array(size - num.toString(16).length).fill(0) : []),
+];
