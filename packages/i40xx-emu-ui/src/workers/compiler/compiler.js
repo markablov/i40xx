@@ -1,4 +1,4 @@
-import compile from 'i40xx-asm';
+import { compile } from 'i40xx-asm';
 import { buildRom } from 'i40xx-link';
 
 onmessage = ({ data: sourceCode }) => {

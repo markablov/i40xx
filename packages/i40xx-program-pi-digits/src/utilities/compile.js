@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import compile from 'i40xx-asm';
+import { compile } from 'i40xx-asm';
 import { preprocessFile } from 'i40xx-preprocess';
 import { buildRom } from 'i40xx-link';
 

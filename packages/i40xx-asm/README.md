@@ -83,13 +83,13 @@ halt:
 i40xx-asm can be required as a module:
 
 ```js
-const parse = require('i40xx-asm');
+const { compile } = require('i40xx-asm');
 
-const { errors, data } = parse('nop');
+const { errors, blocks } = compile('nop');
 if (Array.isArray(errors) && errors.length) {
   console.log(errors);
   process.exit(1);
 }
 
-console.log(`First byte of ROM is ${data[0]}`);
+console.log(`First byte of first block is ${blocks[0].bytecode[0]}`);
 ```

@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 import Emulator from 'i40xx-emu';
-import compile from 'i40xx-asm';
+import { compile } from 'i40xx-asm';
 import * as fs from 'node:fs';
 
 import { hexToHWNumber, hwNumberToHex } from '#utilities/numbers.js';

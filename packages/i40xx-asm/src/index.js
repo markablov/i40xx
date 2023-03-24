@@ -3,9 +3,9 @@ const asmParser = require('./parser/AsmParser.js');
 const { formBlocksFromInstructions } = require('./workers/codeBlocksShaper.js');
 
 /*
- * Compile provided code
+ * Parse provided code and returns raw array of instructions
  */
-const compile = (sourceCode) => {
+const parse = (sourceCode) => {
   const { tokens, errors: lexerErrors } = asmLexer.tokenize(sourceCode.toLowerCase());
   if (lexerErrors.length) {
     return { errors: lexerErrors };
@@ -13,11 +13,22 @@ const compile = (sourceCode) => {
 
   const parsingResult = asmParser.parse(tokens);
   if (!parsingResult) {
-    return { blocks: [], errors: asmParser.errors };
+    return { errors: asmParser.errors };
+  }
+
+  return parsingResult;
+};
+
+/*
+ * Compile provided code
+ */
+const compile = (sourceCode) => {
+  const { fixedLocations, instructions, symbols: instructionAddressedSymbols, errors } = parse(sourceCode);
+  if (errors) {
+    return { blocks: [], errors };
   }
 
   try {
-    const { fixedLocations, instructions, symbols: instructionAddressedSymbols } = parsingResult;
     const { blocks, symbols } = formBlocksFromInstructions(fixedLocations, instructions, instructionAddressedSymbols);
     return { blocks, symbols, errors: [] };
   } catch (err) {
@@ -25,4 +36,7 @@ const compile = (sourceCode) => {
   }
 };
 
-module.exports = compile;
+module.exports = {
+  parse,
+  compile,
+};
