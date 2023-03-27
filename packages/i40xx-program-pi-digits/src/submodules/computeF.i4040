@@ -2,7 +2,7 @@
 %include "mulMulti.i4040"
 %include "div16_fast.i4040"
 %include "mulMod_binary_fast.i4040"
-%include "powerMod.i4040"
+%include "powerCurrentPrime_table.i4040"
 %include "addMod.i4040"
 %include "computeInvertedA_euclid.i4040"
 
@@ -247,8 +247,8 @@ updateA_return:
 # OUTPUT:
 #   STATUS_MEM_VARIABLE_F
 updateF:
-  FIM r2, $STATUS_MEM_VARIABLE_V . 0
-  SRC r2
+  FIM r3, $STATUS_MEM_VARIABLE_V . 0
+  SRC r3
   RD3
   JCN z, updateF_ret                             # if (v === 0)
 
@@ -256,13 +256,31 @@ updateF:
   RD2
   SUB rr0
   CLC
-  XCH rr6                                        # rr6 = vmax - v
+  JCN nz, updateF_currentPrimeExpIsNotZero       # if (vmax - v > 0)
+  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_B
+  JMS loadVarFromStatusCharMemory
+  LDM $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
+  JMS storeVarToStatusCharMemory                 # fk = b
+  JUN updateF_multiplyByK
 
-  JMS modularPowerForCurrentPrimeByExp           # fk = (a ^ (vmax - v)) mod m
+updateF_currentPrimeExpIsNotZero:
+  DAC
+  CLC
+  JCN nz, updateF_currentPrimeExpIsMoreThan1     # if (vmax - v > 1)
+  LDM $STATUS_MEM_VARIABLE_CURRENT_PRIME
+  JMS loadVarFromStatusCharMemory
+  LDM $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
+  JMS storeVarToStatusCharMemory                 # fk = a
+  JUN updateF_multiplyByB
 
+updateF_currentPrimeExpIsMoreThan1:
+  JMS powerCurrentPrime                          # fk = (a ^ (vmax - v)) mod m
+
+updateF_multiplyByB:
   FIM r7, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
   JMS mulMod                                     # fk = (fk * b) mod m
 
+updateF_multiplyByK:
   FIM r7, $STATUS_MEM_VARIABLE_F_COMPUTATION_K . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
   JMS mulMod                                     # fk = (fk * k) mod m
 

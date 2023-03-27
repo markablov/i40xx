@@ -64,8 +64,8 @@ const TESTS = [
   }
 
   const { sourceCode, rom } = compileCodeForTest(
-    variant === 'standard' ? 'submodules/powerMod.i4040' : 'submodules/power8.i4040',
-    variant === 'standard' ? 'modularPowerForCurrentPrimeByExp' : 'powerCurrentPrime',
+    variant === 'standard' ? 'submodules/powerCurrentPrime.i4040' : 'submodules/powerCurrentPrime_table.i4040',
+    'powerCurrentPrime',
   );
 
   let sum = 0;

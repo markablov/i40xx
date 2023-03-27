@@ -42,14 +42,17 @@ powerCurrentPrime_exp4:
   BBL 0
 
 __location(03:0x30)
+powerCurrentPrime_exp5:
   FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_5 . 8
   BBL 0
 
 __location(03:0x40)
+powerCurrentPrime_exp6:
   FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_6 . 0
   BBL 0
 
 __location(03:0x50)
+powerCurrentPrime_exp7:
   FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_7 . 0
   BBL 0
 

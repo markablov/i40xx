@@ -151,7 +151,7 @@ const COMPUTE_F_TESTS = [
 const testComputeF = () => {
   console.log('Testing computeF routine...');
 
-  const { rom, symbols } = compileCodeForTest('submodules/computeF.i4040', 'computeF');
+  const { rom, symbols, sourceMap, sourceCode } = compileCodeForTest('submodules/computeF.i4040', 'computeF');
 
   const labelOffsetForProgress = symbols.find(({ label }) => label === 'computef_loop').romAddress;
   let sum = 0n;
@@ -160,6 +160,16 @@ const testComputeF = () => {
     const { result, elapsed } = runComputeFTest(rom, labelOffsetForProgress, input);
     if (parseInt(expected, 16) !== parseInt(result, 16)) {
       console.log(`Test failed, input = ${jsser(input)}, expected = ${expected}, result = ${result}`);
+      console.log('Code to reproduce:');
+      const { N, m, a, vmax } = input;
+      const initializators = [
+        generateMemoryBankSwitch(0x7),
+        generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS, hexToHWNumber(m)),
+        generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_V, [0x0, 0x0, vmax, 0x00]),
+        generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_N, hexToHWNumber(N)),
+        generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, hexToHWNumber(a)),
+      ];
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
       process.exit(1);
     }
     sum += elapsed;
