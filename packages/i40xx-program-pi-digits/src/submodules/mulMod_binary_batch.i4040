@@ -1,0 +1,325 @@
+%include "memory.i4040"
+
+# INPUT:
+#   rr15 - variable number for first term and for result
+#   rr14 - variable number for second term
+#   memStatusCharVar[rr15] - first term (a)
+#   memStatusCharVar[rr14] - second term (b)
+#   STATUS_MEM_VARIABLE_MODULUS
+# OUTPUT:
+#   memStatusCharVar[rr15] - result
+# VARIABLES:
+#   rr0..rr3 - m
+#   rr4..rr7 - b
+#   rr8..rr11 - multipliedFactor
+# NOTES:
+#   - uses all registers
+#   - clears carry flag
+#   - first term should be always less than m
+#   - second term is zero only if first term is zero too, so single check for fast path is enough
+mulMod:
+  LDM $STATUS_MEM_VARIABLE_MODULUS_INV
+  JMS loadVarFromStatusCharMemory        # m
+
+  SRC r7
+
+  # acc is zero after loadVarFromStatusCharMemory() call, so after two XCH's we got rr14 = rr15 from input, rr15 = 0x0
+  # by doing that we makes sure that after next SRC command, character #0 would be selected, which is good for some
+  # operations later (outside that routine)
+  XCH rr15
+  XCH rr14
+
+  RD0
+  XCH rr6
+  RD1
+  XCH rr7
+  RD2
+  XCH rr4
+  RD3
+  XCH rr5                                # rr6 = b[0], rr7 = b[1], rr4 = b[2], rr5 = b[3]
+
+  SRC r7
+  RD0
+  XCH rr8
+  RD1
+  XCH rr9
+  RD2
+  XCH rr10
+  RD3
+  XCH rr11                               # multipliedFactor =  a
+
+  CLB
+  WR0
+  WR1
+  WR2
+  WR3                                    # res = 0
+
+mulMod_checkMultiplierWord0:
+  LD rr6
+  JCN nz, mulMod_processMultiplierWord0  # if (b[0] !== 0)
+
+  LD rr7
+  OR4
+  OR5
+  JCN z, mulMod_ret                      # if (b === 0)
+
+  # we know that b[0] is zero, so we can skip checks for set bits, but we need to have correct multipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JUN mulMod_checkMultiplierWord1
+
+mulMod_processMultiplierWord0:
+  LDM 0x1
+  AN6
+  JCN z, mulMod_skipMultiplierBit0       # if ((b >> 0) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit0:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+  LDM 0x2
+  AN6
+  JCN z, mulMod_skipMultiplierBit1       # if ((b >> 1) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit1:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+  LDM 0x4
+  AN6
+  JCN z, mulMod_skipMultiplierBit2       # if ((b >> 2) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit2:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+  LDM 0x8
+  AN6
+  JCN z, mulMod_skipMultiplierBit3       # if ((b >> 3) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit3:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+mulMod_checkMultiplierWord1:
+  LD rr7
+  JCN nz, mulMod_processMultiplierWord1  # if (b[1] !== 0)
+
+  OR4
+  OR5
+  JCN z, mulMod_ret                      # if (b[2] === 0 && b[3] === 0)
+
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JUN mulMod_checkMultiplierWord2
+
+mulMod_processMultiplierWord1:
+  LDM 0x1
+  AN7
+  JCN z, mulMod_skipMultiplierBit4       # if ((b >> 4) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit4:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+  LDM 0x2
+  AN7
+  JCN z, mulMod_skipMultiplierBit5       # if ((b >> 5) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit5:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+  LDM 0x4
+  AN7
+  JCN z, mulMod_skipMultiplierBit6       # if ((b >> 6) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit6:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+  LDM 0x8
+  AN7
+  JCN z, mulMod_skipMultiplierBit7       # if ((b >> 7) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit7:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+mulMod_checkMultiplierWord2:
+  LD rr4
+  JCN nz, mulMod_processMultiplierWord2  # if (b[2] !== 0)
+
+  LD rr5
+  JCN z, mulMod_ret                      # if (b[3] === 0)
+
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  LD rr4
+  JUN mulMod_checkMultiplierWord3
+
+mulMod_processMultiplierWord2:
+  XCH rr6
+  LDM 0x1
+  AN6
+  JCN z, mulMod_skipMultiplierBit8       # if ((b >> 8) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit8:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+  LDM 0x2
+  AN6
+  JCN z, mulMod_skipMultiplierBit9       # if ((b >> 9) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit9:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+  LDM 0x4
+  AN6
+  JCN z, mulMod_skipMultiplierBit10      # if ((b >> 10) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit10:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+  LDM 0x8
+  AN6
+  JCN z, mulMod_skipMultiplierBit11      # if ((b >> 11) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit11:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+mulMod_checkMultiplierWord3:
+  LD rr5
+  JCN z, mulMod_ret
+
+mulMod_processMultiplierWord3:
+  XCH rr6
+  LDM 0x1
+  AN6
+  JCN z, mulMod_skipMultiplierBit12      # if ((b >> 12) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit12:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+  LDM 0x2
+  AN6
+  JCN z, mulMod_skipMultiplierBit13      # if ((b >> 13) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit13:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+  LDM 0x4
+  AN6
+  JCN z, mulMod_skipMultiplierBit14      # if ((b >> 14) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit14:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+  LDM 0x8
+  AN6
+  JCN z, mulMod_skipMultiplierBit15      # if ((b >> 15) & 0x1)
+  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
+mulMod_skipMultiplierBit15:
+  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+
+mulMod_ret:
+  BBL 0
+
+# INPUT:
+#   rr0..rr3 - m
+#   rr8..rr11 - multipliedFactor
+# OUTPUT:
+#   rr8..rr11 - multipliedFactor
+# VARIABLES:
+#   rr12..rr15 - tmp
+mulMod_updateMultipliedFactor:
+  LD rr8
+  ADD rr8
+  XCH rr8
+  LD rr9
+  ADD rr9
+  XCH rr9
+  LD rr10
+  ADD rr10
+  XCH rr10
+  LD rr11
+  ADD rr11
+  XCH rr11                                          # multipliedFactor = multipliedFactor + multipliedFactor
+
+  LD rr8
+  ADD rr0
+  XCH rr12
+  LD rr9
+  ADD rr1
+  XCH rr13
+  LD rr10
+  ADD rr2
+  XCH rr14
+  LD rr11
+  ADD rr3
+  XCH rr15                                          # tmp = multipliedFactor - m
+
+  JCN nc, mulMod_updateMultipliedFactor_return      # if (tmp < 0)
+
+  CLC
+  LD rr12
+  XCH rr8
+  LD rr13
+  XCH rr9
+  LD rr14
+  XCH rr10
+  LD rr15
+  XCH rr11                                          # multipliedFactor = tmp
+
+mulMod_updateMultipliedFactor_return:
+  BBL 0
+
+# INPUT:
+#   rr0..rr3 - m
+#   rr8..rr11 - multipliedFactor
+#   status characters in selected memory register - res
+# OUTPUT:
+#   status characters in selected memory register - res
+# VARIABLES:
+#   rr12..rr15 - tmp
+# NOTES:
+#   memory register already should be pre-selected
+mulMod_updateResult:
+  RD0
+  ADD rr8
+  WR0
+  RD1
+  ADD rr9
+  WR1
+  RD2
+  ADD rr10
+  WR2
+  RD3
+  ADD rr11
+  WR3                                               # res = res + multipliedFactor
+
+  RD0
+  ADD rr0
+  XCH rr12
+  RD1
+  ADD rr1
+  XCH rr13
+  RD2
+  ADD rr2
+  XCH rr14
+  RD3
+  ADD rr3
+  XCH rr15                                          # tmp = res - m
+
+  JCN nc, mulMod_updateResult_return                # if (tmp < 0)
+
+  CLC
+  LD rr12
+  WR0
+  LD rr13
+  WR1
+  LD rr14
+  WR2
+  LD rr15
+  WR3                                               # res = tmp
+
+mulMod_updateResult_return:
+  BBL 0
