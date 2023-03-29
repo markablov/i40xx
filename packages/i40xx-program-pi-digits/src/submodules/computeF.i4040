@@ -252,42 +252,35 @@ updateF:
   RD3
   JCN z, updateF_ret                             # if (v === 0)
 
+  JMS computeInvertedA                           # fk = (A ^ (-1)) mod m
+
+  FIM r3, $STATUS_MEM_VARIABLE_V . 0
+  SRC r3
+  RD3
   XCH rr0
   RD2
   SUB rr0
-  CLC
-  JCN nz, updateF_currentPrimeExpIsNotZero       # if (vmax - v > 0)
-  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_B
-  JMS loadVarFromStatusCharMemory
-  LDM $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
-  JMS storeVarToStatusCharMemory                 # fk = b
-  JUN updateF_multiplyByK
+  # carry flag would be cleared later (by mulMod or powerCurrentPrime)
+  JCN z, updateF_multiplyByB                     # if (vmax - v === 0)
 
-updateF_currentPrimeExpIsNotZero:
   DAC
-  CLC
-  JCN nz, updateF_currentPrimeExpIsMoreThan1     # if (vmax - v > 1)
-  LDM $STATUS_MEM_VARIABLE_CURRENT_PRIME
-  JMS loadVarFromStatusCharMemory
-  LDM $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
-  JMS storeVarToStatusCharMemory                 # fk = a
+  # carry flag would be cleared later (by mulMod or powerCurrentPrime)
+  JCN z, updateF_multiplyByCurrentNumber
+  JMS powerCurrentPrime
+  FIM r7, $STATUS_MEM_VARIABLE_CURRENT_PRIME_POW . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
+  JMS mulMod                                     # fk = (fk * (a ^ (vmax - v))) mod m
   JUN updateF_multiplyByB
 
-updateF_currentPrimeExpIsMoreThan1:
-  JMS powerCurrentPrime                          # fk = (a ^ (vmax - v)) mod m
+updateF_multiplyByCurrentNumber:
+  FIM r7, $STATUS_MEM_VARIABLE_CURRENT_PRIME . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
+  JMS mulMod                                     # fk = (fk * a) mod m
 
 updateF_multiplyByB:
   FIM r7, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
   JMS mulMod                                     # fk = (fk * b) mod m
 
-updateF_multiplyByK:
   FIM r7, $STATUS_MEM_VARIABLE_F_COMPUTATION_K . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
   JMS mulMod                                     # fk = (fk * k) mod m
-
-  JMS computeInvertedA                           # A_inv = (A ^ (-1)) mod m
-
-  FIM r7, $STATUS_MEM_VARIABLE_A_INV . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
-  JMS mulMod                                     # fk = (fk * A_inv) mod m
 
   JMS addMod_fPlusFk                             # f = (f + fk) mod m
 

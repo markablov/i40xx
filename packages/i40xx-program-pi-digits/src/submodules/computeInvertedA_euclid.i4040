@@ -8,7 +8,7 @@
 #   STATUS_MEM_VARIABLE_MODULUS
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_A
 # OUTPUT:
-#   STATUS_MEM_VARIABLE_A_INV
+#   STATUS_MEM_VARIABLE_F_COMPUTATION_FK
 # NOTES:
 #   uses all registers in both banks
 computeInvertedA:
@@ -27,7 +27,7 @@ computeInvertedA:
   JCN nz, computeInvertedA_nonTrivialA                        # if rr0..rr3 !== 1
 
 computeInvertedA_trivialA:
-  LDM $STATUS_MEM_VARIABLE_A_INV
+  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_FK
   JMS storeVarToStatusCharMemory
   BBL 0                                                       # return 1
 
@@ -40,7 +40,7 @@ computeInvertedA_nonTrivialA:
   LDM $STATUS_MEM_VARIABLE_INV_PREV_R
   JMS storeVarToStatusCharMemory                              # prevR = m
 
-  FIM r2, $STATUS_MEM_VARIABLE_A_INV . 0
+  FIM r2, $STATUS_MEM_VARIABLE_F_COMPUTATION_FK . 0
   SRC r2
   WR1
   WR2
@@ -90,7 +90,7 @@ computeInvertedA_loop_continue:
 
   JMS computeInvertedA_computeBezoutCoef
 
-  LDM $STATUS_MEM_VARIABLE_A_INV
+  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_FK
   JMS storeVarToStatusCharMemory                              # A_inv = rr0..rr3
 
   JUN computeInvertedA_loop
@@ -117,14 +117,14 @@ computeInvertedA_ret:
   JMS sub16x16                                                # rr0..rr3 = rr4..rr7 - rr0..rr3
 
 computeInvertedA_result_positive:
-  LDM $STATUS_MEM_VARIABLE_A_INV
+  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_FK
   JMS storeVarToStatusCharMemory                              # A_inv = rr0..rr3
   BBL 0
 
 computeInvertedA_computeBezoutCoef:
   # we are sure that accumulator is always zero here, so we set rr1 to 0 to select first main character in memory to update sign later
   XCH rr1
-  LDM $STATUS_MEM_VARIABLE_A_INV
+  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_FK
   JMS loadVarFromStatusCharMemory                             # rr0..rr3 = A_inv
 
   RDM
