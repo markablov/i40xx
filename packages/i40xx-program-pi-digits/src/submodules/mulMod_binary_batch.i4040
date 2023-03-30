@@ -5,11 +5,11 @@
 #   rr14 - variable number for second term
 #   memStatusCharVar[rr15] - first term (a)
 #   memStatusCharVar[rr14] - second term (b)
-#   STATUS_MEM_VARIABLE_MODULUS
+#   STATUS_MEM_VARIABLE_MODULUS_INV
 # OUTPUT:
 #   memStatusCharVar[rr15] - result
 # VARIABLES:
-#   rr0..rr3 - m
+#   rr0..rr3 - 0x10000 - m
 #   rr4..rr7 - b
 #   rr8..rr11 - multipliedFactor
 # NOTES:
@@ -19,7 +19,7 @@
 #   - second term is zero only if first term is zero too, so single check for fast path is enough
 mulMod:
   LDM $STATUS_MEM_VARIABLE_MODULUS_INV
-  JMS loadVarFromStatusCharMemory        # m
+  JMS loadVarFromStatusCharMemory        # rr0..rr3 = 0x10000 - m
 
   SRC r7
 
@@ -54,174 +54,182 @@ mulMod:
   WR2
   WR3                                    # res = 0
 
-mulMod_checkMultiplierWord0:
   LD rr6
-  JCN nz, mulMod_processMultiplierWord0  # if (b[0] !== 0)
+  JMS mulMod_processNibble
 
   LD rr7
   OR4
   OR5
-  JCN z, mulMod_ret                      # if (b === 0)
-
-  # we know that b[0] is zero, so we can skip checks for set bits, but we need to have correct multipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JUN mulMod_checkMultiplierWord1
-
-mulMod_processMultiplierWord0:
-  LDM 0x1
-  AN6
-  JCN z, mulMod_skipMultiplierBit0       # if ((b >> 0) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit0:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
-
-  LDM 0x2
-  AN6
-  JCN z, mulMod_skipMultiplierBit1       # if ((b >> 1) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit1:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
-
-  LDM 0x4
-  AN6
-  JCN z, mulMod_skipMultiplierBit2       # if ((b >> 2) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit2:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
-
-  LDM 0x8
-  AN6
-  JCN z, mulMod_skipMultiplierBit3       # if ((b >> 3) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit3:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
-
-mulMod_checkMultiplierWord1:
-  LD rr7
-  JCN nz, mulMod_processMultiplierWord1  # if (b[1] !== 0)
-
-  OR4
-  OR5
-  JCN z, mulMod_ret                      # if (b[2] === 0 && b[3] === 0)
-
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JUN mulMod_checkMultiplierWord2
-
-mulMod_processMultiplierWord1:
-  LDM 0x1
-  AN7
-  JCN z, mulMod_skipMultiplierBit4       # if ((b >> 4) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit4:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
-
-  LDM 0x2
-  AN7
-  JCN z, mulMod_skipMultiplierBit5       # if ((b >> 5) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit5:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
-
-  LDM 0x4
-  AN7
-  JCN z, mulMod_skipMultiplierBit6       # if ((b >> 6) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit6:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
-
-  LDM 0x8
-  AN7
-  JCN z, mulMod_skipMultiplierBit7       # if ((b >> 7) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit7:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
-
-mulMod_checkMultiplierWord2:
-  LD rr4
-  JCN nz, mulMod_processMultiplierWord2  # if (b[2] !== 0)
-
-  LD rr5
-  JCN z, mulMod_ret                      # if (b[3] === 0)
-
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  LD rr4
-  JUN mulMod_checkMultiplierWord3
-
-mulMod_processMultiplierWord2:
-  XCH rr6
-  LDM 0x1
-  AN6
-  JCN z, mulMod_skipMultiplierBit8       # if ((b >> 8) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit8:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
-
-  LDM 0x2
-  AN6
-  JCN z, mulMod_skipMultiplierBit9       # if ((b >> 9) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit9:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
-
-  LDM 0x4
-  AN6
-  JCN z, mulMod_skipMultiplierBit10      # if ((b >> 10) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit10:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
-
-  LDM 0x8
-  AN6
-  JCN z, mulMod_skipMultiplierBit11      # if ((b >> 11) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit11:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
-
-mulMod_checkMultiplierWord3:
-  LD rr5
   JCN z, mulMod_ret
 
-mulMod_processMultiplierWord3:
-  XCH rr6
-  LDM 0x1
-  AN6
-  JCN z, mulMod_skipMultiplierBit12      # if ((b >> 12) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit12:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+  LD rr7
+  JMS mulMod_processNibble
 
-  LDM 0x2
-  AN6
-  JCN z, mulMod_skipMultiplierBit13      # if ((b >> 13) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit13:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+  LD rr4
+  OR5
+  JCN z, mulMod_ret
 
-  LDM 0x4
-  AN6
-  JCN z, mulMod_skipMultiplierBit14      # if ((b >> 14) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit14:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+  LD rr4
+  JMS mulMod_processNibble
 
-  LDM 0x8
-  AN6
-  JCN z, mulMod_skipMultiplierBit15      # if ((b >> 15) & 0x1)
-  JMS mulMod_updateResult                #   res = (res + multipliedFactor) % m
-mulMod_skipMultiplierBit15:
-  JMS mulMod_updateMultipliedFactor      # multipliedFactor = (multipliedFactor * 2) % m
+  LD rr5
+  JCN z, mulMod_ret
+  # can't do "JCN nz, mulMod_processNibble" because it would be short call, but ROM page with mulMod_processNibble would not fit main body
+  JMS mulMod_processNibble
 
 mulMod_ret:
   BBL 0
+
+__location(0x3:0x00)
+mulMod_processNibble_0:                   # 0b0000
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0x8)
+mulMod_processNibble:
+  XCH rr12
+  CLB
+  XCH rr13
+  JIN r6
+
+__location(0x3:0x10)
+mulMod_processNibble_1:                   # 0b0001
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0x20)
+mulMod_processNibble_2:                   # 0b0010
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0x30)
+mulMod_processNibble_3:                   # 0b0011
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0x40)
+mulMod_processNibble_4:                   # 0b0100
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0x50)
+mulMod_processNibble_5:                   # 0b0101
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0x60)
+mulMod_processNibble_6:                   # 0b0110
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0x70)
+mulMod_processNibble_7:                   # 0b0111
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0x80)
+mulMod_processNibble_8:                   # 0b1000
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0x90)
+mulMod_processNibble_9:                   # 0b1001
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0xA0)
+mulMod_processNibble_A:                   # 0b1010
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0xB0)
+mulMod_processNibble_B:                   # 0b1011
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0xC0)
+mulMod_processNibble_C:                   # 0b1100
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0xD0)
+mulMod_processNibble_D:                   # 0b1101
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0xE0)
+mulMod_processNibble_E:                   # 0b1110
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JUN mulMod_updateMultipliedFactor
+
+__location(0x3:0xF0)
+mulMod_processNibble_F:                   # 0b1111
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResult
+  JUN mulMod_updateMultipliedFactor
 
 # INPUT:
 #   rr0..rr3 - m

@@ -2244,12 +2244,17 @@ const TESTS = [
     if (parseInt(expected, 16) !== parseInt(result, 16)) {
       console.log(`Test failed, expected = ${expected}, result = ${result}`);
       console.log('Code to reproduce:');
+      const invertedM = numToHWNumber(0x10000 - parseInt(input.m, 16));
       const initializators = [
         generateMemoryBankSwitch(0x7),
-        generateMemoryStatusCharactersInitialization(0xD, hexToHWNumber(input.m)),
+        generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS, hexToHWNumber(input.m)),
         generateMemoryStatusCharactersInitialization(0x3, hexToHWNumber(input.a)),
         generateMemoryStatusCharactersInitialization(0x4, hexToHWNumber(input.b)),
         generateMemoryMainCharactersInitialization(0x7, hexToHWNumber(input.m)),
+        ...(variant === 'binary_batch'
+          ? [generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV, invertedM)]
+          : []
+        ),
         generateRegisterInitialization(14, 0x4),
         generateRegisterInitialization(15, 0x3),
       ];
