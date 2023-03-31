@@ -54,42 +54,38 @@ mulMod:
   WR2
   WR3                                    # res = 0
 
+  LD rr5
+  JCN nz, mulMod_factor4
+  LD rr4
+  JCN nz, mulMod_factor3
   LD rr7
-  OR4
-  OR5
-  JCN nz, mulMod_factorHaveMoreWords1
+  JCN nz, mulMod_factor2
   LD rr6
   JUN mulMod_processLastNibble
 
-mulMod_factorHaveMoreWords1:
+mulMod_factor4:
   LD rr6
   JMS mulMod_processNibble
-
-  LD rr4
-  OR5
-  JCN nz, mulMod_factorHaveMoreWords2
-  LD rr7
-  JUN mulMod_processLastNibble
-
-mulMod_factorHaveMoreWords2:
   LD rr7
   JMS mulMod_processNibble
-
-  LD rr5
-  JCN nz, mulMod_factorHaveMoreWords3
-  LD rr4
-  JUN mulMod_processLastNibble
-
-mulMod_factorHaveMoreWords3:
   LD rr4
   JMS mulMod_processNibble
-
   LD rr5
-  JCN z, mulMod_ret
   JUN mulMod_processLastNibble
 
-mulMod_ret:
-  BBL 0
+mulMod_factor3:
+  LD rr6
+  JMS mulMod_processNibble
+  LD rr7
+  JMS mulMod_processNibble
+  LD rr4
+  JUN mulMod_processLastNibble
+
+mulMod_factor2:
+  LD rr6
+  JMS mulMod_processNibble
+  LD rr7
+  JUN mulMod_processLastNibble
 
 __location(0x3:0x00)
 mulMod_processNibble_0:                   # 0b0000

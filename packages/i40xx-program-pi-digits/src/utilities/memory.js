@@ -19,7 +19,7 @@ export const writeValueToMainChars = (value, memory, regIdx, bankIdx = 0) => (
 /*
  * Writes bytes into main characters of specified RAM register
  */
-export const writeValueToStatusChars = (value, memory, regIdx, bankIdx = 0) => (
+export const writeValueToStatusChars = (value, memory, regIdx, bankIdx = 7) => (
   writeValueToChars(value, getRegister(memory, bankIdx, regIdx).status, 4)
 );
 

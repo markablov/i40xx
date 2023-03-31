@@ -1,7 +1,7 @@
 %include "memory.i4040"
 %include "mulMulti.i4040"
 %include "div16_fast.i4040"
-%include "mulMod_binary_fast.i4040"
+%include "mulMod_binary_batch.i4040"
 %include "powerCurrentPrime_table.i4040"
 %include "addMod.i4040"
 %include "computeInvertedA_euclid.i4040"

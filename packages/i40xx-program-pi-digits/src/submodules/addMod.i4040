@@ -58,7 +58,7 @@ addMod_return:
   BBL 0
 
 # INPUT:
-#   rr0..rr3 - m
+#   rr0..rr3 - 0x10000 - m
 #   STATUS_MEM_VARIABLE_F
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_FK
 # OUTPUT:
@@ -92,19 +92,16 @@ addMod_fPlusFk:
   WR3                                               # f = f + fk
 
   RD0
-  SUB rr0
-  CMC
+  ADD rr0
   XCH rr12
   RD1
-  SUB rr1
-  CMC
+  ADD rr1
   XCH rr13
   RD2
-  SUB rr2
-  CMC
+  ADD rr2
   XCH rr14
   RD3
-  SUB rr3
+  ADD rr3
   XCH rr15                                          # tmp = f - m
 
   JCN nc, addMod_fPlusFk_return                     # if (tmp < 0)
