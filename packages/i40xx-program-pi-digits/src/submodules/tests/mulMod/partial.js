@@ -11,7 +11,7 @@ import {
   generateRegisterInitialization, generateMemoryMainCharactersInitialization,
 } from '#utilities/codeGenerator.js';
 
-import RAM_DUMP from './data/ramWithLookupTables.json' assert { type: 'json' };
+import RAM_DUMP from '../data/ramWithLookupTables.json' assert { type: 'json' };
 
 const runSingleTest = (romDump, { a, b, m }, variant) => {
   const system = new Emulator({ romDump, ramDump: RAM_DUMP });
