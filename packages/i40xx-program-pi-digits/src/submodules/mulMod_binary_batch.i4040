@@ -61,7 +61,7 @@ mulMod:
   LD rr7
   JCN nz, mulMod_factor2
   LD rr6
-  JUN mulMod_processLastNibbleAndReturn
+  JUN mulMod_processLastNibble
 
 mulMod_factor4:
   LD rr6
@@ -71,7 +71,7 @@ mulMod_factor4:
   LD rr4
   JMS mulMod_processNibble
   LD rr5
-  JUN mulMod_processLastNibbleAndReturn
+  JUN mulMod_processLastNibble
 
 mulMod_factor3:
   LD rr6
@@ -79,13 +79,13 @@ mulMod_factor3:
   LD rr7
   JMS mulMod_processNibble
   LD rr4
-  JUN mulMod_processLastNibbleAndReturn
+  JUN mulMod_processLastNibble
 
 mulMod_factor2:
   LD rr6
   JMS mulMod_processNibble
   LD rr7
-  JUN mulMod_processLastNibbleAndReturn
+  JUN mulMod_processLastNibble
 
 __location(0x3:0x00)
 mulMod_processNibble_0:                   # 0b0000
@@ -251,38 +251,38 @@ mulMod_processLastNibble:
 
 __location(0x4:0x10)
 mulMod_processLastNibble_1:                   # 0b0001
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 __location(0x4:0x20)
 mulMod_processLastNibble_2:                   # 0b0010
   JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 __location(0x4:0x30)
 mulMod_processLastNibble_3:                   # 0b0011
   JMS mulMod_updateResult
   JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 __location(0x4:0x40)
 mulMod_processLastNibble_4:                   # 0b0100
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 __location(0x4:0x50)
 mulMod_processLastNibble_5:                   # 0b0101
   JMS mulMod_updateResult
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 __location(0x4:0x60)
 mulMod_processLastNibble_6:                   # 0b0110
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateResult
   JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 __location(0x4:0x70)
 mulMod_processLastNibble_7:                   # 0b0111
@@ -290,14 +290,14 @@ mulMod_processLastNibble_7:                   # 0b0111
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateResult
   JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 __location(0x4:0x80)
 mulMod_processLastNibble_8:                   # 0b1000
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 __location(0x4:0x90)
 mulMod_processLastNibble_9:                   # 0b1001
@@ -305,7 +305,7 @@ mulMod_processLastNibble_9:                   # 0b1001
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 __location(0x4:0xA0)
 mulMod_processLastNibble_A:                   # 0b1010
@@ -313,7 +313,7 @@ mulMod_processLastNibble_A:                   # 0b1010
   JMS mulMod_updateResult
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 __location(0x4:0xB0)
 mulMod_processLastNibble_B:                   # 0b1011
@@ -322,7 +322,7 @@ mulMod_processLastNibble_B:                   # 0b1011
   JMS mulMod_updateResult
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 __location(0x4:0xC0)
 mulMod_processLastNibble_C:                   # 0b1100
@@ -330,7 +330,7 @@ mulMod_processLastNibble_C:                   # 0b1100
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateResult
   JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 __location(0x4:0xD0)
 mulMod_processLastNibble_D:                   # 0b1101
@@ -339,7 +339,7 @@ mulMod_processLastNibble_D:                   # 0b1101
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateResult
   JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 __location(0x4:0xE0)
 mulMod_processLastNibble_E:                   # 0b1110
@@ -348,7 +348,7 @@ mulMod_processLastNibble_E:                   # 0b1110
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateResult
   JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 __location(0x4:0xF0)
 mulMod_processLastNibble_F:                   # 0b1111
@@ -358,7 +358,7 @@ mulMod_processLastNibble_F:                   # 0b1111
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateResult
   JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateResult
+  JUN mulMod_updateResultLast
 
 # INPUT:
 #   rr0..rr3 - m
@@ -452,8 +452,24 @@ mulMod_updateResult_return:
   CLC
   BBL 0
 
-mulMod_processLastNibbleAndReturn:
-  JMS mulMod_processLastNibble
+mulMod_updateResultLast:
+  RD0
+  ADD rr8
+  WR0
+  RD1
+  ADD rr9
+  WR1
+  RD2
+  ADD rr10
+  WR2
+  RD3
+  ADD rr11
+  WR3                                               # res = res + multipliedFactor
+
+  RAL
+  JCN nc, mulMod_updateResult_return                # if res >= 0
+
+  CLC
   RD0
   SUB rr0
   CMC
@@ -469,4 +485,7 @@ mulMod_processLastNibbleAndReturn:
   RD3
   SUB rr3
   WR3                                               # res = res + m
+  BBL 0
+
+mulMod_updateResultLast_return:
   BBL 0
