@@ -10,7 +10,7 @@ import {
   updateCodeForUseInEmulator, generateMemoryBankSwitch, generateMemoryStatusCharactersInitialization,
 } from '#utilities/codeGenerator.js';
 
-import RAM_DUMP from './data/ramWithLookupTables.json' assert { type: 'json' };
+import RAM_DUMP from '../data/ramWithLookupTables.json' assert { type: 'json' };
 
 const jsser = (obj) => JSON.stringify(obj);
 

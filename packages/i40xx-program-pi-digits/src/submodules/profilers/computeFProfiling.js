@@ -17,8 +17,6 @@ const STARTING_VALUES = { N: '0x1AC5', vmax: 3, m: '0x533', a: '0xB' };
   const { rom, symbols } = compileCodeForTest('submodules/computeF.i4040', 'computeF');
   console.log('Code has been compiled, running test...');
 
-  const labelOffsetForProgress = symbols.find(({ label }) => label === 'computef_loop').romAddress;
-
   const system = new Emulator({ romDump: rom, ramDump: RAM_DUMP });
   const { memory, registers } = system;
 
@@ -29,12 +27,9 @@ const STARTING_VALUES = { N: '0x1AC5', vmax: 3, m: '0x533', a: '0xB' };
 
   registers.ramControl = 0b1110;
 
-  const { stacktraces, functionCalls } = runWithProfiler(system, symbols, labelOffsetForProgress);
+  const { stacktraces } = runWithProfiler(system, symbols);
 
   console.log(`Cycles = ${system.instructionCycles.toString()}, seconds = ${system.instructionCycles / CYCLES_PER_SECOND}`);
   console.log('Stacktraces:');
   console.log([...stacktraces.entries()].map(([stacktrace, cycles]) => `${stacktrace} ${cycles}`).join('\n'));
-
-  console.log('Function calls:');
-  console.log([...functionCalls.entries()].map(([name, times]) => `${name} ${times}`).join('\n'));
 }());

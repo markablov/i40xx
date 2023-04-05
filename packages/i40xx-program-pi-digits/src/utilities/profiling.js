@@ -1,28 +1,18 @@
 /* eslint-disable no-console */
 
-export const runWithProfiler = (system, symbols, progressTrackingPC) => {
+export const runWithProfiler = (system, symbols) => {
   const { registers } = system;
   const labelByOffset = Object.fromEntries(symbols.map(({ label, romAddress }) => [romAddress, label]));
 
   const stacktraces = new Map();
-  const functionCalls = new Map();
   const currentStack = [];
   let currentSP = 0;
-  let iters = 0;
 
   while (!system.isFinished()) {
     system.instruction();
 
-    if (registers.pc === progressTrackingPC) {
-      iters++;
-      if (iters % 100 === 0) {
-        console.log(`Iterations passed: ${iters}...`);
-      }
-    }
-
     if (currentSP < registers.sp) {
       const functionName = labelByOffset[registers.pc] || 'unknown';
-      functionCalls.set(functionName, (functionCalls.get(functionName) || 0) + 1);
 
       currentStack.push({
         name: functionName,
@@ -45,5 +35,5 @@ export const runWithProfiler = (system, symbols, progressTrackingPC) => {
     }
   }
 
-  return { stacktraces, functionCalls };
+  return { stacktraces };
 };
