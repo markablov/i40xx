@@ -61,7 +61,7 @@ mulMod:
   LD rr7
   JCN nz, mulMod_factor2
   LD rr6
-  JUN mulMod_processLastNibble
+  JUN mulMod_processLastNibbleAndReturn
 
 mulMod_factor4:
   LD rr6
@@ -71,7 +71,7 @@ mulMod_factor4:
   LD rr4
   JMS mulMod_processNibble
   LD rr5
-  JUN mulMod_processLastNibble
+  JUN mulMod_processLastNibbleAndReturn
 
 mulMod_factor3:
   LD rr6
@@ -79,13 +79,13 @@ mulMod_factor3:
   LD rr7
   JMS mulMod_processNibble
   LD rr4
-  JUN mulMod_processLastNibble
+  JUN mulMod_processLastNibbleAndReturn
 
 mulMod_factor2:
   LD rr6
   JMS mulMod_processNibble
   LD rr7
-  JUN mulMod_processLastNibble
+  JUN mulMod_processLastNibbleAndReturn
 
 __location(0x3:0x00)
 mulMod_processNibble_0:                   # 0b0000
@@ -415,8 +415,6 @@ mulMod_updateMultipliedFactor_return:
 #   status characters in selected memory register - res
 # OUTPUT:
 #   status characters in selected memory register - res
-# VARIABLES:
-#   rr12..rr15 - tmp
 # NOTES:
 #   memory register already should be pre-selected
 mulMod_updateResult:
@@ -433,30 +431,42 @@ mulMod_updateResult:
   ADD rr11
   WR3                                               # res = res + multipliedFactor
 
+  RAL
+  JCN c, mulMod_updateResult_return                 # if res < 0
+
   RD0
   ADD rr0
-  XCH rr12
+  WR0
   RD1
   ADD rr1
-  XCH rr13
+  WR1
   RD2
   ADD rr2
-  XCH rr14
+  WR2
   RD3
   ADD rr3
-  XCH rr15                                          # tmp = res - m
-
-  JCN nc, mulMod_updateResult_return                # if (tmp < 0)
-
-  CLC
-  LD rr12
-  WR0
-  LD rr13
-  WR1
-  LD rr14
-  WR2
-  LD rr15
-  WR3                                               # res = tmp
+  WR3                                               # res = res - m
+  BBL 0
 
 mulMod_updateResult_return:
+  CLC
+  BBL 0
+
+mulMod_processLastNibbleAndReturn:
+  JMS mulMod_processLastNibble
+  RD0
+  SUB rr0
+  CMC
+  WR0
+  RD1
+  SUB rr1
+  CMC
+  WR1
+  RD2
+  SUB rr2
+  CMC
+  WR2
+  RD3
+  SUB rr3
+  WR3                                               # res = res + m
   BBL 0
