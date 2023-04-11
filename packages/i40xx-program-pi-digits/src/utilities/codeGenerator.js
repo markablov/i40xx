@@ -59,7 +59,7 @@ export const generateAccumulatorInitialization = (value) => [`LDM ${value}`];
 export const generateMemoryMainCharactersInitialization = (memoryRegNo, values) => {
   const lines = [
     '# init main characters in RAM',
-    `FIM r0, 0x${memoryRegNo}0`,
+    `FIM r0, 0x${memoryRegNo.toString(16)}0`,
   ];
 
   for (let i = 0; i < 16; i++) {

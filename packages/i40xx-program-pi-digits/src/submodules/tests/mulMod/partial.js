@@ -22,12 +22,9 @@ const runSingleTest = (romDump, { a, b, m }, variant) => {
   writeValueToStatusChars(hexToHWNumber(b), memory, 0x04, 7);
 
   if (variant === 'binary_batch') {
-    writeValueToStatusChars(
-      numToHWNumber(0x10000 - parseInt(m, 16)),
-      memory,
-      VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV,
-      7,
-    );
+    const invertedM = 0x10000 - parseInt(m, 16);
+    writeValueToStatusChars(numToHWNumber(invertedM), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+    writeValueToMainChars([m > 0x1000 ? 0x01 : 0x00], memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
   }
 
   // for binary
@@ -2252,7 +2249,13 @@ const TESTS = [
         generateMemoryStatusCharactersInitialization(0x4, hexToHWNumber(input.b)),
         generateMemoryMainCharactersInitialization(0x7, hexToHWNumber(input.m)),
         ...(variant === 'binary_batch'
-          ? [generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV, invertedM)]
+          ? [
+            generateMemoryMainCharactersInitialization(
+              VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV,
+              [parseInt(input.m, 16) > 0x1000 ? 0x01 : 0x00],
+            ),
+            generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV, invertedM),
+          ]
           : []
         ),
         generateRegisterInitialization(14, 0x4),

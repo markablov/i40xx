@@ -1,7 +1,7 @@
 import { workerData, parentPort } from 'node:worker_threads';
 import Emulator from 'i40xx-emu';
 
-import { VARIABLES, writeValueToStatusChars } from '#utilities/memory.js';
+import { VARIABLES, writeValueToMainChars, writeValueToStatusChars } from '#utilities/memory.js';
 import { hexToHWNumber, hwNumberToHex, numToHWNumber } from '#utilities/numbers.js';
 
 const PROLOGUE_CYCLES_COUNT = 5n;
@@ -23,6 +23,7 @@ parentPort.on('message', ({ tests }) => {
     writeValueToStatusChars(hexToHWNumber(b), memory, 0x04);
     const invertedM = 0x10000 - parseInt(m, 16);
     writeValueToStatusChars(numToHWNumber(invertedM), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+    writeValueToMainChars([m > 0x1000 ? 0x01 : 0x00], memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
 
     registers.ramControl = 0b1110;
     registers.indexBanks[0][14] = 4;

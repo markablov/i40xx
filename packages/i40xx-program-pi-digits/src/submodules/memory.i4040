@@ -16,7 +16,6 @@
 %define STATUS_MEM_VARIABLE_INV_PREV_R          0x2
 %define STATUS_MEM_VARIABLE_INV_R               0x3
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_K     0x4
-%define STATUS_MEM_VARIABLE_MODULUS_INV         0x5
 %define STATUS_MEM_VARIABLE_V                   0x6
 %define STATUS_MEM_VARIABLE_VMAX                0x6
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_A     0x7
@@ -28,6 +27,7 @@
 %define STATUS_MEM_VARIABLE_INV_PREV_P          0xA
 %define STATUS_MEM_VARIABLE_CURRENT_PRIME_POW   0xA
 %define STATUS_MEM_VARIABLE_F                   0xB
+%define STATUS_MEM_VARIABLE_MODULUS_INV         0xC
 %define STATUS_MEM_VARIABLE_MODULUS             0xD
 %define STATUS_MEM_VARIABLE_N                   0xE
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_B     0xF
