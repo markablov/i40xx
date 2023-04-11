@@ -17,6 +17,61 @@
 #   - clears carry flag
 #   - first term should be always less than m
 #   - second term is zero only if first term is zero too, so single check for fast path is enough
+
+mulMod_withSwaps:
+  FIM r0, $STATUS_MEM_VARIABLE_MODULUS_INV . 0
+  SRC r0
+  RD0
+  XCH rr0
+  RD1
+  XCH rr1
+  RD2
+  XCH rr2
+  RDM
+  JCN z, mulMod_12bit_withSwaps          # if (m < 0x1000)
+  RD3
+  XCH rr3                                # rr0..rr3 = 0x10000 - m
+
+  SRC r7
+  RD3
+  JCN z, mulMod_dontSwap                 # if (b[3] === 0)
+
+  XCH rr11
+  RD0
+  XCH rr8
+  RD1
+  XCH rr9
+  RD2
+  XCH rr10                               # multipliedFactor = b
+
+  XCH rr15
+  XCH rr14
+
+  SRC r7
+  RD0
+  XCH rr6
+  RD1
+  XCH rr7
+  RD2
+  XCH rr4
+  RD3
+  XCH rr5                                # rr6 = a[0], rr7 = a[1], rr4 = a[2], rr5 = a[3]
+
+  CLB
+  WR0
+  WR1
+  WR2
+  WR3                                    # res = 0
+
+  LD rr5
+  JCN nz, mulMod_factor4
+  LD rr4
+  JCN nz, mulMod_factor3
+  LD rr7
+  JCN nz, mulMod_factor2
+  LD rr6
+  JUN mulMod_processLastNibble
+
 mulMod:
   FIM r0, $STATUS_MEM_VARIABLE_MODULUS_INV . 0
   SRC r0
@@ -32,18 +87,18 @@ mulMod:
   XCH rr3                                # rr0..rr3 = 0x10000 - m
 
   SRC r7
-
-  XCH rr15
-  XCH rr14
-
+  RD3
+mulMod_dontSwap:
+  XCH rr5
   RD0
   XCH rr6
   RD1
   XCH rr7
   RD2
-  XCH rr4
-  RD3
-  XCH rr5                                # rr6 = b[0], rr7 = b[1], rr4 = b[2], rr5 = b[3]
+  XCH rr4                                # rr6 = b[0], rr7 = b[1], rr4 = b[2], rr5 = b[3]
+
+  XCH rr15
+  XCH rr14
 
   SRC r7
   RD0
@@ -497,12 +552,21 @@ mulMod_updateResultLast:
 mulMod_updateResultLast_return:
   BBL 0
 
-mulMod_12bit:
+mulMod_12bit_withSwaps:
   SRC r7
+  RD2
+  JCN z, mulMod_12bit_dontSwap           # if (b[3] === 0)
+
+  XCH rr10
+  RD0
+  XCH rr8
+  RD1
+  XCH rr9                                # multipliedFactor =  b
 
   XCH rr15
   XCH rr14
 
+  SRC r7
   RD0
   XCH rr6
   RD1
@@ -510,7 +574,38 @@ mulMod_12bit:
   RD2
   XCH rr4
   RD3
+  XCH rr5                                # rr6 = a[0], rr7 = a[1], rr4 = a[2], rr5 = a[3]
+
+  CLB
+  WR3
+  DAC
+  WR0
+  WR1
+  WR2                                    # res = 0x0FFF
+
+  LD rr5
+  JCN nz, mulMod_12bit_factor4
+  LD rr4
+  JCN nz, mulMod_12bit_factor3
+  LD rr7
+  JCN nz, mulMod_12bit_factor2
+  LD rr6
+  JUN mulMod_12bit_processLastNibble
+
+mulMod_12bit:
+  SRC r7
+  RD2
+mulMod_12bit_dontSwap:
+  XCH rr4
+  RD0
+  XCH rr6
+  RD1
+  XCH rr7
+  RD3
   XCH rr5                                # rr6 = b[0], rr7 = b[1], rr4 = b[2], rr5 = b[3]
+
+  XCH rr15
+  XCH rr14
 
   SRC r7
   RD0

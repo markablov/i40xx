@@ -8,10 +8,13 @@ import { writeValueToMainChars, writeValueToStatusChars, VARIABLES } from '#util
 
 import {
   updateCodeForUseInEmulator, generateMemoryBankSwitch, generateMemoryStatusCharactersInitialization,
-  generateRegisterInitialization, generateMemoryMainCharactersInitialization,
+  generateRegisterInitialization, generateMemoryMainCharactersInitialization, generateAccumulatorInitialization,
 } from '#utilities/codeGenerator.js';
 
 import RAM_DUMP from '../data/ramWithLookupTables.json' assert { type: 'json' };
+
+const PROLOGUE_CYCLES_COUNT = 5n;
+const BINARY_BATCH_PROLOGUE_CYCLES_COUNT = 7n;
 
 const runSingleTest = (romDump, { a, b, m }, variant) => {
   const system = new Emulator({ romDump, ramDump: RAM_DUMP });
@@ -22,9 +25,11 @@ const runSingleTest = (romDump, { a, b, m }, variant) => {
   writeValueToStatusChars(hexToHWNumber(b), memory, 0x04, 7);
 
   if (variant === 'binary_batch') {
-    const invertedM = 0x10000 - parseInt(m, 16);
+    const mNum = parseInt(m, 16);
+    const invertedM = 0x10000 - mNum;
     writeValueToStatusChars(numToHWNumber(invertedM), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
-    writeValueToMainChars([m > 0x1000 ? 0x01 : 0x00], memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+    writeValueToMainChars([mNum > 0x1000 ? 0x01 : 0x00], memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+    registers.acc = parseInt(b, 16) > mNum ? 0x0 : 0x1;
   }
 
   // for binary
@@ -2221,6 +2226,18 @@ const TESTS = [
   { input: { a: '0x2DEE', b: '0x1ACB', m: '0x357B' }, expected: '0x1FC4' },
 ];
 
+const wrapSourceCode = (sourceCode) => `
+entrypoint:
+  JCN z, regularCall 
+  JMS mulMod_withSwaps
+  HLT
+regularCall:
+  JMS mulMod
+  HLT
+
+${sourceCode}
+`;
+
 (function () {
   const variant = process.argv[2];
 
@@ -2229,9 +2246,10 @@ const TESTS = [
     process.exit(0);
   }
 
-  const { sourceCode, rom } = compileCodeForTest(
+  const { sourceCode, rom, sourceMap, symbols } = compileCodeForTest(
     variant === 'standard' ? 'submodules/mulMod.i4040' : `submodules/mulMod_${variant}.i4040`,
     'mulMod',
+    variant === 'binary_batch' ? { wrapSourceCode } : {},
   );
 
   let sum = 0n;
@@ -2260,13 +2278,17 @@ const TESTS = [
         ),
         generateRegisterInitialization(14, 0x4),
         generateRegisterInitialization(15, 0x3),
+        ...(variant === 'binary_batch'
+          ? [generateAccumulatorInitialization(parseInt(input.b, 16) > parseInt(input.m, 16) ? 0x0 : 0x1)]
+          : []
+        ),
       ];
 
-      console.log(updateCodeForUseInEmulator(sourceCode, initializators));
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
       process.exit(1);
     }
 
-    sum += elapsed;
+    sum += (elapsed - (variant === 'binary_batch' ? BINARY_BATCH_PROLOGUE_CYCLES_COUNT : PROLOGUE_CYCLES_COUNT));
   }
 
   console.log(`Avg: ${sum / BigInt(TESTS.length)}`);

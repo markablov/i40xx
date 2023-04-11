@@ -4,7 +4,7 @@ import Emulator from 'i40xx-emu';
 import { VARIABLES, writeValueToMainChars, writeValueToStatusChars } from '#utilities/memory.js';
 import { hexToHWNumber, hwNumberToHex, numToHWNumber } from '#utilities/numbers.js';
 
-const PROLOGUE_CYCLES_COUNT = 5n;
+const PROLOGUE_CYCLES_COUNT = 7n;
 
 const { romDump, ramDump } = workerData;
 
@@ -21,15 +21,17 @@ parentPort.on('message', ({ tests }) => {
     writeValueToStatusChars(hexToHWNumber(m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS);
     writeValueToStatusChars(hexToHWNumber(a), memory, 0x03);
     writeValueToStatusChars(hexToHWNumber(b), memory, 0x04);
-    const invertedM = 0x10000 - parseInt(m, 16);
+    const mNum = parseInt(m, 16);
+    const invertedM = 0x10000 - mNum;
     writeValueToStatusChars(numToHWNumber(invertedM), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
-    writeValueToMainChars([m > 0x1000 ? 0x01 : 0x00], memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+    writeValueToMainChars([mNum > 0x1000 ? 0x01 : 0x00], memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
 
     registers.ramControl = 0b1110;
     registers.indexBanks[0][14] = 4;
     registers.indexBanks[0][15] = 3;
     registers.indexBanks[1][14] = 4;
     registers.indexBanks[1][15] = 3;
+    registers.acc = parseInt(b, 16) > mNum ? 0x0 : 0x1;
 
     while (!system.isFinished()) {
       system.instruction();

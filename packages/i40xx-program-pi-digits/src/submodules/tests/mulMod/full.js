@@ -12,6 +12,18 @@ import RAM_DUMP from '../data/ramWithLookupTables.json' assert { type: 'json' };
 const WORKER_AMOUNT = 16;
 const TESTS_PER_WORKER = 1000;
 
+const wrapSourceCode = (sourceCode) => `
+entrypoint:
+  JCN z, regularCall 
+  JMS mulMod_withSwaps
+  HLT
+regularCall:
+  JMS mulMod
+  HLT
+
+${sourceCode}
+`;
+
 (async function main() {
   const dirname = path.dirname(fileURLToPath(import.meta.url));
   const workerPath = path.resolve(dirname, './worker.js');
@@ -24,7 +36,7 @@ const TESTS_PER_WORKER = 1000;
     },
   );
 
-  const { rom } = compileCodeForTest('submodules/mulMod_binary_batch.i4040', 'mulMod');
+  const { rom } = compileCodeForTest('submodules/mulMod_binary_batch.i4040', 'mulMod', { wrapSourceCode });
 
   const stats = {};
   let processedTests = 0;
@@ -55,13 +67,16 @@ const TESTS_PER_WORKER = 1000;
     if (!tests.length) {
       if (runningThreads === 0) {
         let totalAllVariants = 0n;
+        let countAllVariants = 0n;
         console.log('[+] All done, stats:');
         const sortedStats = Object.entries(stats).sort((a, b) => (b[1].total > a[1].total ? 1 : -1));
         for (const [variant, { total, count }] of sortedStats) {
           console.log(`  ${variant}: ${count} calls, avg = ${total / BigInt(count)} cycles, total = ${total} cycles`);
           totalAllVariants += total;
+          countAllVariants += BigInt(count);
         }
         console.log(`  Total: ${totalAllVariants} cycles`);
+        console.log(`  Average: ${totalAllVariants / countAllVariants} cycles`);
         process.exit();
       }
       return;

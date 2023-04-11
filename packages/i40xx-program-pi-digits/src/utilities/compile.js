@@ -17,13 +17,13 @@ ${sourceCode}
 `;
 
 // eslint-disable-next-line consistent-return
-export const compileCodeForTest = (fileName, funcName) => {
+export const compileCodeForTest = (fileName, funcName, options = {}) => {
   const dirName = path.dirname(fileURLToPath(import.meta.url));
 
   console.log('Preprocessing source code...');
   const t0 = performance.now();
   const preprocessedCode = preprocessFile(path.resolve(dirName, '../', fileName));
-  const testCode = wrapSourceCode(preprocessedCode, funcName);
+  const testCode = (options?.wrapSourceCode || wrapSourceCode)(preprocessedCode, funcName);
   console.log(`Source code has been preprocessed, time elapsed = ${Math.round(performance.now() - t0)}ms`);
 
   console.log('Compiling code...');
