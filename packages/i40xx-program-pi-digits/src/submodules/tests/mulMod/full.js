@@ -31,8 +31,8 @@ ${sourceCode}
   const tasks = new TasksReader(
     path.resolve(dirname, './tests.dat'),
     (line) => {
-      const [, a, b, m, expected] = line.match(/\s*\{ input: \{ a: '(0x[0-9A-F]+)', b: '(0x[0-9A-F]+)', m: '(0x[0-9A-F]+)' }, expected: '(0x[0-9A-F]+)' },/);
-      return { input: { a, b, m }, expected };
+      const [, a, b, m, expected, allowSwaps] = line.match(/\s*\{ input: \{ a: '(0x[0-9A-F]+)', b: '(0x[0-9A-F]+)', m: '(0x[0-9A-F]+)' }, expected: '(0x[0-9A-F]+)', allowSwaps: (\w+) },/);
+      return { input: { a, b, m }, expected, allowSwaps: allowSwaps === 'true' };
     },
   );
 

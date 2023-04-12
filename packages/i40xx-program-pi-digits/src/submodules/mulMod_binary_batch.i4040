@@ -11,7 +11,7 @@
 # VARIABLES:
 #   rr0..rr3 - 0x10000 - m
 #   rr4..rr7 - b
-#   rr8..rr11 - multipliedFactor
+#   [rr8, rr9, rr10, rr15] - multipliedFactor
 # NOTES:
 #   - uses all registers
 #   - clears carry flag
@@ -36,16 +36,14 @@ mulMod_withSwaps:
   RD3
   JCN z, mulMod_dontSwap                 # if (b[3] === 0)
 
-  XCH rr11
+  XCH rr15
+  XCH rr14
   RD0
   XCH rr8
   RD1
   XCH rr9
   RD2
   XCH rr10                               # multipliedFactor = b
-
-  XCH rr15
-  XCH rr14
 
   SRC r7
   RD0
@@ -108,7 +106,7 @@ mulMod_dontSwap:
   RD2
   XCH rr10
   RD3
-  XCH rr11                               # multipliedFactor =  a
+  XCH rr15                               # multipliedFactor =  a
 
   CLB
   WR0
@@ -424,11 +422,11 @@ mulMod_processLastNibble_F:                   # 0b1111
 
 # INPUT:
 #   rr0..rr3 - m
-#   rr8..rr11 - multipliedFactor
+#   [rr8, rr9, rr10, rr15] - multipliedFactor
 # OUTPUT:
-#   rr8..rr11 - multipliedFactor
+#   [rr8, rr9, rr10, rr15] - multipliedFactor
 # VARIABLES:
-#   rr12..rr15 - tmp
+#   [rr12, rr13, rr11, rr6] - tmp
 mulMod_updateMultipliedFactor:
   LD rr8
   ADD rr8
@@ -439,9 +437,13 @@ mulMod_updateMultipliedFactor:
   LD rr10
   ADD rr10
   XCH rr10
-  LD rr11
-  ADD rr11
-  XCH rr11                                          # multipliedFactor = multipliedFactor + multipliedFactor
+  LD rr15
+  ADD rr15
+  XCH rr15                                          # multipliedFactor = multipliedFactor + multipliedFactor
+
+  SRC r7
+  RDM
+  JCN z, mulMod_updateMultipliedFactor_return       # if (multipliedFactor[3] < m[3])
 
   LD rr8
   ADD rr0
@@ -451,10 +453,10 @@ mulMod_updateMultipliedFactor:
   XCH rr13
   LD rr10
   ADD rr2
-  XCH rr14
-  LD rr11
+  XCH rr11
+  LD rr15
   ADD rr3
-  XCH rr15                                          # tmp = multipliedFactor - m
+  XCH rr6                                           # tmp = multipliedFactor - m
 
   JCN nc, mulMod_updateMultipliedFactor_return      # if (tmp < 0)
 
@@ -463,10 +465,10 @@ mulMod_updateMultipliedFactor:
   XCH rr8
   LD rr13
   XCH rr9
-  LD rr14
+  LD rr11
   XCH rr10
-  LD rr15
-  XCH rr11                                          # multipliedFactor = tmp
+  LD rr6
+  XCH rr15                                          # multipliedFactor = tmp
 
 mulMod_updateMultipliedFactor_return:
   BBL 0
@@ -490,7 +492,7 @@ mulMod_updateResult:
   ADD rr10
   WR2
   RD3
-  ADD rr11
+  ADD rr15
   WR3                                               # res = res + multipliedFactor
 
   RAL
@@ -525,7 +527,7 @@ mulMod_updateResultLast:
   ADD rr10
   WR2
   RD3
-  ADD rr11
+  ADD rr15
   WR3                                               # res = res + multipliedFactor
 
   RAL
@@ -557,14 +559,12 @@ mulMod_12bit_withSwaps:
   RD2
   JCN z, mulMod_12bit_dontSwap           # if (b[3] === 0)
 
-  XCH rr10
+  XCH rr15
+  XCH rr14
   RD0
   XCH rr8
   RD1
   XCH rr9                                # multipliedFactor =  b
-
-  XCH rr15
-  XCH rr14
 
   SRC r7
   RD0
@@ -613,7 +613,7 @@ mulMod_12bit_dontSwap:
   RD1
   XCH rr9
   RD2
-  XCH rr10                               # multipliedFactor =  a
+  XCH rr15                               # multipliedFactor =  a
 
   CLB
   WR3
@@ -930,11 +930,11 @@ mulMod_12bit_processLastNibble_F:                   # 0b1111
 
 # INPUT:
 #   rr0..rr2 - m
-#   rr8..rr10 - multipliedFactor
+#   [rr8, rr9, rr15] - multipliedFactor
 # OUTPUT:
-#   rr8..rr10 - multipliedFactor
+#   [rr8, rr9, rr15] - multipliedFactor
 # VARIABLES:
-#   rr12..rr14 - tmp
+#   [rr12, rr13, rr11] - tmp
 mulMod_12bit_updateMultipliedFactor:
   LD rr8
   ADD rr8
@@ -942,10 +942,14 @@ mulMod_12bit_updateMultipliedFactor:
   LD rr9
   ADD rr9
   XCH rr9
-  LD rr10
-  ADD rr10
-  XCH rr10                                                     # multipliedFactor = multipliedFactor + multipliedFactor
+  LD rr15
+  ADD rr15
+  XCH rr15                                                     # multipliedFactor = multipliedFactor + multipliedFactor
   JCN c, mulMod_12bit_updateMultipliedFactor_subtractModulus   # if (multipliedFactor > 0x1000)
+
+  SRC r7
+  RDM
+  JCN z, mulMod_updateMultipliedFactor_return                  # if (multipliedFactor[2] < m[2])
 
   LD rr8
   ADD rr0
@@ -953,9 +957,9 @@ mulMod_12bit_updateMultipliedFactor:
   LD rr9
   ADD rr1
   XCH rr13
-  LD rr10
+  LD rr15
   ADD rr2
-  XCH rr14                                                     # tmp = multipliedFactor - m
+  XCH rr11                                                     # tmp = multipliedFactor - m
 
   JCN nc, mulMod_12bit_updateMultipliedFactor_return           # if (tmp < 0)
 
@@ -964,8 +968,8 @@ mulMod_12bit_updateMultipliedFactor:
   XCH rr8
   LD rr13
   XCH rr9
-  LD rr14
-  XCH rr10                                                     # multipliedFactor = tmp
+  LD rr11
+  XCH rr15                                                     # multipliedFactor = tmp
 
 mulMod_12bit_updateMultipliedFactor_return:
   BBL 0
@@ -978,15 +982,15 @@ mulMod_12bit_updateMultipliedFactor_subtractModulus:
   LD rr9
   ADD rr1
   XCH rr9
-  LD rr10
+  LD rr15
   ADD rr2
-  XCH rr10                                                     # multipliedFactor = multipliedFactor - m
+  XCH rr15                                                     # multipliedFactor = multipliedFactor - m
   CLC
   BBL 0
 
 # INPUT:
 #   rr0..rr2 - m
-#   rr8..rr10 - multipliedFactor
+#   [rr8, rr9, rr15] - multipliedFactor
 #   status characters in selected memory register - res
 # OUTPUT:
 #   status characters in selected memory register - res
@@ -1000,7 +1004,7 @@ mulMod_12bit_updateResult:
   ADD rr9
   WR1
   RD2
-  ADD rr10
+  ADD rr15
   WR2                                               # res = res + multipliedFactor
   JCN nc, mulMod_12bit_updateResult_negative        # if (res < 0)
 
@@ -1029,7 +1033,7 @@ mulMod_12bit_updateResultLast:
   ADD rr9
   WR1
   RD2
-  ADD rr10
+  ADD rr15
   WR2                                               # res = res + multipliedFactor + 1
   JCN c, mulMod_12bit_updateResultLast_return       # if res >= 0
 

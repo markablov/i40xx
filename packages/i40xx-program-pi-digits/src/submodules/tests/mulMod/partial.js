@@ -29,6 +29,12 @@ const runSingleTest = (romDump, { a, b, m }, variant) => {
     const invertedM = 0x10000 - mNum;
     writeValueToStatusChars(numToHWNumber(invertedM), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
     writeValueToMainChars([mNum > 0x1000 ? 0x01 : 0x00], memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+
+    const highestModulusDigit = mNum >= 0x100 ? parseInt(m[2], 16) : 0x00;
+    for (let highestFactorDigit = 0; highestFactorDigit < 16; highestFactorDigit++) {
+      memory[7].registers[3].main[highestFactorDigit] = (highestFactorDigit < highestModulusDigit) ? 0x0 : 0x1;
+    }
+
     registers.acc = parseInt(b, 16) > mNum ? 0x0 : 0x1;
   }
 
