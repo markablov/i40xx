@@ -315,8 +315,8 @@ computeF:
 
   LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_K
   JMS clearVarFromStatusCharMemory
-  LDM 0x1
-  WR0                                                 # k = 1
+  LDM 0x2
+  WR0                                                 # k = 2
 
   FIM r0, $STATUS_MEM_VARIABLE_V . 0
   SRC r0
