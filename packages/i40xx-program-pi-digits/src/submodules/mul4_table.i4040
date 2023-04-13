@@ -25,14 +25,10 @@ mul4x4_1:
 
 __location(01:0x20)
 mul4x4_2:
+  RAL
   XCH rr12
-  LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
-  DCL
-  SRC r6
-  RD0
-  XCH rr12                                              # low  = a << 1
-  RD3
-  XCH rr13                                              # high = a >> 3
+  TCC
+  XCH rr13
   BBL $BANK_WITH_VARIABLES
 
 __location(01:0x30)
