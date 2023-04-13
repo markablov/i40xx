@@ -93,14 +93,18 @@ mul4x4_7:
 
 __location(01:0x80)
 mul4x4_8:
+  RAR
+  XCH rr13
+  JCN c, mul4x4_8_lsb_set
+  CLB
   XCH rr12
-  LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
-  DCL
-  SRC r6
-  RD1
-  XCH rr12                                              # low  = a << 3
-  RD2
-  XCH rr13                                              # high = a >> 1
+  BBL $BANK_WITH_VARIABLES
+
+__location(01:0x87)
+mul4x4_8_lsb_set:
+  CLC
+  LDM 0x8
+  XCH rr12
   BBL $BANK_WITH_VARIABLES
 
 __location(01:0x90)
