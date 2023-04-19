@@ -11,7 +11,6 @@
 #   rr12 or rr13 - shifted value, depends on shift direction
 __location(02:0x00)
 shift4ByR1:
-  XCH rr12
   JIN r1
 
 # INPUT:
@@ -22,7 +21,6 @@ shift4ByR1:
 #   rr12 or rr13 - shifted value, depends on shift direction
 __location(02:0x02)
 shift4ByR2:
-  XCH rr12
   JIN r2
 
 # INPUT:
@@ -33,7 +31,6 @@ shift4ByR2:
 #   rr12 or rr13 - shifted value, depends on shift direction
 __location(02:0x04)
 shift4ByR5:
-  XCH rr12
   JIN r5
 
 # INPUT:
@@ -44,7 +41,6 @@ shift4ByR5:
 #   rr12 or rr13 - shifted value, depends on shift direction
 __location(02:0x06)
 shift4ByR7:
-  XCH rr12
   JIN r7
 
 # INPUT:
@@ -55,29 +51,25 @@ shift4ByR7:
 #   rr12 or rr13 - shifted value, depends on shift direction
 __location(02:0x08)
 shift4ByR4:
-  XCH rr12
   JIN r4
 
 __location(02:0x10)
 shift_right_1:
-  LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
-  DCL
-  SRC r6
-  RD2
+  RAR
   XCH rr12
+  CLB
   BBL $BANK_WITH_VARIABLES
 
 __location(02:0x18)
 shift_left_1:
-  LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
-  DCL
-  SRC r6
-  RD0
+  RAL
   XCH rr13
+  CLB
   BBL $BANK_WITH_VARIABLES
 
 __location(02:0x20)
 shift_right_2:
+  XCH rr12
   LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_2
   DCL
   SRC r6
@@ -87,6 +79,7 @@ shift_right_2:
 
 __location(02:0x28)
 shift_left_2:
+  XCH rr12
   LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_2
   DCL
   SRC r6
@@ -96,19 +89,17 @@ shift_left_2:
 
 __location(02:0x30)
 shift_right_3:
-  LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
-  DCL
-  SRC r6
-  RD3
+  RAL
+  LDM 0x0
+  RAL
   XCH rr12
   BBL $BANK_WITH_VARIABLES
 
 __location(02:0x38)
 shift_left_3:
-  LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_1_OR_3
-  DCL
-  SRC r6
-  RD1
+  RAR
+  LDM 0x0
+  RAR
   XCH rr13
   BBL $BANK_WITH_VARIABLES
 
