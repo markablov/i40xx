@@ -1,7 +1,7 @@
 .framedBox {
   border: 2px groove threedface;
   border-color: black;
-  border-top: none;
+  border-top-style: none;
   padding: 0.25em;
   margin: 1em 2px;
   border-radius: 6px;

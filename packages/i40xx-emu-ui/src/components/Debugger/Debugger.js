@@ -1,12 +1,13 @@
-import { Button, Notification, Columns, Table, Tag } from 'react-bulma-components';
+import { Button, Notification, Columns, Table, Tag, Level } from 'react-bulma-components';
 
 import { pad, padHex } from '../../utilities/string.js';
 import FramedBox from '../UI/FramedBox/FramedBox.js';
+import Watchers from './Watchers.js';
 import emulator from '../../services/emulator.js';
 import compile from '../../services/compiler.js';
 import editorStore from '../../stores/editorStore.js';
 import compilerStore from '../../stores/compilerStore.js';
-import emulatorStore from '../../stores/emulatorStore';
+import emulatorStore from '../../stores/emulatorStore.js';
 
 /*
  * Compile source code into ROM image and run this image inside emulator
@@ -149,6 +150,11 @@ export default function Debugger() {
           }
         </Columns.Column>
       </Columns>
+      <Level>
+        <FramedBox title="Watchers">
+          <Watchers />
+        </FramedBox>
+      </Level>
     </>
   );
 }
