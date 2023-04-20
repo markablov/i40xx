@@ -3,41 +3,28 @@
 # INPUT:
 #   rr15 - variable number for first term and for result
 #   rr14 - variable number for second term
+#   rr13 - 0x0
+#   rr6 - 0x4
 #   memStatusCharVar[rr15] - first term (a)
 #   memStatusCharVar[rr14] - second term (b)
 #   STATUS_MEM_VARIABLE_MODULUS_INV
 # OUTPUT:
 #   memStatusCharVar[rr15] - result
 # VARIABLES:
-#   rr0..rr3 - 0x10000 - m
-#   rr4..rr7 - b
-#   [rr8, rr9, rr10, rr15] - multipliedFactor
+#   [rr0, rr1, rr3, rr2] - result
+#   [rr12, rr11, rr7, rr15] - shiftedFactor
+#   [rr8, rr9, rr10, rr4] - multipliedFactor
 # NOTES:
-#   - uses all registers
+#   - modifies all registers, except rr13, rr6
 #   - clears carry flag
 #   - first term should be always less than m
-#   - second term is zero only if first term is zero too, so single check for fast path is enough
 
 mulMod_withSwaps:
-  FIM r0, $STATUS_MEM_VARIABLE_MODULUS_INV . 0
-  SRC r0
-  RD0
-  XCH rr0
-  RD1
-  XCH rr1
-  RD2
-  XCH rr2
-  RDM
-  JCN z, mulMod_12bit_withSwaps          # if (m < 0x1000)
-  RD3
-  XCH rr3                                # rr0..rr3 = 0x10000 - m
-
   SRC r7
   RD3
   JCN z, mulMod_dontSwap                 # if (b[3] === 0)
 
-  XCH rr15
-  XCH rr14
+  XCH rr4
   RD0
   XCH rr8
   RD1
@@ -45,58 +32,46 @@ mulMod_withSwaps:
   RD2
   XCH rr10                               # multipliedFactor = b
 
+  LD rr15
+  XCH rr14
+
   SRC r7
   RD0
-  XCH rr6
+  XCH rr12
   RD1
-  XCH rr7
+  XCH rr11
   RD2
-  XCH rr4
+  XCH rr7
   RD3
-  XCH rr5                                # rr6 = a[0], rr7 = a[1], rr4 = a[2], rr5 = a[3]
+  XCH rr15                                # rr12 = a[0], rr11 = a[1], rr7 = a[2], rr15 = a[3]
+
+  FIM r0, 0x00
+  FIM r1, 0x00                           # res = 0
 
   CLB
-  WR0
-  WR1
-  WR2
-  WR3                                    # res = 0
+  DCL
 
-  LD rr5
+  LD rr15
   JCN nz, mulMod_factor4
-  LD rr4
-  JCN nz, mulMod_factor3
   LD rr7
+  JCN nz, mulMod_factor3
+  LD rr11
   JCN nz, mulMod_factor2
-  LD rr6
+  LD rr12
   JUN mulMod_processLastNibble
 
 mulMod:
-  FIM r0, $STATUS_MEM_VARIABLE_MODULUS_INV . 0
-  SRC r0
-  RD0
-  XCH rr0
-  RD1
-  XCH rr1
-  RD2
-  XCH rr2
-  RDM
-  JCN z, mulMod_12bit                    # if (m < 0x1000)
-  RD3
-  XCH rr3                                # rr0..rr3 = 0x10000 - m
-
   SRC r7
   RD3
 mulMod_dontSwap:
-  XCH rr5
-  RD0
-  XCH rr6
-  RD1
-  XCH rr7
-  RD2
-  XCH rr4                                # rr6 = b[0], rr7 = b[1], rr4 = b[2], rr5 = b[3]
-
   XCH rr15
   XCH rr14
+  RD0
+  XCH rr12
+  RD1
+  XCH rr11
+  RD2
+  XCH rr7                                # rr12 = b[0], rr11 = b[1], rr7 = b[2], rr15 = b[3]
 
   SRC r7
   RD0
@@ -106,45 +81,41 @@ mulMod_dontSwap:
   RD2
   XCH rr10
   RD3
-  XCH rr15                               # multipliedFactor =  a
+  XCH rr4                                # multipliedFactor =  a
+
+  FIM r0, 0x00
+  FIM r1, 0x00                           # res = 0
 
   CLB
-  WR0
-  WR1
-  WR2
-  WR3                                    # res = 0
+  DCL
 
-  LD rr5
+  LD rr15
   JCN nz, mulMod_factor4
-  LD rr4
-  JCN nz, mulMod_factor3
   LD rr7
+  JCN nz, mulMod_factor3
+  LD rr11
   JCN nz, mulMod_factor2
-  LD rr6
-  JUN mulMod_processLastNibble
+  JUN mulMod_processSingleNibble
 
 mulMod_factor4:
-  LD rr6
+  JMS mulMod_processNibble_first
+  LD rr11
   JMS mulMod_processNibble
   LD rr7
   JMS mulMod_processNibble
-  LD rr4
-  JMS mulMod_processNibble
-  LD rr5
+  LD rr15
   JUN mulMod_processLastNibble
 
 mulMod_factor3:
-  LD rr6
+  JMS mulMod_processNibble_first
+  LD rr11
   JMS mulMod_processNibble
   LD rr7
-  JMS mulMod_processNibble
-  LD rr4
   JUN mulMod_processLastNibble
 
 mulMod_factor2:
-  LD rr6
-  JMS mulMod_processNibble
-  LD rr7
+  JMS mulMod_processNibble_first
+  LD rr11
   JUN mulMod_processLastNibble
 
 __location(0x3:0x00)
@@ -157,8 +128,9 @@ mulMod_processNibble_0:                   # 0b0000
 __location(0x3:0x8)
 mulMod_processNibble:
   XCH rr12
-  CLB
-  XCH rr13
+
+__location(0x3:0x9)
+mulMod_processNibble_first:
   JIN r6
 
 __location(0x3:0x10)
@@ -305,8 +277,9 @@ mulMod_processLastNibble_0:                   # 0b0000
 __location(0x4:0x8)
 mulMod_processLastNibble:
   XCH rr12
-  CLB
-  XCH rr13
+
+__location(0x4:0x9)
+mulMod_processSingleNibble:
   JIN r6
 
 __location(0x4:0x10)
@@ -421,12 +394,9 @@ mulMod_processLastNibble_F:                   # 0b1111
   JUN mulMod_updateResultLast
 
 # INPUT:
-#   rr0..rr3 - m
-#   [rr8, rr9, rr10, rr15] - multipliedFactor
+#   [rr8, rr9, rr10, rr4] - multipliedFactor
 # OUTPUT:
-#   [rr8, rr9, rr10, rr15] - multipliedFactor
-# VARIABLES:
-#   [rr12, rr13, rr11, rr6] - tmp
+#   [rr8, rr9, rr10, rr4] - multipliedFactor
 mulMod_updateMultipliedFactor:
   LD rr8
   ADD rr8
@@ -437,619 +407,313 @@ mulMod_updateMultipliedFactor:
   LD rr10
   ADD rr10
   XCH rr10
-  LD rr15
-  ADD rr15
-  XCH rr15                                          # multipliedFactor = multipliedFactor + multipliedFactor
+  LD rr4
+  ADD rr4
+  XCH rr4                                           # multipliedFactor = multipliedFactor + multipliedFactor
+  AN6                                               # check if previous value of multipliedFactor[3] < 4, then new multipliedFactor[3] < 8
+  JCN z, mulMod_updateMultipliedFactor_return       # if (multipliedFactor[3] < 0x8)
 
-  SRC r7
-  RDM
-  JCN z, mulMod_updateMultipliedFactor_return       # if (multipliedFactor[3] < m[3])
-
-  LD rr8
-  ADD rr0
-  XCH rr12
-  LD rr9
-  ADD rr1
-  XCH rr13
-  LD rr10
-  ADD rr2
-  XCH rr11
-  LD rr15
-  ADD rr3
-  XCH rr6                                           # tmp = multipliedFactor - m
-
-  JCN nc, mulMod_updateMultipliedFactor_return      # if (tmp < 0)
-
-  CLC
-  LD rr12
+  SRC r2
+  RD0
+  ADD rr8
   XCH rr8
-  LD rr13
+  RD1
+  ADD rr9
   XCH rr9
-  LD rr11
+  RD2
+  ADD rr10
   XCH rr10
-  LD rr6
-  XCH rr15                                          # multipliedFactor = tmp
-
+  RD3
+  ADD rr4
+  XCH rr4                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
+  CLC
 mulMod_updateMultipliedFactor_return:
   BBL 0
 
 # INPUT:
-#   rr0..rr3 - m
-#   rr8..rr11 - multipliedFactor
-#   status characters in selected memory register - res
+#   [rr8, rr9, rr10, rr4] - multipliedFactor
+#   [rr0, rr1, rr3, rr2] - res
 # OUTPUT:
-#   status characters in selected memory register - res
-# NOTES:
-#   memory register already should be pre-selected
+#   [rr0, rr1, rr3, rr2] - res
 mulMod_updateResult:
-  RD0
+  LD rr0
   ADD rr8
-  WR0
-  RD1
+  XCH rr0
+  LD rr1
   ADD rr9
-  WR1
-  RD2
+  XCH rr1
+  LD rr3
   ADD rr10
-  WR2
-  RD3
-  ADD rr15
-  WR3                                               # res = res + multipliedFactor
-
+  XCH rr3
+  LD rr2
+  ADD rr4                                           # res = res + multipliedFactor
   RAL
-  JCN c, mulMod_updateResult_return                 # if res < 0
+  JCN nc, mulMod_updateResult_return                # if (res[3] < 0x8)
 
+  RAR
+  XCH rr2
+  SRC r1
   RD0
   ADD rr0
-  WR0
+  XCH rr0
   RD1
   ADD rr1
-  WR1
+  XCH rr1
   RD2
-  ADD rr2
-  WR2
-  RD3
   ADD rr3
-  WR3                                               # res = res - m
+  XCH rr3
+  RD3
+  ADD rr2
+  XCH rr2                                           # res = res - m * floor((res[3] * 0x1000) / m)
+  CLC
   BBL 0
 
 mulMod_updateResult_return:
-  CLC
+  RAR
+  XCH rr2
   BBL 0
 
 mulMod_updateResultLast:
-  RD0
+  LD rr0
   ADD rr8
-  WR0
-  RD1
+  XCH rr0
+  LD rr1
   ADD rr9
-  WR1
-  RD2
+  XCH rr1
+  LD rr3
   ADD rr10
-  WR2
+  XCH rr3
+  LD rr2
+  ADD rr4                                                                      # res = res + multipliedFactor
+  JCN z, mulMod_updateResultLast_subtractModulus
+  XCH rr2
+
+  SRC r1
+  RD0
+  ADD rr0
+  XCH rr0
+  RD1
+  ADD rr1
+  XCH rr1
+  RD2
+  ADD rr3
+  XCH rr3
   RD3
-  ADD rr15
-  WR3                                               # res = res + multipliedFactor
-
-  RAL
-  JCN nc, mulMod_updateResultLast_return            # if res >= 0
-
+  ADD rr2                                                                      # res = res - m * floor((res[3] * 0x1000) / m)
   CLC
-  RD0
-  SUB rr0
-  CMC
-  WR0
-  RD1
-  SUB rr1
-  CMC
-  WR1
-  RD2
-  SUB rr2
-  CMC
-  WR2
-  RD3
-  SUB rr3
-  WR3                                               # res = res + m
-  BBL 0
 
-mulMod_updateResultLast_return:
-  BBL 0
-
-mulMod_12bit_withSwaps:
-  SRC r7
-  RD2
-  JCN z, mulMod_12bit_dontSwap           # if (b[3] === 0)
-
-  XCH rr15
-  XCH rr14
-  RD0
-  XCH rr8
-  RD1
-  XCH rr9                                # multipliedFactor =  b
-
-  SRC r7
-  RD0
-  XCH rr6
-  RD1
-  XCH rr7
-  RD2
-  XCH rr4
-  RD3
-  XCH rr5                                # rr6 = a[0], rr7 = a[1], rr4 = a[2], rr5 = a[3]
-
-  CLB
-  WR3
-  DAC
-  WR0
-  WR1
-  WR2                                    # res = 0x0FFF
-
-  LD rr5
-  JCN nz, mulMod_12bit_factor4
-  LD rr4
-  JCN nz, mulMod_12bit_factor3
-  LD rr7
-  JCN nz, mulMod_12bit_factor2
-  LD rr6
-  JUN mulMod_12bit_processLastNibble
-
-mulMod_12bit:
-  SRC r7
-  RD2
-mulMod_12bit_dontSwap:
-  XCH rr4
-  RD0
-  XCH rr6
-  RD1
-  XCH rr7
-  RD3
-  XCH rr5                                # rr6 = b[0], rr7 = b[1], rr4 = b[2], rr5 = b[3]
-
-  XCH rr15
-  XCH rr14
-
-  SRC r7
-  RD0
-  XCH rr8
-  RD1
-  XCH rr9
-  RD2
-  XCH rr15                               # multipliedFactor =  a
-
-  CLB
-  WR3
-  DAC
-  WR0
-  WR1
-  WR2                                    # res = 0x0FFF
-
-  LD rr5
-  JCN nz, mulMod_12bit_factor4
-  LD rr4
-  JCN nz, mulMod_12bit_factor3
-  LD rr7
-  JCN nz, mulMod_12bit_factor2
-  LD rr6
-  JUN mulMod_12bit_processLastNibble
-
-mulMod_12bit_factor4:
-  LD rr6
-  JMS mulMod_12bit_processNibble
-  LD rr7
-  JMS mulMod_12bit_processNibble
-  LD rr4
-  JMS mulMod_12bit_processNibble
-  LD rr5
-  JUN mulMod_12bit_processLastNibble
-
-mulMod_12bit_factor3:
-  LD rr6
-  JMS mulMod_12bit_processNibble
-  LD rr7
-  JMS mulMod_12bit_processNibble
-  LD rr4
-  JUN mulMod_12bit_processLastNibble
-
-mulMod_12bit_factor2:
-  LD rr6
-  JMS mulMod_12bit_processNibble
-  LD rr7
-  JUN mulMod_12bit_processLastNibble
-
-__location(0x5:0x00)
-mulMod_12bit_processNibble_0:                   # 0b0000
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0x8)
-mulMod_12bit_processNibble:
+mulMod_updateResultLast_subtractModulus:
+  XCH rr2
+  # relies that $STATUS_MEM_VARIABLE_MODULUS_INV === 0x7
+  LDM 0x7
+  DCL
   XCH rr12
-  CLB
-  XCH rr13
-  JIN r6
-
-__location(0x5:0x10)
-mulMod_12bit_processNibble_1:                   # 0b0001
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0x20)
-mulMod_12bit_processNibble_2:                   # 0b0010
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0x30)
-mulMod_12bit_processNibble_3:                   # 0b0011
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0x40)
-mulMod_12bit_processNibble_4:                   # 0b0100
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0x50)
-mulMod_12bit_processNibble_5:                   # 0b0101
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0x60)
-mulMod_12bit_processNibble_6:                   # 0b0110
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0x70)
-mulMod_12bit_processNibble_7:                   # 0b0111
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0x80)
-mulMod_12bit_processNibble_8:                   # 0b1000
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0x90)
-mulMod_12bit_processNibble_9:                   # 0b1001
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0xA0)
-mulMod_12bit_processNibble_A:                   # 0b1010
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0xB0)
-mulMod_12bit_processNibble_B:                   # 0b1011
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0xC0)
-mulMod_12bit_processNibble_C:                   # 0b1100
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0xD0)
-mulMod_12bit_processNibble_D:                   # 0b1101
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0xE0)
-mulMod_12bit_processNibble_E:                   # 0b1110
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x5:0xF0)
-mulMod_12bit_processNibble_F:                   # 0b1111
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JUN mulMod_12bit_updateMultipliedFactor
-
-__location(0x6:0x00)
-mulMod_12bit_processLastNibble_0:                   # 0b0000
-  BBL 0
-
-__location(0x6:0x8)
-mulMod_12bit_processLastNibble:
-  XCH rr12
-  CLB
-  XCH rr13
-  JIN r6
-
-__location(0x6:0x10)
-mulMod_12bit_processLastNibble_1:                   # 0b0001
-  JUN mulMod_12bit_updateResultLast
-
-__location(0x6:0x20)
-mulMod_12bit_processLastNibble_2:                   # 0b0010
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateResultLast
-
-__location(0x6:0x30)
-mulMod_12bit_processLastNibble_3:                   # 0b0011
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateResultLast
-
-__location(0x6:0x40)
-mulMod_12bit_processLastNibble_4:                   # 0b0100
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateResultLast
-
-__location(0x6:0x50)
-mulMod_12bit_processLastNibble_5:                   # 0b0101
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateResultLast
-
-__location(0x6:0x60)
-mulMod_12bit_processLastNibble_6:                   # 0b0110
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateResultLast
-
-__location(0x6:0x70)
-mulMod_12bit_processLastNibble_7:                   # 0b0111
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateResultLast
-
-__location(0x6:0x80)
-mulMod_12bit_processLastNibble_8:                   # 0b1000
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateResultLast
-
-__location(0x6:0x90)
-mulMod_12bit_processLastNibble_9:                   # 0b1001
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateResultLast
-
-__location(0x6:0xA0)
-mulMod_12bit_processLastNibble_A:                   # 0b1010
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateResultLast
-
-__location(0x6:0xB0)
-mulMod_12bit_processLastNibble_B:                   # 0b1011
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateResultLast
-
-__location(0x6:0xC0)
-mulMod_12bit_processLastNibble_C:                   # 0b1100
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateResultLast
-
-__location(0x6:0xD0)
-mulMod_12bit_processLastNibble_D:                   # 0b1101
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateResultLast
-
-__location(0x6:0xE0)
-mulMod_12bit_processLastNibble_E:                   # 0b1110
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateResultLast
-
-__location(0x6:0xF0)
-mulMod_12bit_processLastNibble_F:                   # 0b1111
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JMS mulMod_12bit_updateResult
-  JMS mulMod_12bit_updateMultipliedFactor
-  JUN mulMod_12bit_updateResultLast
-
-# INPUT:
-#   rr0..rr2 - m
-#   [rr8, rr9, rr15] - multipliedFactor
-# OUTPUT:
-#   [rr8, rr9, rr15] - multipliedFactor
-# VARIABLES:
-#   [rr12, rr13, rr11] - tmp
-mulMod_12bit_updateMultipliedFactor:
-  LD rr8
-  ADD rr8
-  XCH rr8
-  LD rr9
-  ADD rr9
-  XCH rr9
-  LD rr15
-  ADD rr15
-  XCH rr15                                                     # multipliedFactor = multipliedFactor + multipliedFactor
-  JCN c, mulMod_12bit_updateMultipliedFactor_subtractModulus   # if (multipliedFactor > 0x1000)
-
-  SRC r7
+  SRC r6
   RDM
-  JCN z, mulMod_updateMultipliedFactor_return                  # if (multipliedFactor[2] < m[2])
-
-  LD rr8
-  ADD rr0
-  XCH rr12
-  LD rr9
-  ADD rr1
-  XCH rr13
-  LD rr15
-  ADD rr2
-  XCH rr11                                                     # tmp = multipliedFactor - m
-
-  JCN nc, mulMod_12bit_updateMultipliedFactor_return           # if (tmp < 0)
-
-  CLC
-  LD rr12
-  XCH rr8
-  LD rr13
-  XCH rr9
-  LD rr11
-  XCH rr15                                                     # multipliedFactor = tmp
-
-mulMod_12bit_updateMultipliedFactor_return:
-  BBL 0
-
-mulMod_12bit_updateMultipliedFactor_subtractModulus:
-  CLC
-  LD rr8
-  ADD rr0
-  XCH rr8
-  LD rr9
-  ADD rr1
-  XCH rr9
-  LD rr15
-  ADD rr2
-  XCH rr15                                                     # multipliedFactor = multipliedFactor - m
-  CLC
-  BBL 0
-
-# INPUT:
-#   rr0..rr2 - m
-#   [rr8, rr9, rr15] - multipliedFactor
-#   status characters in selected memory register - res
-# OUTPUT:
-#   status characters in selected memory register - res
-# NOTES:
-#   memory register already should be pre-selected
-mulMod_12bit_updateResult:
-  RD0
-  ADD rr8
-  WR0
-  RD1
-  ADD rr9
-  WR1
-  RD2
-  ADD rr15
-  WR2                                               # res = res + multipliedFactor
-  JCN nc, mulMod_12bit_updateResult_negative        # if (res < 0)
-
-  CLC
+  JCN nz, mulMod_updateResultLast_smallModulus
   RD0
   ADD rr0
-  WR0
+  XCH rr9
   RD1
   ADD rr1
-  WR1
+  XCH rr4
   RD2
+  ADD rr3
+  XCH rr8
+  RD3
   ADD rr2
-  WR2                                               # res = res - m
+  XCH rr7                                                                      # tmp = res - m
+
+  JCN nc, mulMod_updateResultLast_returnRes                                    # if (tmp < 0)
+  SRC r7
+  LD rr9
+  WR0
+  LD rr4
+  WR1
+  LD rr8
+  WR2
+  LD rr7
+  WR3                                                                          # return tmp
+  BBL 0
+
+mulMod_updateResultLast_smallModulus:
+  XCH rr11
+  LD rr2
+  JCN z, mulMod_updateResultLast_smallModulus_reduce12bitNumber                # if (res[3] === 0)
+
+  FIM r4, 0xBC
+  SRC r4
+  RDM
+  JCN z, mulMod_updateResultLast_smallModulus_subtractMaxMultiple             # if (LUT12bit[0xF] !== 0x0)
+
+mulMod_updateResultLast_smallModulus_subtractModulus:
+  FIM r4, $STATUS_MEM_VARIABLE_MODULUS_INV . 0
+  SRC r4
+  RD0
+  ADD rr0
+  XCH rr0
+  RD1
+  ADD rr1
+  XCH rr1
+  RD2
+  ADD rr3
+  XCH rr3                                                                      # res = res - m
   CLC
-  BBL 0
+  JUN mulMod_updateResultLast_smallModulus_reduce12bitNumber
 
-mulMod_12bit_updateResult_negative:
-  BBL 0
+mulMod_updateResultLast_smallModulus_subtractMaxMultiple:
+  INC rr9
+  SRC r4
+  RDM
+  ADD rr0
+  XCH rr0
+  INC rr9
+  SRC r4
+  RDM
+  ADD rr1
+  XCH rr1
+  INC rr9
+  SRC r4
+  RDM
+  ADD rr3
+  XCH rr3                                                                      # res = res - LUT12bit[0xF]
+  CLC
 
-mulMod_12bit_updateResultLast:
+mulMod_updateResultLast_smallModulus_reduce12bitNumber:
+  LD rr3
+  JCN z, mulMod_updateResultLast_smallModulus_reduce8bitNumber                 # if (res[2] === 0)
+
+  RAR
   STC
-  RD0
-  ADD rr8
-  WR0
-  RD1
-  ADD rr9
-  WR1
-  RD2
-  ADD rr15
-  WR2                                               # res = res + multipliedFactor + 1
-  JCN c, mulMod_12bit_updateResultLast_return       # if res >= 0
+  RAR
+  CLC
+  XCH rr8                                                                      # rr8 = (res[2] >> 2) + 0x8
+  LD rr3
+  RAL
+  STC
+  RAL
+  CLC
+  XCH rr9                                                                      # rr9 = (res[2] << 2) + 0x1
+  SRC r4
+  RDM
+  ADD rr0
+  XCH rr0
+  INC rr9
+  SRC r4
+  RDM
+  ADD rr1
+  XCH rr1
+  INC rr9
+  SRC r4
+  RDM
+  ADD rr3
+  XCH rr3                                                                      # res = res - LUT12bit[res[2]]
+  CLC
+  ISZ rr11, mulMod_updateResultLast_smallModulus_modulus8bit                   # if (m < 0x100)
 
+  SRC r6
   RD0
-  SUB rr0
-  CMC
-  WR0
+  ADD rr0
+  XCH rr9
   RD1
-  SUB rr1
-  CMC
-  WR1
+  ADD rr1
+  XCH rr4
   RD2
-  SUB rr2
-  WR2                                               # res = res + m + 1
+  ADD rr3
+  XCH rr8                                                                      # tmp = res - m
+
+  JCN nc, mulMod_updateResultLast_smallModulus_returnRes                       # if (tmp < 0)
+  SRC r7
+  LD rr9
+  WR0
+  LD rr4
+  WR1
+  LD rr8
+  WR2
+  CLB
+  WR3                                                                          # return tmp
   BBL 0
 
-mulMod_12bit_updateResultLast_return:
+mulMod_updateResultLast_smallModulus_returnRes:
+  SRC r7
+  LD rr0
+  WR0
+  LD rr1
+  WR1
+  LD rr3
+  WR2
+  CLB
+  WR3                                                                          # return res
+  BBL 0
+
+mulMod_updateResultLast_smallModulus_reduce8bitNumber:
+  ISZ rr11, mulMod_updateResultLast_smallModulus_modulus8bit                   # if (m < 0x100)
+  FIM r1, 0x00
+
+mulMod_updateResultLast_returnRes:
   CLC
+  SRC r7
+  LD rr0
+  WR0
+  LD rr1
+  WR1
+  LD rr3
+  WR2
+  LD rr2
+  WR3
+  BBL 0                                                                        # return res
+
+mulMod_updateResultLast_smallModulus_modulus8bit:
+  SRC r6
+  RD0
+  ADD rr0
+  XCH rr9
+  RD1
+  ADD rr1
+  XCH rr4
+  RD2
+  ADD rr3
+  XCH rr8                                                                      # tmp = res - m
+  JCN nc, mulMod_updateResultLast_smallModulus_modulus8bit_returnRes           # if (tmp < 0)
+
+  CLC
+  RD0
+  ADD rr9
+  XCH rr0
+  RD1
+  ADD rr4
+  XCH rr1
+  RD2
+  ADD rr8                                                                      # res = tmp - m
+  JCN nc, mulMod_updateResultLast_smallModulus_modulus8bit_returnTmp           # if (res < 0)
+
+  CLC
+  RD0
+  ADD rr0
+  XCH rr9
+  RD1
+  ADD rr1
+  XCH rr4                                                                      # tmp = res - m
+  JCN c, mulMod_updateResultLast_smallModulus_modulus8bit_returnTmp            # if (tmp < 0)
+
+mulMod_updateResultLast_smallModulus_modulus8bit_returnRes:
+  SRC r7
+  LD rr0
+  WR0
+  LD rr1
+  WR1
+  CLB
+  WR2
+  WR3
+  BBL 0
+
+mulMod_updateResultLast_smallModulus_modulus8bit_returnTmp:
+  SRC r7
+  LD rr9
+  WR0
+  LD rr4
+  WR1
+  CLB
+  WR2
+  WR3
   BBL 0
