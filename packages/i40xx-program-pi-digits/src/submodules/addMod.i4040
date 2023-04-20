@@ -58,7 +58,6 @@ addMod_return:
   BBL 0
 
 # INPUT:
-#   rr0..rr3 - 0x10000 - m
 #   STATUS_MEM_VARIABLE_F
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_FK
 # OUTPUT:
@@ -75,6 +74,9 @@ addMod_fPlusFk:
   XCH rr10
   RD3
   XCH rr11                                          # fk
+
+  LDM $STATUS_MEM_VARIABLE_MODULUS_INV
+  JMS loadVarFromStatusCharMemory
 
   FIM r6, $STATUS_MEM_VARIABLE_F . 0
   SRC r6

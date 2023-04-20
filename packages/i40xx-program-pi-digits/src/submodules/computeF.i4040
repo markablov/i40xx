@@ -1,10 +1,10 @@
 %include "memory.i4040"
 %include "mulMulti.i4040"
 %include "div16_fast.i4040"
-%include "mulMod_binary_batch.i4040"
+%include "mulMod_binary_fast.i4040"
 %include "powerCurrentPrime_table.i4040"
 %include "addMod.i4040"
-%include "computeInvertedA_euclid.i4040"
+%include "computeInvertedA_binary.i4040"
 
 computeMaxVAndM:
   CLB
@@ -232,7 +232,7 @@ updateA_loop:
   JCN nc, updateA_loop                                   # if (ACoef >= a)
 
 updateA_return:
-  FIM r7, $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_A
+  FIM r7, $STATUS_MEM_VARIABLE_A_COMPUTATION_COEF . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_A
   JMS mulMod                                             # A = (A * ACoef) % m
   BBL 0
 

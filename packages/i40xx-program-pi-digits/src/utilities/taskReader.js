@@ -75,4 +75,8 @@ export default class TasksReader {
     await this.#readTasksOnce();
     return this.#tasks.splice(0, amount);
   }
+
+  get isFinished() {
+    return this.#isFinished;
+  }
 }

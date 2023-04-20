@@ -1,0 +1,361 @@
+%include "memory.i4040"
+
+# INPUT:
+#   STATUS_MEM_VARIABLE_MODULUS
+#   STATUS_MEM_VARIABLE_F_COMPUTATION_A
+# OUTPUT:
+#   STATUS_MEM_VARIABLE_F_COMPUTATION_FK
+# VARIABLES:
+#   rr0..rr3 - rx
+#   rr4..rr7 - v
+#   rr8..rr11 - ry
+#   rr12..rr15 - u
+computeInvertedA:
+  FIM r3, $STATUS_MEM_VARIABLE_F_COMPUTATION_A . E
+  SRC r3
+  RD0
+  XCH rr0
+  RD1
+  XCH rr1
+  RD2
+  XCH rr2
+  RD3
+  XCH rr3                                                       # rx = A
+
+  LD rr0
+  AN7
+  ADD rr1
+  ADD rr2
+  ADD rr3
+  JCN nz, computeInvertedA_nonTrivialA
+  JCN nc, computeInvertedA_trivialA                             # if (rx === 1)
+
+computeInvertedA_nonTrivialA:
+  SB1
+  FIM r0, $STATUS_MEM_VARIABLE_MODULUS_INV . 0
+  FIM r1, $STATUS_MEM_VARIABLE_MODULUS . 0
+  SRC r1
+  SB0
+
+  RD0
+  XCH rr8
+  RD1
+  XCH rr9
+  RD2
+  XCH rr10
+  RD3
+  XCH rr11                                                      # ry = m
+
+  FIM r2, 0x10
+  FIM r3, 0x00                                                  # v = 1
+
+  FIM r6, 0x00
+  FIM r7, 0x00                                                  # u = 0
+
+computeInvertedA_rx_normalize_loop:
+  LD rr0
+  RAR
+  JCN c, computeInvertedA_loop                                  # if (rx % 2 === 1)
+  LD rr3
+  RAR
+  XCH rr3
+  LD rr2
+  RAR
+  XCH rr2
+  LD rr1
+  RAR
+  XCH rr1
+  LD rr0
+  RAR
+  XCH rr0                                                       # rx = rx >> 1
+
+  LD rr4
+  RAR
+  JCN c, computeInvertedA_rx_normalize_shift_odd_v              # if (v % 2 === 1)
+
+  LD rr7
+  RAR
+  XCH rr7
+  LD rr6
+  RAR
+  XCH rr6
+  LD rr5
+  RAR
+  XCH rr5
+  LD rr4
+  RAR
+  XCH rr4                                                       # v = v >> 1
+  JUN computeInvertedA_rx_normalize_loop
+
+computeInvertedA_rx_normalize_shift_odd_v:
+  CLC
+  RD0
+  ADD rr4
+  XCH rr4
+  RD1
+  ADD rr5
+  XCH rr5
+  RD2
+  ADD rr6
+  XCH rr6
+  RD3
+  ADD rr7
+  XCH rr7                                                       # v = v + m
+
+  LD rr7
+  RAR
+  XCH rr7
+  LD rr6
+  RAR
+  XCH rr6
+  LD rr5
+  RAR
+  XCH rr5
+  LD rr4
+  RAR
+  XCH rr4                                                       # v = v >> 1
+  JUN computeInvertedA_rx_normalize_loop
+
+computeInvertedA_loop:
+  LD rr8
+  RAR
+  JCN c, computeInvertedA_odd_ry                                # if (ry % 2 === 1)
+
+  LD rr11
+  RAR
+  XCH rr11
+  LD rr10
+  RAR
+  XCH rr10
+  LD rr9
+  RAR
+  XCH rr9
+  LD rr8
+  RAR
+  XCH rr8                                                       # ry = ry >> 1
+  JUN computeInvertedA_shiftU
+
+computeInvertedA_odd_ry:
+  CLC
+  LD rr8
+  SUB rr0
+  CMC
+  XCH rr8
+  LD rr9
+  SUB rr1
+  CMC
+  XCH rr9
+  LD rr10
+  SUB rr2
+  CMC
+  XCH rr10
+  LD rr11
+  SUB rr3
+  XCH rr11                                                      # ry = ry - rx
+  JCN c, computeInvertedA_shiftRyAndUpdateU                     # if (ry > rx)
+
+  LD rr8
+  ADD rr0
+  XCH rr0
+  LD rr9
+  ADD rr1
+  XCH rr1
+  LD rr10
+  ADD rr2
+  XCH rr2
+  LD rr11
+  ADD rr3
+  XCH rr3                                                       # rx = ry + rx = (old ry - rx) + rx = old ry
+
+  SB1
+  LD rr8
+  CMA
+  ADD rr1
+  XCH rr8
+  LD rr9
+  CMA
+  ADD rr1
+  XCH rr9
+  LD rr10
+  CMA
+  ADD rr1
+  XCH rr10
+  LD rr11
+  CMA
+  ADD rr1
+  XCH rr11                                                      # ry = -ry = old rx - old ry
+  SB0
+
+  LD rr4
+  XCH rr12
+  XCH rr4
+  LD rr5
+  XCH rr13
+  XCH rr5
+  LD rr6
+  XCH rr14
+  XCH rr6
+  LD rr7
+  XCH rr15
+  XCH rr7                                                       # u <-> v
+
+computeInvertedA_shiftRyAndUpdateU:
+  CLC
+  LD rr11
+  RAR
+  XCH rr11
+  LD rr10
+  RAR
+  XCH rr10
+  LD rr9
+  RAR
+  XCH rr9
+  LD rr8
+  RAR
+  XCH rr8                                                       # ry = ry >> 1
+
+  LD rr12
+  SUB rr4
+  CMC
+  XCH rr12
+  LD rr13
+  SUB rr5
+  CMC
+  XCH rr13
+  LD rr14
+  SUB rr6
+  CMC
+  XCH rr14
+  LD rr15
+  SUB rr7
+  XCH rr15                                                      # u = u - v
+
+  LD rr15
+  RAL
+  JCN c, computeInvertedA_shiftU                                # if (u < 0)
+
+  SB1
+  SRC r0
+  RD0
+  ADD rr12
+  XCH rr4
+  RD1
+  ADD rr13
+  XCH rr5
+  RD2
+  ADD rr14
+  XCH rr6
+  RD3
+  ADD rr15
+  XCH rr7                                                       # tmp = u - m
+  JCN nc, computeInvertedA_shiftU_restoreRegBank                # if (tmp < 0)
+
+  LD rr7
+  XCH rr15
+  LD rr6
+  XCH rr14
+  LD rr5
+  XCH rr13
+  LD rr4
+  XCH rr12                                                      # u = tmp
+
+computeInvertedA_shiftU_restoreRegBank:
+  SRC r1
+  SB0
+computeInvertedA_shiftU:
+  LD rr12
+  RAR
+  JCN c, computeInvertedA_odd_u                                 # if (u % 2 === 1)
+
+  # put sign bit to carry to be able to shift negative numbers
+  LD rr15
+  RAL
+  LD rr15
+  RAR
+  XCH rr15
+  LD rr14
+  RAR
+  XCH rr14
+  LD rr13
+  RAR
+  XCH rr13
+  LD rr12
+  RAR
+  XCH rr12                                                       # u = u >> 1
+  JUN computeInvertedA_loop_check_cond
+
+computeInvertedA_odd_u:
+  RD0
+  ADD rr12
+  XCH rr12
+  RD1
+  ADD rr13
+  XCH rr13
+  RD2
+  ADD rr14
+  XCH rr14
+  RD3
+  ADD rr15
+  XCH rr15                                                      # u = u + m
+
+  LD rr15
+  RAL
+  LD rr15
+  RAR
+  XCH rr15
+  LD rr14
+  RAR
+  XCH rr14
+  LD rr13
+  RAR
+  XCH rr13
+  LD rr12
+  RAR
+  XCH rr12                                                       # u = u >> 1
+
+computeInvertedA_loop_check_cond:
+  LD rr8
+  DAC
+  CLC
+  ADD rr9
+  ADD rr10
+  ADD rr11
+  JCN nz, computeInvertedA_loop
+  JCN c, computeInvertedA_loop                                  # if (ry === 1)
+
+  LD rr15
+  RAL
+  JCN nc, computeInvertedA_returnU                              # if (u >= 0)
+
+  CLC
+  RD0
+  ADD rr12
+  XCH rr12
+  RD1
+  ADD rr13
+  XCH rr13
+  RD2
+  ADD rr14
+  XCH rr14
+  RD3
+  ADD rr15
+  XCH rr15                                                      # u = u + m
+  CLC
+
+computeInvertedA_returnU:
+  FIM r0, $STATUS_MEM_VARIABLE_F_COMPUTATION_FK . 0
+  SRC r0
+  LD rr12
+  WR0
+  LD rr13
+  WR1
+  LD rr14
+  WR2
+  LD rr15
+  WR3
+  BBL 0
+
+computeInvertedA_trivialA:
+  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_FK
+  JMS storeVarToStatusCharMemory
+  BBL 0                                                         # return 1

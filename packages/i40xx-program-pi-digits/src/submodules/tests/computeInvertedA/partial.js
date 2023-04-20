@@ -2,15 +2,15 @@
 
 import Emulator from 'i40xx-emu';
 
-import { hexToHWNumber, hwNumberToHex } from '#utilities/numbers.js';
+import { hexToHWNumber, hwNumberToHex, numToHWNumber } from '#utilities/numbers.js';
 import { compileCodeForTest } from '#utilities/compile.js';
-import { writeValueToMainChars, writeValueToStatusChars } from '#utilities/memory.js';
+import { writeValueToMainChars, writeValueToStatusChars, VARIABLES } from '#utilities/memory.js';
 
 import {
   updateCodeForUseInEmulator, generateMemoryBankSwitch, generateMemoryStatusCharactersInitialization,
 } from '#utilities/codeGenerator.js';
 
-import RAM_DUMP from './data/ramWithLookupTables.json' assert { type: 'json' };
+import RAM_DUMP from '../data/ramWithLookupTables.json' assert { type: 'json' };
 
 const PROLOGUE_CYCLES_COUNT = 5n;
 
@@ -38,18 +38,26 @@ const runSingleTestEuclid = (romDump, { A, m }) => {
 
   registers.ramControl = 0b1110;
 
-  writeValueToStatusChars(hexToHWNumber(m), memory, 0x0D, 7);
-  writeValueToStatusChars(hexToHWNumber(A), memory, 0x0A, 7);
+  writeValueToStatusChars(hexToHWNumber(m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS, 7);
+  writeValueToStatusChars(numToHWNumber(0x10000 - parseInt(m, 16)), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+  writeValueToStatusChars(hexToHWNumber(A), memory, VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_A, 7);
 
   while (!system.isFinished()) {
     system.instruction();
   }
 
-  return { result: hwNumberToHex(memory[7].registers[0x08].status), elapsed: system.instructionCycles };
+  return {
+    result: hwNumberToHex(memory[7].registers[VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_FK].status),
+    elapsed: system.instructionCycles,
+  };
 };
 
 const TESTS = [
   // TEST CASES FROM DISCOVERED BUGS
+  { input: { A: '0x155B', vmax: 1, m: '0x27EF', a: '0x27EF' }, expected: '0x428' },
+  { input: { A: '0x24FA', vmax: 3, m: '0x2F87', a: '0x17' }, expected: '0x2BBA' },
+  { input: { A: '0xE4B', vmax: 1, m: '0x151F', a: '0x151F' }, expected: '0x3C2' },
+  { input: { A: '0xBA8', vmax: 3, m: '0x1ACB', a: '0x13' }, expected: '0x179B' },
   { input: { A: '0x221', vmax: 1, m: '0x2231', a: '0x2231' }, expected: '0x212' },
   { input: { A: '0x19', vmax: 8, m: '0x19A1', a: '0x3' }, expected: '0x93A' },
   { input: { A: '0xCE', vmax: 8, m: '0x19A1', a: '0x3' }, expected: '0xE0F' },
@@ -2547,13 +2555,13 @@ const TESTS = [
 (function () {
   const variant = process.argv[2];
 
-  if (!['euler', 'euclid'].includes(variant)) {
+  if (!['euler', 'euclid', 'binary'].includes(variant)) {
     console.log(`Unknown code variant "${variant}"!`);
     process.exit(0);
   }
 
   const { rom, sourceCode, sourceMap, symbols } = compileCodeForTest(
-    variant === 'euler' ? 'submodules/computeInvertedA_euler.i4040' : 'submodules/computeInvertedA_euclid.i4040',
+    `submodules/computeInvertedA_${variant}.i4040`,
     'computeInvertedA',
   );
 
@@ -2566,12 +2574,18 @@ const TESTS = [
     if (parseInt(expected, 16) !== parseInt(result, 16)) {
       console.log(`Test failed, expected = ${expected}, result = ${result}`);
 
-      if (variant === 'euclid') {
+      if (variant !== 'euler') {
+        const mNum = parseInt(input.m, 16);
+        const invM = 0x10000 - mNum;
         console.log('Code to reproduce:');
         const initializators = [
           generateMemoryBankSwitch(0x7),
-          generateMemoryStatusCharactersInitialization(0xD, hexToHWNumber(input.m)),
-          generateMemoryStatusCharactersInitialization(0xA, hexToHWNumber(input.A)),
+          generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS, numToHWNumber(mNum)),
+          generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV, numToHWNumber(invM)),
+          generateMemoryStatusCharactersInitialization(
+            VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_A,
+            hexToHWNumber(input.A),
+          ),
         ];
 
         console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
