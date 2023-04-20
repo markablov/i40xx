@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import { compileCodeForTest } from '#utilities/compile.js';
 
-import RAM_DUMP from '../data/ramWithLookupTables.json' assert { type: 'json' };
+import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
 const TESTS = [
   { input: { N: '0xD74', vmax: 8, m: '0x19A1', a: '0x3' }, expected: '0x1612' },

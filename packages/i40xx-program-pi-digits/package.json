@@ -6,6 +6,7 @@
   "description": "Computation of first X digits of Pi, running at intel 4040 CPU",
   "type": "module",
   "imports": {
-    "#utilities/*": "./src/utilities/*"
+    "#utilities/*": "./src/utilities/*",
+    "#data/*": "./src/data/*"
   }
 }

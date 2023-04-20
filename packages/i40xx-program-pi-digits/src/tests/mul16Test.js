@@ -6,7 +6,7 @@ import { compileCodeForTest } from '#utilities/compile.js';
 import { numToHWNumber, hwNumberToNum } from '#utilities/numbers.js';
 import { writeValueToMainChars } from '#utilities/memory.js';
 
-import RAM_DUMP from './data/ramWithLookupTables.json' assert { type: 'json' };
+import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
 const PROLOGUE_CYCLES_COUNT = 5;
 

@@ -5,7 +5,7 @@ import Emulator from 'i40xx-emu';
 import { compileCodeForTest } from '#utilities/compile.js';
 import { updateCodeForUseInEmulator, generateRegisterInitialization } from '#utilities/codeGenerator.js';
 
-import RAM_DUMP from './data/ramWithLookupTables.json' assert { type: 'json' };
+import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
 const PROLOGUE_CYCLES_COUNT = 5;
 

@@ -7,7 +7,7 @@ import { Worker } from 'node:worker_threads';
 import { compileCodeForTest } from '#utilities/compile.js';
 import TasksReader from '#utilities/taskReader.js';
 
-import RAM_DUMP from '../data/ramWithLookupTables.json' assert { type: 'json' };
+import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
 const WORKER_AMOUNT = 16;
 const TESTS_PER_WORKER = 1000;
@@ -24,9 +24,41 @@ regularCall:
 ${sourceCode}
 `;
 
+const getTestsSliceSpec = () => {
+  const sliceStr = process.argv[2];
+  if (!sliceStr) {
+    return null;
+  }
+
+  const [aLen, bLen, mLen] = sliceStr.split('/').map((len) => Number(len) + 2);
+  return { aLen, bLen, mLen };
+};
+
+const getTestsBySlice = async (tasks, slice) => {
+  while (!tasks.isFinished) {
+    const tests = await tasks.getTasks(TESTS_PER_WORKER);
+    const testsToRun = slice
+      ? tests.filter(
+        ({ input: { a, b, m } }) => a.length === slice.aLen && b.length === slice.bLen && m.length === slice.mLen,
+      )
+      : tests;
+
+    if (testsToRun.length) {
+      return testsToRun;
+    }
+  }
+
+  return [];
+};
+
 (async function main() {
   const dirname = path.dirname(fileURLToPath(import.meta.url));
   const workerPath = path.resolve(dirname, './worker.js');
+  const testsSlice = getTestsSliceSpec();
+
+  if (testsSlice) {
+    console.log(`[+] filter tests by a length = ${testsSlice.aLen - 2}, b length = ${testsSlice.bLen - 2} and m length = ${testsSlice.mLen - 2}`);
+  }
 
   const tasks = new TasksReader(
     path.resolve(dirname, './tests.dat'),
@@ -40,16 +72,18 @@ ${sourceCode}
 
   const stats = {};
   let processedTests = 0;
+  let lastProcessedReport = 0;
   let runningThreads = 0;
 
   const onMessage = async (worker, { elapsed, failedTest }) => {
     processedTests += elapsed.length;
-    if (processedTests % 10000 === 0) {
+    if (processedTests - lastProcessedReport >= 10_000) {
+      lastProcessedReport = processedTests;
       console.log(`[~] Processed ${processedTests}...`);
     }
 
     if (failedTest) {
-      console.log(`[-] Test failed, input = ${JSON.stringify(failedTest)}`);
+      console.log(`[-] Test failed, test = ${JSON.stringify(failedTest)}`);
       process.exit();
     }
 
@@ -63,7 +97,7 @@ ${sourceCode}
     }
     runningThreads--;
 
-    const tests = await tasks.getTasks(TESTS_PER_WORKER);
+    const tests = await getTestsBySlice(tasks, testsSlice);
     if (!tests.length) {
       if (runningThreads === 0) {
         let totalAllVariants = 0n;
@@ -93,7 +127,7 @@ ${sourceCode}
 
     worker.on('message', (data) => onMessage(worker, data));
 
-    const initialTests = await tasks.getTasks(TESTS_PER_WORKER);
+    const initialTests = await getTestsBySlice(tasks, testsSlice);
     worker.postMessage({ tests: initialTests });
     runningThreads++;
   }

@@ -7,7 +7,7 @@ import { Worker } from 'node:worker_threads';
 import { compileCodeForTest } from '#utilities/compile.js';
 import TasksReader from '#utilities/taskReader.js';
 
-import RAM_DUMP from '../data/ramWithLookupTables.json' assert { type: 'json' };
+import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
 const WORKER_AMOUNT = 16;
 const TESTS_PER_WORKER = 1000;

@@ -11,7 +11,7 @@ import {
   generateRegisterInitialization, generateAccumulatorInitialization,
 } from '#utilities/codeGenerator.js';
 
-import RAM_DUMP from './data/ramWithLookupTables.json' assert { type: 'json' };
+import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
 const PROLOGUE_CYCLES_COUNT = 5;
 

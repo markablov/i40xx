@@ -11,7 +11,7 @@ import {
   generateRegisterInitialization,
 } from '#utilities/codeGenerator.js';
 
-import RAM_DUMP from './data/ramWithLookupTables.json' assert { type: 'json' };
+import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
 const testLeftShift = (romDump, { value, shiftCount }) => {
   const system = new Emulator({ romDump, ramDump: RAM_DUMP });

@@ -7,7 +7,7 @@ import { compileCodeForTest } from '#utilities/compile.js';
 import { VARIABLES, writeValueToStatusChars } from '#utilities/memory.js';
 import { runWithProfiler } from '#utilities/profiling.js';
 
-import RAM_DUMP from '../tests/data/ramWithLookupTables.json' assert { type: 'json' };
+import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
 const CYCLES_PER_SECOND = 95000n;
 

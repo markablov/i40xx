@@ -2,59 +2,63 @@
 
 import Emulator from 'i40xx-emu';
 
-import { hexToHWNumber, hwNumberToHex, numToHWNumber } from '#utilities/numbers.js';
+import { hexToHWNumber, hwNumberToHex } from '#utilities/numbers.js';
 import { compileCodeForTest } from '#utilities/compile.js';
 import { writeValueToMainChars, writeValueToStatusChars, VARIABLES } from '#utilities/memory.js';
+
+import {
+  generateCodeToPrepareModulusBasedDataForEmulator, putModulusBasedDataIntoMemory,
+} from '#data/multiplicationModulusData/multDataGenerator.js';
 
 import {
   updateCodeForUseInEmulator, generateMemoryBankSwitch, generateMemoryStatusCharactersInitialization,
   generateRegisterInitialization, generateMemoryMainCharactersInitialization, generateAccumulatorInitialization,
 } from '#utilities/codeGenerator.js';
 
-import RAM_DUMP from '../data/ramWithLookupTables.json' assert { type: 'json' };
+import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
 const PROLOGUE_CYCLES_COUNT = 5n;
 const BINARY_BATCH_PROLOGUE_CYCLES_COUNT = 7n;
+
+const REGISTER_NUMBER_FOR_FIRST_FACTOR = 0x2;
+const REGISTER_NUMBER_FOR_SECOND_FACTOR = 0x3;
 
 const runSingleTest = (romDump, { a, b, m }, variant) => {
   const system = new Emulator({ romDump, ramDump: RAM_DUMP });
   const { memory, registers } = system;
 
-  writeValueToStatusChars(hexToHWNumber(m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS, 7);
-  writeValueToStatusChars(hexToHWNumber(a), memory, 0x03, 7);
-  writeValueToStatusChars(hexToHWNumber(b), memory, 0x04, 7);
+  writeValueToStatusChars(hexToHWNumber(m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS);
+  writeValueToStatusChars(hexToHWNumber(a), memory, REGISTER_NUMBER_FOR_FIRST_FACTOR);
+  writeValueToStatusChars(hexToHWNumber(b), memory, REGISTER_NUMBER_FOR_SECOND_FACTOR);
 
   if (variant === 'binary_batch') {
-    const mNum = parseInt(m, 16);
-    const invertedM = 0x10000 - mNum;
-    writeValueToStatusChars(numToHWNumber(invertedM), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
-    writeValueToMainChars([mNum > 0x1000 ? 0x01 : 0x00], memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
-
-    const highestModulusDigit = mNum >= 0x100 ? parseInt(m[2], 16) : 0x00;
-    for (let highestFactorDigit = 0; highestFactorDigit < 16; highestFactorDigit++) {
-      memory[7].registers[3].main[highestFactorDigit] = (highestFactorDigit < highestModulusDigit) ? 0x0 : 0x1;
-    }
-
-    registers.acc = parseInt(b, 16) > mNum ? 0x0 : 0x1;
+    putModulusBasedDataIntoMemory(memory, parseInt(m, 16));
+    registers.indexBanks[0][13] = 0x0;
+    registers.indexBanks[0][6] = 0x4;
+    registers.acc = parseInt(b, 16) > parseInt(m, 16) ? 0x0 : 0x1;
+  } else {
+    // for binary
+    writeValueToMainChars(hexToHWNumber(m), memory, 0x07, 7);
   }
 
-  // for binary
-  writeValueToMainChars(hexToHWNumber(m), memory, 0x07, 7);
-
   registers.ramControl = 0b1110;
-  registers.indexBanks[0][14] = 4;
-  registers.indexBanks[0][15] = 3;
-  registers.indexBanks[1][14] = 4;
-  registers.indexBanks[1][15] = 3;
+  registers.indexBanks[0][14] = REGISTER_NUMBER_FOR_SECOND_FACTOR;
+  registers.indexBanks[0][15] = REGISTER_NUMBER_FOR_FIRST_FACTOR;
+  registers.indexBanks[1][14] = REGISTER_NUMBER_FOR_SECOND_FACTOR;
+  registers.indexBanks[1][15] = REGISTER_NUMBER_FOR_FIRST_FACTOR;
 
   while (!system.isFinished()) {
     system.instruction();
   }
 
-  return { result: hwNumberToHex(memory[7].registers[0x3].status), elapsed: system.instructionCycles };
+  return {
+    result: hwNumberToHex(memory[7].registers[REGISTER_NUMBER_FOR_FIRST_FACTOR].status),
+    elapsed: system.instructionCycles,
+  };
 };
 
 const TESTS = [
+  { input: { a: '0x4D', b: '0x18B', m: '0x53' }, expected: '0x25' },
   { input: { a: '0x50D', b: '0x107D', m: '0xC35' }, expected: '0x5DF' },
   { input: { a: '0x157', b: '0x271', m: '0x961' }, expected: '0x2AE' },
   { input: { a: '0x210', b: '0x341', m: '0x533' }, expected: '0x252' },
@@ -2265,30 +2269,25 @@ ${sourceCode}
     if (parseInt(expected, 16) !== parseInt(result, 16)) {
       console.log(`Test failed, expected = ${expected}, result = ${result}`);
       console.log('Code to reproduce:');
-      const invertedM = numToHWNumber(0x10000 - parseInt(input.m, 16));
       const initializators = [
         generateMemoryBankSwitch(0x7),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS, hexToHWNumber(input.m)),
-        generateMemoryStatusCharactersInitialization(0x3, hexToHWNumber(input.a)),
-        generateMemoryStatusCharactersInitialization(0x4, hexToHWNumber(input.b)),
-        generateMemoryMainCharactersInitialization(0x7, hexToHWNumber(input.m)),
-        ...(variant === 'binary_batch'
-          ? [
-            generateMemoryMainCharactersInitialization(
-              VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV,
-              [parseInt(input.m, 16) > 0x1000 ? 0x01 : 0x00],
-            ),
-            generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV, invertedM),
-          ]
-          : []
-        ),
-        generateRegisterInitialization(14, 0x4),
-        generateRegisterInitialization(15, 0x3),
-        ...(variant === 'binary_batch'
-          ? [generateAccumulatorInitialization(parseInt(input.b, 16) > parseInt(input.m, 16) ? 0x0 : 0x1)]
-          : []
-        ),
+        generateMemoryStatusCharactersInitialization(REGISTER_NUMBER_FOR_FIRST_FACTOR, hexToHWNumber(input.a)),
+        generateMemoryStatusCharactersInitialization(REGISTER_NUMBER_FOR_SECOND_FACTOR, hexToHWNumber(input.b)),
+        generateRegisterInitialization(14, REGISTER_NUMBER_FOR_SECOND_FACTOR),
+        generateRegisterInitialization(15, REGISTER_NUMBER_FOR_FIRST_FACTOR),
       ];
+
+      if (variant === 'binary_batch') {
+        initializators.push(
+          ...generateCodeToPrepareModulusBasedDataForEmulator(parseInt(input.m)),
+          generateRegisterInitialization(13, 0x0),
+          generateRegisterInitialization(6, 0x4),
+          generateAccumulatorInitialization(parseInt(input.b, 16) > parseInt(input.m, 16) ? 0x0 : 0x1),
+        );
+      } else {
+        initializators.push(generateMemoryMainCharactersInitialization(0x7, hexToHWNumber(input.m)));
+      }
 
       console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
       process.exit(1);

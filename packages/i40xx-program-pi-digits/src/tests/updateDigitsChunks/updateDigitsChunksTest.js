@@ -9,7 +9,7 @@ import { compileCodeForTest } from '#utilities/compile.js';
 import { writeValueToMainChars, writeValueToStatusChars } from '#utilities/memory.js';
 import { updateCodeForUseInEmulator, generateMemoryBankSwitch } from '#utilities/codeGenerator.js';
 
-import TESTS from './data/updateDigitsChunksTestData.json' assert { type: 'json' };
+import TESTS from './updateDigitsChunksTestData.json' assert { type: 'json' };
 
 const getMemoryBankFromAbsoluteAddr = (addr) => {
   const bankNo = Math.floor(addr / 16);
