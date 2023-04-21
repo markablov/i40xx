@@ -1,7 +1,7 @@
 %include "memory.i4040"
 %include "mulMulti.i4040"
 %include "div16_fast.i4040"
-%include "mulMod_binary_fast.i4040"
+%include "mulMod_binary_batch.i4040"
 %include "powerCurrentPrime_table.i4040"
 %include "addMod.i4040"
 %include "computeInvertedA_binary.i4040"
@@ -68,6 +68,10 @@ updateB:
   JCN nc, updateB_cont                          # if (a <= k)
 
   FIM r7, $STATUS_MEM_VARIABLE_F_COMPUTATION_K . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_B
+  LDM 0x4
+  XCH rr6
+  CLB
+  XCH rr13
   JMS mulMod                                     # b = (b * k) % m
   BBL 0
 
@@ -120,6 +124,10 @@ updateB_loop:
 
 updateB_return:
   FIM r7, $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_B
+  LDM 0x4
+  XCH rr6
+  CLB
+  XCH rr13
   JMS mulMod                                     # b = (b * bCoef) % m
   BBL 0
 
@@ -233,6 +241,10 @@ updateA_loop:
 
 updateA_return:
   FIM r7, $STATUS_MEM_VARIABLE_A_COMPUTATION_COEF . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_A
+  LDM 0x4
+  XCH rr6
+  CLB
+  XCH rr13
   JMS mulMod                                             # A = (A * ACoef) % m
   BBL 0
 
@@ -254,8 +266,10 @@ updateF:
 
   JMS computeInvertedA                           # fk = (A ^ (-1)) mod m
 
-  FIM r3, $STATUS_MEM_VARIABLE_V . 0
-  SRC r3
+  FIM r4, $STATUS_MEM_VARIABLE_V . 0
+  SRC r4
+  LDM 0x4
+  XCH rr6
   RD3
   XCH rr0
   RD2
@@ -267,15 +281,21 @@ updateF:
   # carry flag would be cleared later (by mulMod or powerCurrentPrime)
   JCN z, updateF_multiplyByCurrentNumber
   JMS powerCurrentPrime
+  CLB
+  XCH rr13
   FIM r7, $STATUS_MEM_VARIABLE_CURRENT_PRIME_POW . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
   JMS mulMod                                     # fk = (fk * (a ^ (vmax - v))) mod m
   JUN updateF_multiplyByB
 
 updateF_multiplyByCurrentNumber:
+  CLB
+  XCH rr13
   FIM r7, $STATUS_MEM_VARIABLE_CURRENT_PRIME . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
   JMS mulMod                                     # fk = (fk * a) mod m
 
 updateF_multiplyByB:
+  CLB
+  XCH rr13
   FIM r7, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
   JMS mulMod                                     # fk = (fk * b) mod m
 

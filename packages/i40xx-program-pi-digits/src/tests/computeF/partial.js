@@ -2,9 +2,13 @@
 
 import Emulator from 'i40xx-emu';
 
-import { hexToHWNumber, hwNumberToHex, numToHWNumber } from '#utilities/numbers.js';
+import { hexToHWNumber, hwNumberToHex } from '#utilities/numbers.js';
 import { compileCodeForTest } from '#utilities/compile.js';
 import { writeValueToStatusChars, VARIABLES } from '#utilities/memory.js';
+
+import {
+  generateCodeToPrepareModulusBasedDataForEmulator, putModulusBasedDataIntoMemory,
+} from '#data/multiplicationModulusData/multDataGenerator.js';
 
 import {
   updateCodeForUseInEmulator, generateMemoryBankSwitch, generateMemoryStatusCharactersInitialization,
@@ -18,11 +22,10 @@ const runComputeFTest = (romDump, labelOffsetForProgress, { N, vmax, m, a }) => 
   const system = new Emulator({ romDump, ramDump: RAM_DUMP });
   const { memory, registers } = system;
 
-  writeValueToStatusChars(hexToHWNumber(m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS);
   writeValueToStatusChars(hexToHWNumber(a), memory, VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME);
   writeValueToStatusChars(hexToHWNumber(N), memory, VARIABLES.STATUS_MEM_VARIABLE_N);
   writeValueToStatusChars([0x0, 0x0, vmax, 0x0], memory, VARIABLES.STATUS_MEM_VARIABLE_V);
-  writeValueToStatusChars(numToHWNumber(0x10000 - parseInt(m, 16)), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+  putModulusBasedDataIntoMemory(memory, parseInt(m, 16));
 
   registers.ramControl = 0b1110;
 
@@ -50,12 +53,11 @@ const runUpdateBTest = (romDump, { m, v, k, b, a }) => {
   const system = new Emulator({ romDump, ramDump: RAM_DUMP });
   const { memory, registers } = system;
 
-  writeValueToStatusChars(hexToHWNumber(m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS, 7);
   writeValueToStatusChars([0x0, 0x0, 0x0, v], memory, VARIABLES.STATUS_MEM_VARIABLE_V, 7);
   writeValueToStatusChars(hexToHWNumber(k), memory, VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_K, 7);
   writeValueToStatusChars(hexToHWNumber(b), memory, VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_B, 7);
   writeValueToStatusChars(hexToHWNumber(a), memory, VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, 7);
-  writeValueToStatusChars(numToHWNumber(0x10000 - parseInt(m, 16)), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+  putModulusBasedDataIntoMemory(memory, parseInt(m, 16));
 
   registers.ramControl = 0b1110;
 
@@ -73,12 +75,11 @@ const runUpdateATest = (romDump, { m, v, k, A, a }) => {
   const system = new Emulator({ romDump, ramDump: RAM_DUMP });
   const { memory, registers } = system;
 
-  writeValueToStatusChars(hexToHWNumber(m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS, 7);
   writeValueToStatusChars([0x0, 0x0, 0x0, v], memory, VARIABLES.STATUS_MEM_VARIABLE_V, 7);
   writeValueToStatusChars(hexToHWNumber(k), memory, VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_K, 7);
   writeValueToStatusChars(hexToHWNumber(A), memory, VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_A, 7);
   writeValueToStatusChars(hexToHWNumber(a), memory, VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, 7);
-  writeValueToStatusChars(numToHWNumber(0x10000 - parseInt(m, 16)), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+  putModulusBasedDataIntoMemory(memory, parseInt(m, 16));
 
   registers.ramControl = 0b1110;
 
@@ -101,9 +102,8 @@ const runUpdateFTest = (romDump, { k, f, v, vmax, m, b, A, a }) => {
   writeValueToStatusChars([0x0, 0x0, vmax, v], memory, VARIABLES.STATUS_MEM_VARIABLE_V, 7);
   writeValueToStatusChars(hexToHWNumber(A), memory, VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_A, 7);
   writeValueToStatusChars(hexToHWNumber(b), memory, VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_B, 7);
-  writeValueToStatusChars(hexToHWNumber(m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS, 7);
   writeValueToStatusChars(hexToHWNumber(a), memory, VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, 7);
-  writeValueToStatusChars(numToHWNumber(0x10000 - parseInt(m, 16)), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+  putModulusBasedDataIntoMemory(memory, parseInt(m, 16));
 
   registers.ramControl = 0b1110;
 
@@ -168,10 +168,10 @@ const testComputeF = () => {
       const { N, m, a, vmax } = input;
       const initializators = [
         generateMemoryBankSwitch(0x7),
-        generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS, hexToHWNumber(m)),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_V, [0x0, 0x0, vmax, 0x00]),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_N, hexToHWNumber(N)),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, hexToHWNumber(a)),
+        ...generateCodeToPrepareModulusBasedDataForEmulator(parseInt(m, 16)),
       ];
       console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
       process.exit(1);
@@ -346,11 +346,11 @@ const testUpdateB = () => {
       const { m, v, k, b, a } = input;
       const initializators = [
         generateMemoryBankSwitch(0x7),
-        generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS, hexToHWNumber(m)),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_V, [0x0, 0x0, 0x0, v]),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_K, hexToHWNumber(k)),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_B, hexToHWNumber(b)),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, hexToHWNumber(a)),
+        ...generateCodeToPrepareModulusBasedDataForEmulator(parseInt(m, 16)),
       ];
       console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
       process.exit(1);
@@ -526,11 +526,11 @@ const testUpdateA = () => {
       const { v, m, k, A, a } = input;
       const initializators = [
         generateMemoryBankSwitch(0x7),
-        generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS, hexToHWNumber(m)),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_V, [0x0, 0x0, 0x0, v]),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_K, hexToHWNumber(k)),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_A, hexToHWNumber(A)),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, hexToHWNumber(a)),
+        ...generateCodeToPrepareModulusBasedDataForEmulator(parseInt(m, 16)),
       ];
       console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
       process.exit(1);
@@ -606,7 +606,6 @@ const testUpdateF = () => {
       console.log(`Test failed, input = ${jsser(input)}, expected = ${jsser(expected)}, result = ${result}`);
       console.log('Code to reproduce:');
       const { k, f, vmax, v, A, b, m, a } = input;
-      const invertedM = numToHWNumber(0x10000 - parseInt(m, 16));
       const initializators = [
         generateMemoryBankSwitch(0x7),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_K, hexToHWNumber(k)),
@@ -614,9 +613,8 @@ const testUpdateF = () => {
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_V, [0x0, 0x0, vmax, v]),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_A, hexToHWNumber(A)),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_B, hexToHWNumber(b)),
-        generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS, hexToHWNumber(m)),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, hexToHWNumber(a)),
-        generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV, invertedM),
+        ...generateCodeToPrepareModulusBasedDataForEmulator(parseInt(m, 16)),
       ];
       console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
       process.exit(1);

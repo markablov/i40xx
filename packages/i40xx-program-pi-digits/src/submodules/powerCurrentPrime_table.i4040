@@ -31,7 +31,7 @@ powerCurrentPrime_exp3:
 # so we can't just do JIN from main function, or otherwise we would not gain control back
 __location(05:0x18)
 powerCurrentPrime_trampoline:
-  JIN r3
+  JIN r4
 
 __location(05:0x20)
 powerCurrentPrime_exp4:
@@ -48,7 +48,7 @@ powerCurrentPrime_exp5:
 
 __location(05:0x40)
 powerCurrentPrime_exp6:
-  FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_6 . 0
+  FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_6 . C
   BBL 0
 
 __location(05:0x50)
@@ -59,7 +59,7 @@ powerCurrentPrime_exp7:
 # INPUT:
 #   STATUS_MEM_VARIABLE_CURRENT_PRIME - base
 #   acc - (exponent - 1), so it would have range [1..6]
-#   rr7 - 0
+#   rr9 - 0
 # OUTPUT:
 #   STATUS_MEM_VARIABLE_CURRENT_PRIME_POW
 # NOTES:
@@ -70,7 +70,7 @@ powerCurrentPrime:
   SRC r5
   DAC
   JCN z, powerCurrentPrime_exp2
-  XCH rr6                                        # rr6 = exponent - 2
+  XCH rr8                                        # rr8 = exponent - 2
   RD0
   JMS powerCurrentPrime_trampoline
   SRC r5

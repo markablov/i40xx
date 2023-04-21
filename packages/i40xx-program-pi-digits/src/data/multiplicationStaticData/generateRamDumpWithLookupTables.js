@@ -43,17 +43,17 @@ const addMulTableEntry = (ramDump, a, b, bankNo, lowCharNo) => {
   ];
 
   ramDump[7][0x7].main = [
-    ...numToHWNumber(0x3 ** 6, 4),
+    ...numToHWNumber(0, 4),
     ...numToHWNumber(0x3 ** 3, 4),
     ...numToHWNumber(0x5 ** 3, 4),
     ...numToHWNumber(0x7 ** 3, 4),
   ];
 
-  ramDump[7][0xB].main = [
+  ramDump[7][0xC].main = [
     ...numToHWNumber(0x3 ** 7, 4),
     ...numToHWNumber(0x3 ** 4, 4),
     ...numToHWNumber(0x5 ** 4, 4),
-    ...numToHWNumber(0x0, 4),
+    ...numToHWNumber(0x3 ** 6, 4),
   ];
 
   const dumpPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), './ramWithLookupTables.json');

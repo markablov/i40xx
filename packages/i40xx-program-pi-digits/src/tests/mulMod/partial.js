@@ -2280,7 +2280,7 @@ ${sourceCode}
 
       if (variant === 'binary_batch') {
         initializators.push(
-          ...generateCodeToPrepareModulusBasedDataForEmulator(parseInt(input.m)),
+          ...generateCodeToPrepareModulusBasedDataForEmulator(parseInt(input.m, 16)),
           generateRegisterInitialization(13, 0x0),
           generateRegisterInitialization(6, 0x4),
           generateAccumulatorInitialization(parseInt(input.b, 16) > parseInt(input.m, 16) ? 0x0 : 0x1),

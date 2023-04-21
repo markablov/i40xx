@@ -22,7 +22,7 @@ parentPort.on('message', ({ tests }) => {
     const system = new Emulator({ romDump, ramDump });
     const { memory, registers } = system;
 
-    putModulusBasedDataIntoMemory(memory, m);
+    putModulusBasedDataIntoMemory(memory, parseInt(m, 16));
     writeValueToStatusChars(hexToHWNumber(a), memory, REGISTER_NUMBER_FOR_FIRST_FACTOR);
     writeValueToStatusChars(hexToHWNumber(b), memory, REGISTER_NUMBER_FOR_SECOND_FACTOR);
 

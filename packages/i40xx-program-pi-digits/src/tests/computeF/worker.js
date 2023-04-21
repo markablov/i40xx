@@ -2,8 +2,9 @@ import { workerData, parentPort } from 'node:worker_threads';
 import Emulator from 'i40xx-emu';
 
 import { VARIABLES, writeValueToStatusChars } from '#utilities/memory.js';
-import { hexToHWNumber, hwNumberToHex, numToHWNumber } from '#utilities/numbers.js';
+import { hexToHWNumber, hwNumberToHex } from '#utilities/numbers.js';
 import { runWithProfiler } from '#utilities/profiling.js';
+import { putModulusBasedDataIntoMemory } from '#data/multiplicationModulusData/multDataGenerator.js';
 
 const { romDump, ramDump, symbols, shouldProfile } = workerData;
 
@@ -24,11 +25,10 @@ parentPort.on('message', ({ test, testNo }) => {
   const system = new Emulator({ romDump, ramDump });
   const { memory, registers } = system;
 
-  writeValueToStatusChars(hexToHWNumber(m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS);
   writeValueToStatusChars(hexToHWNumber(a), memory, VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME);
   writeValueToStatusChars(hexToHWNumber(N), memory, VARIABLES.STATUS_MEM_VARIABLE_N);
   writeValueToStatusChars([0x0, 0x0, vmax, 0x0], memory, VARIABLES.STATUS_MEM_VARIABLE_V);
-  writeValueToStatusChars(numToHWNumber(0x10000 - parseInt(m, 16)), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+  putModulusBasedDataIntoMemory(memory, parseInt(m, 16));
 
   registers.ramControl = 0b1110;
 

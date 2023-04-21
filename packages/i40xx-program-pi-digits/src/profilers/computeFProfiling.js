@@ -2,10 +2,11 @@
 
 import Emulator from 'i40xx-emu';
 
-import { hexToHWNumber, hwNumberToHex, numToHWNumber } from '#utilities/numbers.js';
+import { hexToHWNumber, hwNumberToHex } from '#utilities/numbers.js';
 import { compileCodeForTest } from '#utilities/compile.js';
 import { VARIABLES, writeValueToStatusChars } from '#utilities/memory.js';
 import { runWithProfiler } from '#utilities/profiling.js';
+import { putModulusBasedDataIntoMemory } from '#data/multiplicationModulusData/multDataGenerator.js';
 
 import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
@@ -22,11 +23,10 @@ const EXPECTED_F = '0x3D5';
   const { memory, registers } = system;
 
   const { m, a, N, vmax } = STARTING_VALUES;
-  writeValueToStatusChars(hexToHWNumber(m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS);
   writeValueToStatusChars(hexToHWNumber(a), memory, VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME);
   writeValueToStatusChars(hexToHWNumber(N), memory, VARIABLES.STATUS_MEM_VARIABLE_N);
   writeValueToStatusChars([0x0, 0x0, vmax, 0x0], memory, VARIABLES.STATUS_MEM_VARIABLE_V);
-  writeValueToStatusChars(numToHWNumber(0x10000 - parseInt(m, 16)), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+  putModulusBasedDataIntoMemory(memory, parseInt(m, 16));
 
   registers.ramControl = 0b1110;
 

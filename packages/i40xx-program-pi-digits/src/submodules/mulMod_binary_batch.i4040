@@ -17,7 +17,6 @@
 # NOTES:
 #   - modifies all registers, except rr13, rr6
 #   - clears carry flag
-#   - first term should be always less than m
 
 mulMod_withSwaps:
   SRC r7
@@ -485,7 +484,7 @@ mulMod_updateResultLast:
   XCH rr3
   LD rr2
   ADD rr4                                                                      # res = res + multipliedFactor
-  JCN z, mulMod_updateResultLast_subtractModulus
+  JCN z, mulMod_updateResultLast_subtractModulus                               # if (res[3] === 0)
   XCH rr2
 
   SRC r1
@@ -525,6 +524,7 @@ mulMod_updateResultLast_subtractModulus:
   XCH rr7                                                                      # tmp = res - m
 
   JCN nc, mulMod_updateResultLast_returnRes                                    # if (tmp < 0)
+  CLC
   SRC r7
   LD rr9
   WR0
