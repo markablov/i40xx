@@ -1,7 +1,7 @@
 const MINIMAL_BLOCKS_SET_TO_CACHE = 3;
 
 const RomPages = class RomPages {
-  static ROM_PAGES_COUNT = 0xF;
+  static ROM_PAGES_COUNT = 0x10;
 
   static BYTES_PER_ROM_PAGE = 0x100;
 
