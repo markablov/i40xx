@@ -1,42 +1,98 @@
-const toHexByte = (val) => val.toString(16).toUpperCase().padStart(2, '0');
+const toHex = (val) => val.toString(16).toUpperCase().padStart(2, '0');
+
+/*
+ * Return true if instruction has two bytes - JCN, FIM, JUN, JMS, ISZ
+ */
+const isTwoByteInstructionByOpcode = (opcode) => (
+  [0x10, 0x40, 0x50, 0x70].includes(opcode & 0xF0)
+  || (((opcode & 0xF0) === 0x20) && ((opcode & 0x1) === 0x00))
+);
 
 /*
  * Updates source code to be more usable inside browser emulator GUI
- *   - adds preamble that contains initialization code to seed registers and memory with values
+ *   - source code lines follows bytecode order in resulting ROM
  *   - put ROM location directives to help linker to arrange code blocks
+ *   - removes all original comments
+ *   - adds comments with ROM location and bytecode info for instruction
+ *   - adds preamble that contains initialization code to seed registers and memory with values
  */
-export const updateCodeForUseInEmulator = (sourceCode, initializators, sourceMap, symbols) => {
-  const lines = sourceCode.split('\n');
+export const updateCodeForUseInEmulator = (sourceCode, initializators, sourceMap, symbols, rom, romSize) => {
+  const sourceLines = sourceCode.split('\n');
 
-  if (sourceMap && symbols) {
-    for (const [idx, line] of lines.entries()) {
-      if (line.match(/^\s*__location/)) {
-        lines[idx] = undefined;
+  if (!rom) {
+    if (sourceMap && symbols) {
+      for (const [idx, line] of sourceLines.entries()) {
+        if (line.match(/^\s*__location/)) {
+          sourceLines[idx] = undefined;
+        }
+      }
+
+      const offsetToLineMap = new Map(sourceMap.map(({ line, romOffset }) => [romOffset, line - 1]));
+      const insertedDirectives = new Set();
+      for (const { romAddress } of symbols) {
+        if (insertedDirectives.has(romAddress)) {
+          continue;
+        }
+        const lineNo = offsetToLineMap.get(romAddress) - 1;
+        sourceLines[lineNo] = `\n__location(0x${toHex(romAddress >> 8)}:0x${toHex(romAddress & 0xFF)})\n${sourceLines[lineNo]}`;
+        insertedDirectives.add(romAddress);
       }
     }
 
-    const offsetToLineMap = new Map(sourceMap.map(({ line, romOffset }) => [romOffset, line - 1]));
-    const insertedDirectives = new Set();
-    for (const { romAddress } of symbols) {
-      if (insertedDirectives.has(romAddress)) {
-        continue;
+    sourceLines.push(
+      '__location(00:0x00)',
+      '  JUN prepareTestData',
+      '',
+      'prepareTestData:',
+      ...initializators.flat().map((line) => `  ${line}`),
+      '  JUN entrypoint',
+    );
+
+    return sourceLines.filter(Boolean).join('\n');
+  }
+
+  const lines = ['__location(00:0x00)', '  JUN prepareTestData'];
+  const sourceLinesTrim = sourceLines.map((line) => line.replace(/#.+/, '').trim());
+  const romOffsetToLine = new Map(sourceMap.map(({ romOffset, line }) => [romOffset, line]));
+  const romOffsetToLabel = new Map(symbols.map(({ romAddress, label }) => [romAddress, label]));
+  const maxSourceCodeLineLen = Math.max(...sourceLinesTrim.map((line) => line.length));
+
+  const insertedDirectives = new Set();
+  // skip auto-generated jump to entrypoint
+  for (let romOffset = 2; romOffset < romSize; romOffset++) {
+    if (romOffsetToLabel.has(romOffset)) {
+      if (!insertedDirectives.has(romOffset)) {
+        lines.push('', `__location(0x${toHex(romOffset >> 8)}:0x${toHex(romOffset & 0xFF)})`);
+        insertedDirectives.add(romOffset);
       }
-      const lineNo = offsetToLineMap.get(romAddress) - 1;
-      lines[lineNo] = `\n__location(0x${toHexByte(romAddress >> 8)}:0x${toHexByte(romAddress & 0xFF)})\n${lines[lineNo]}`;
-      insertedDirectives.add(romAddress);
+      lines.push(`${romOffsetToLabel.get(romOffset)}:`);
+    }
+
+    const sourceCodeLine = romOffsetToLine.has(romOffset) ? sourceLinesTrim[romOffsetToLine.get(romOffset) - 1] : null;
+    const romOffsetStr = `[${toHex(romOffset >> 8)}:${toHex(romOffset & 0xFF)}]`;
+    if (sourceCodeLine) {
+      const isTwoByteInstruction = isTwoByteInstructionByOpcode(rom[romOffset]);
+      const romBytesStr = isTwoByteInstruction
+        ? `${toHex(rom[romOffset])} ${toHex(rom[romOffset + 1])}`
+        : toHex(rom[romOffset]);
+      const commentsPadding = ' '.repeat(maxSourceCodeLineLen - sourceCodeLine.length + 1);
+      lines.push(`  ${sourceCodeLine}${commentsPadding}# ${romOffsetStr} ${romBytesStr}`);
+
+      if (isTwoByteInstruction) {
+        romOffset++;
+      }
+    } else {
+      lines.push(`  NOP ${' '.repeat(maxSourceCodeLineLen - 3)}# ${romOffsetStr} 00`);
     }
   }
 
   lines.push(
-    '__location(00:0x00)',
-    '  JUN prepareTestData',
-    '',
     'prepareTestData:',
     ...initializators.flat().map((line) => `  ${line}`),
     '  JUN entrypoint',
   );
 
-  return lines.filter(Boolean).join('\n');
+  return lines.join('\n');
 };
 
 /*

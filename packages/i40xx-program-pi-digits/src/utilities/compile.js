@@ -40,7 +40,7 @@ export const compileCodeForTest = (fileName, funcName, options = {}) => {
   const placementCache = fs.existsSync(cacheFile) ? JSON.parse(fs.readFileSync(cacheFile, 'utf-8')) : {};
   console.log('Linking code...');
   const t2 = performance.now();
-  const { rom, symbols, sourceMap, placementCache: updatedPlacementCache } = buildRom(
+  const { rom, symbols, sourceMap, placementCache: updatedPlacementCache, romSize } = buildRom(
     blocks,
     blockAddressedSymbols,
     { placementCache },
@@ -51,5 +51,5 @@ export const compileCodeForTest = (fileName, funcName, options = {}) => {
     fs.writeFileSync(cacheFile, JSON.stringify(updatedPlacementCache, undefined, 2));
   }
 
-  return { rom, symbols, sourceMap, sourceCode: testCode };
+  return { rom, symbols, sourceMap, sourceCode: testCode, romSize };
 };
