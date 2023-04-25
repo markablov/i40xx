@@ -1,7 +1,6 @@
 %include "memory.i4040"
 %include "mul4_table.i4040"
 
-__location(05:0x00)
 # routine is 15 bytes long
 powerCurrentPrime_exp2_4bit:
   RD0
@@ -9,7 +8,7 @@ powerCurrentPrime_exp2_4bit:
   LD rr10
   JMS mul4x4
   DCL
-  SRC r0
+  SRC r4
   LD rr12
   WR0
   LD rr13
@@ -19,7 +18,7 @@ powerCurrentPrime_exp2_4bit:
   WR3
   BBL 0
 
-__location(05:0x10)
+__location(0x3:0x1A)
 powerCurrentPrime_exp3:
   FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_3 . 3
   RAL
@@ -29,11 +28,11 @@ powerCurrentPrime_exp3:
 
 # we need to do execute some common code after specific routines for exponent values
 # so we can't just do JIN from main function, or otherwise we would not gain control back
-__location(05:0x18)
+__location(0x3:0x18)
 powerCurrentPrime_trampoline:
-  JIN r4
+  JIN r7
 
-__location(05:0x20)
+__location(0x3:0x2A)
 powerCurrentPrime_exp4:
   FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_4 . 3
   RAL
@@ -41,17 +40,17 @@ powerCurrentPrime_exp4:
   XCH rr11
   BBL 0
 
-__location(05:0x30)
+__location(0x3:0x3A)
 powerCurrentPrime_exp5:
   FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_5 . 8
   BBL 0
 
-__location(05:0x40)
+__location(0x3:0x4A)
 powerCurrentPrime_exp6:
   FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_6 . C
   BBL 0
 
-__location(05:0x50)
+__location(0x3:0x5A)
 powerCurrentPrime_exp7:
   FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_7 . 0
   BBL 0
@@ -66,31 +65,31 @@ powerCurrentPrime_exp7:
 #   clears carry flag
 powerCurrentPrime:
   FIM r5, $STATUS_MEM_VARIABLE_CURRENT_PRIME . 0
-  FIM r0, $STATUS_MEM_VARIABLE_CURRENT_PRIME_POW . 0
+  FIM r4, $STATUS_MEM_VARIABLE_CURRENT_PRIME_POW . 0
   SRC r5
   DAC
   JCN z, powerCurrentPrime_exp2
-  XCH rr8                                        # rr8 = exponent - 2
+  XCH rr14                                        # rr8 = exponent - 2
   RD0
   JMS powerCurrentPrime_trampoline
   SRC r5
   RDM
-  SRC r0
+  SRC r4
   WR0
   INC rr11
   SRC r5
   RDM
-  SRC r0
+  SRC r4
   WR1
   INC rr11
   SRC r5
   RDM
-  SRC r0
+  SRC r4
   WR2
   INC rr11
   SRC r5
   RDM
-  SRC r0
+  SRC r4
   WR3
   BBL 0
 
@@ -104,17 +103,17 @@ powerCurrentPrime_exp2:
   XCH rr11
   SRC r5
   RDM
-  SRC r0
+  SRC r4
   WR0
   INC rr11
   SRC r5
   RDM
-  SRC r0
+  SRC r4
   WR1
   INC rr11
   SRC r5
   RDM
-  SRC r0
+  SRC r4
   WR2
   CLB
   WR3

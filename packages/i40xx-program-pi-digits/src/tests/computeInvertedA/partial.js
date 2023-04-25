@@ -32,7 +32,7 @@ const runSingleTestEuler = (romDump, { vmax, A, m, a }) => {
   return { result: hwNumberToHex(memory[7].registers[0x07].status), elapsed: system.instructionCycles };
 };
 
-const runSingleTestEuclid = (romDump, { A, m }) => {
+const runSingleTestEuclid = (romDump, { A, m }, variant) => {
   const system = new Emulator({ romDump, ramDump: RAM_DUMP });
   const { memory, registers } = system;
 
@@ -46,8 +46,11 @@ const runSingleTestEuclid = (romDump, { A, m }) => {
     system.instruction();
   }
 
+  const registersBank = registers.indexBanks[0];
   return {
-    result: hwNumberToHex(memory[7].registers[VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_FK].status),
+    result: variant === 'binary'
+      ? hwNumberToHex([registersBank[0], registersBank[1], registersBank[3], registersBank[2]])
+      : hwNumberToHex(memory[7].registers[VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_FK].status),
     elapsed: system.instructionCycles,
   };
 };
@@ -2570,7 +2573,7 @@ const TESTS = [
   let sum = 0n;
   for (const [idx, { input, expected }] of TESTS.entries()) {
     console.log(`Run test ${idx + 1} / ${TESTS.length} : ${JSON.stringify(input)}...`);
-    const { result, elapsed } = runSingleTest(rom, input);
+    const { result, elapsed } = runSingleTest(rom, input, variant);
     if (parseInt(expected, 16) !== parseInt(result, 16)) {
       console.log(`Test failed, expected = ${expected}, result = ${result}`);
 

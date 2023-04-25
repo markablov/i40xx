@@ -67,12 +67,30 @@ updateB:
   SUB rr3
   JCN nc, updateB_cont                          # if (a <= k)
 
-  FIM r7, $STATUS_MEM_VARIABLE_F_COMPUTATION_K . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_B
-  LDM 0x4
-  XCH rr6
-  CLB
-  XCH rr13
+  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_K . 0
+  SRC r6
+  RD0
+  XCH rr0
+  RD1
+  XCH rr1
+  RD2
+  XCH rr3
+  RD3
+  XCH rr2
+  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . 0
+  FIM r3, 0x04
   JMS mulMod                                     # b = (b * k) % m
+  DCL
+  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . 0
+  SRC r6
+  LD rr0
+  WR0
+  LD rr1
+  WR1
+  LD rr3
+  WR2
+  LD rr2
+  WR3
   BBL 0
 
 updateB_cont:
@@ -123,12 +141,30 @@ updateB_loop:
   JCN nc, updateB_loop                          # if (bCoef >= a)
 
 updateB_return:
-  FIM r7, $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_B
-  LDM 0x4
-  XCH rr6
-  CLB
-  XCH rr13
+  FIM r6, $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF . 0
+  SRC r6
+  RD0
+  XCH rr0
+  RD1
+  XCH rr1
+  RD2
+  XCH rr3
+  RD3
+  XCH rr2
+  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . 0
+  FIM r3, 0x04
   JMS mulMod                                     # b = (b * bCoef) % m
+  DCL
+  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . 0
+  SRC r6
+  LD rr0
+  WR0
+  LD rr1
+  WR1
+  LD rr3
+  WR2
+  LD rr2
+  WR3
   BBL 0
 
 # INPUT:
@@ -240,12 +276,30 @@ updateA_loop:
   JCN nc, updateA_loop                                   # if (ACoef >= a)
 
 updateA_return:
-  FIM r7, $STATUS_MEM_VARIABLE_A_COMPUTATION_COEF . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_A
-  LDM 0x4
-  XCH rr6
-  CLB
-  XCH rr13
+  FIM r6, $STATUS_MEM_VARIABLE_A_COMPUTATION_COEF . 0
+  SRC r6
+  RD0
+  XCH rr0
+  RD1
+  XCH rr1
+  RD2
+  XCH rr3
+  RD3
+  XCH rr2
+  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_A . 0
+  FIM r3, 0x04
   JMS mulMod                                             # A = (A * ACoef) % m
+  DCL
+  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_A . 0
+  SRC r6
+  LD rr0
+  WR0
+  LD rr1
+  WR1
+  LD rr3
+  WR2
+  LD rr2
+  WR3
   BBL 0
 
 # INPUT:
@@ -266,14 +320,14 @@ updateF:
 
   JMS computeInvertedA                           # fk = (A ^ (-1)) mod m
 
-  FIM r4, $STATUS_MEM_VARIABLE_V . 0
-  SRC r4
-  LDM 0x4
-  XCH rr6
+  # 0xA is necessary to let powerCurrentPrime work properly, because jump table is placed at addresses in form "03:*A"
+  FIM r7, $STATUS_MEM_VARIABLE_V . A
+  SRC r7
+  FIM r3, 0x04
   RD3
-  XCH rr0
+  XCH rr8
   RD2
-  SUB rr0
+  SUB rr8
   # carry flag would be cleared later (by mulMod or powerCurrentPrime)
   JCN z, updateF_multiplyByB                     # if (vmax - v === 0)
 
@@ -281,28 +335,69 @@ updateF:
   # carry flag would be cleared later (by mulMod or powerCurrentPrime)
   JCN z, updateF_multiplyByCurrentNumber
   JMS powerCurrentPrime
-  CLB
-  XCH rr13
-  FIM r7, $STATUS_MEM_VARIABLE_CURRENT_PRIME_POW . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
+  FIM r6, $STATUS_MEM_VARIABLE_CURRENT_PRIME_POW . 0
   JMS mulMod                                     # fk = (fk * (a ^ (vmax - v))) mod m
+  DCL
   JUN updateF_multiplyByB
 
 updateF_multiplyByCurrentNumber:
-  CLB
-  XCH rr13
-  FIM r7, $STATUS_MEM_VARIABLE_CURRENT_PRIME . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
+  FIM r6, $STATUS_MEM_VARIABLE_CURRENT_PRIME . 0
   JMS mulMod                                     # fk = (fk * a) mod m
+  DCL
 
 updateF_multiplyByB:
-  CLB
-  XCH rr13
-  FIM r7, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
+  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . 0
   JMS mulMod                                     # fk = (fk * b) mod m
+  DCL
 
-  FIM r7, $STATUS_MEM_VARIABLE_F_COMPUTATION_K . $STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK
+  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_K . 0
   JMS mulMod                                     # fk = (fk * k) mod m
+  DCL
 
-  JMS addMod_fPlusFk                             # f = (f + fk) mod m
+  FIM r4, $STATUS_MEM_VARIABLE_F . 0
+  SRC r4
+  RD0
+  ADD rr0
+  XCH rr4
+  RD1
+  ADD rr1
+  XCH rr5
+  RD2
+  ADD rr3
+  XCH rr7
+  RD3
+  ADD rr2                                        # tmp = f + fk
+  JCN z, updateF_writeF                          # if (f < 0x1000)
+  XCH rr6
+
+  CLB
+  DCL
+  SRC r3
+  RD0
+  ADD rr4
+  XCH rr4
+  RD1
+  ADD rr5
+  XCH rr5
+  RD2
+  ADD rr7
+  XCH rr7
+  RD3
+  ADD rr6
+  XCH rr6                                        # f = f - m * floor((f[3] * 0x1000) / m)
+  LDM 0x7
+  DCL
+  CLB
+  LD rr6
+
+updateF_writeF:
+  WR3
+  LD rr4
+  WR0
+  LD rr5
+  WR1
+  LD rr7
+  WR2
 
 updateF_ret:
   BBL 0

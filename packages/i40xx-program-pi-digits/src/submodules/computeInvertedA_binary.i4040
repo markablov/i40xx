@@ -4,7 +4,7 @@
 #   STATUS_MEM_VARIABLE_MODULUS
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_A
 # OUTPUT:
-#   STATUS_MEM_VARIABLE_F_COMPUTATION_FK
+#   [rr0, rr1, rr3, rr2] - result
 # VARIABLES:
 #   rr0..rr3 - rx
 #   rr4..rr7 - v
@@ -343,19 +343,17 @@ computeInvertedA_loop_check_cond:
   CLC
 
 computeInvertedA_returnU:
-  FIM r0, $STATUS_MEM_VARIABLE_F_COMPUTATION_FK . 0
-  SRC r0
   LD rr12
-  WR0
+  XCH rr0
   LD rr13
-  WR1
+  XCH rr1
   LD rr14
-  WR2
+  XCH rr3
   LD rr15
-  WR3
+  XCH rr2
   BBL 0
 
 computeInvertedA_trivialA:
-  LDM $STATUS_MEM_VARIABLE_F_COMPUTATION_FK
-  JMS storeVarToStatusCharMemory
+  FIM r0, 0x10
+  FIM r1, 0x00
   BBL 0                                                         # return 1

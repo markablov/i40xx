@@ -155,14 +155,14 @@ const COMPUTE_F_TESTS = [
 const testComputeF = () => {
   console.log('Testing computeF routine...');
 
-  const { rom, symbols, sourceMap, sourceCode } = compileCodeForTest('submodules/computeF.i4040', 'computeF');
+  const { rom, symbols, sourceMap, sourceCode, romSize } = compileCodeForTest('submodules/computeF.i4040', 'computeF');
 
   const labelOffsetForProgress = symbols.find(({ label }) => label === 'computef_loop').romAddress;
   let sum = 0n;
   for (const [idx, { input, expected }] of COMPUTE_F_TESTS.entries()) {
     console.log(`Run test ${idx + 1} / ${COMPUTE_F_TESTS.length} : ${jsser(input)}...`);
     const { result, elapsed } = runComputeFTest(rom, labelOffsetForProgress, input);
-    if (parseInt(expected, 16) !== parseInt(result, 16)) {
+    if (parseInt(expected, 16) !== (parseInt(result, 16) % parseInt(input.m, 16))) {
       console.log(`Test failed, input = ${jsser(input)}, expected = ${expected}, result = ${result}`);
       console.log('Code to reproduce:');
       const { N, m, a, vmax } = input;
@@ -173,7 +173,7 @@ const testComputeF = () => {
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, hexToHWNumber(a)),
         ...generateCodeToPrepareModulusBasedDataForEmulator(parseInt(m, 16)),
       ];
-      console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols, rom, romSize));
       process.exit(1);
     }
     sum += elapsed;
@@ -340,7 +340,7 @@ const testUpdateB = () => {
   for (const [idx, { input, expected }] of UPDATE_B_TESTS.entries()) {
     console.log(`Run test ${idx + 1} / ${UPDATE_B_TESTS.length} : ${jsser(input)}...`);
     const result = runUpdateBTest(rom, input);
-    if (parseInt(expected.b, 16) !== parseInt(result.b, 16) || result.v !== expected.v) {
+    if (parseInt(expected.b, 16) !== (parseInt(result.b, 16) % parseInt(input.m, 16)) || result.v !== expected.v) {
       console.log(`Test failed, input = ${jsser(input)}, expected = ${jsser(expected)}, result = ${jsser(result)}`);
       console.log('Code to reproduce:');
       const { m, v, k, b, a } = input;
@@ -516,11 +516,11 @@ const UPDATE_A_TESTS = [
 const testUpdateA = () => {
   console.log('Testing updateA routine...');
 
-  const { sourceCode, rom, symbols, sourceMap } = compileCodeForTest('submodules/computeF.i4040', 'updateA');
+  const { sourceCode, rom, symbols, sourceMap, romSize } = compileCodeForTest('submodules/computeF.i4040', 'updateA');
   for (const [idx, { input, expected }] of UPDATE_A_TESTS.entries()) {
     console.log(`Run test ${idx + 1} / ${UPDATE_A_TESTS.length} : ${jsser(input)}...`);
     const result = runUpdateATest(rom, input);
-    if (parseInt(expected.A, 16) !== parseInt(result.A, 16) || result.v !== expected.v) {
+    if (parseInt(expected.A, 16) !== (parseInt(result.A, 16) % parseInt(input.m, 16)) || result.v !== expected.v) {
       console.log(`Test failed, input = ${jsser(input)}, expected = ${jsser(expected)}, result = ${jsser(result)}`);
       console.log('Code to reproduce:');
       const { v, m, k, A, a } = input;
@@ -532,7 +532,7 @@ const testUpdateA = () => {
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, hexToHWNumber(a)),
         ...generateCodeToPrepareModulusBasedDataForEmulator(parseInt(m, 16)),
       ];
-      console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols, rom, romSize));
       process.exit(1);
     }
   }
@@ -602,7 +602,7 @@ const testUpdateF = () => {
   for (const [idx, { input, expected }] of UPDATE_F_TESTS.entries()) {
     console.log(`Run test ${idx + 1} / ${UPDATE_F_TESTS.length} : ${jsser(input)}...`);
     const result = runUpdateFTest(rom, input);
-    if (parseInt(expected.f, 16) !== parseInt(result, 16)) {
+    if (parseInt(expected.f, 16) !== (parseInt(result, 16) % parseInt(input.m, 16))) {
       console.log(`Test failed, input = ${jsser(input)}, expected = ${jsser(expected)}, result = ${result}`);
       console.log('Code to reproduce:');
       const { k, f, vmax, v, A, b, m, a } = input;
