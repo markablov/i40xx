@@ -155,7 +155,7 @@ const checkPlacementVariant = (blocks, blocksRomOffsets, blocksPlacement) => {
       }
 
       const absoluteOffset = callerBlockRomOffset + (addressOffset - 1);
-      if ((absoluteOffset % RomPages.BYTES_PER_ROM_PAGE) >= (RomPages.BYTES_PER_ROM_PAGE - 1)) {
+      if ((absoluteOffset % RomPages.BYTES_PER_ROM_PAGE) >= (RomPages.BYTES_PER_ROM_PAGE - 2)) {
         return false;
       }
 
