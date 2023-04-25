@@ -66,8 +66,7 @@ export const generateMemoryMainCharactersInitialization = (memoryRegNo, values) 
     const value = values[i] || 0;
     lines.push(...[
       'SRC r0',
-      `LDM ${value}`,
-      'WRM',
+      ...(value ? [`LDM ${value}`, 'WRM'] : []),
       'INC rr1',
     ]);
   }
@@ -81,14 +80,10 @@ export const generateMemoryMainCharactersInitialization = (memoryRegNo, values) 
 export const generateMemoryStatusCharactersInitialization = (memoryRegNo, values) => [
   `FIM r0, 0x${memoryRegNo.toString(16)}0`,
   'SRC r0',
-  `LDM ${values[0] || 0}`,
-  'WR0',
-  `LDM ${values[1] || 0}`,
-  'WR1',
-  `LDM ${values[2] || 0}`,
-  'WR2',
-  `LDM ${values[3] || 0}`,
-  'WR3',
+  ...(values[0] ? [`LDM ${values[0]}`, 'WR0'] : []),
+  ...(values[1] ? [`LDM ${values[1]}`, 'WR1'] : []),
+  ...(values[2] ? [`LDM ${values[2]}`, 'WR2'] : []),
+  ...(values[3] ? [`LDM ${values[3]}`, 'WR3'] : []),
 ];
 
 /*
