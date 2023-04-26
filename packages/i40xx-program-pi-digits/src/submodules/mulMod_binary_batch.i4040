@@ -65,10 +65,7 @@ mulMod_factor2:
 
 __location(0x2:0x00)
 mulMod_processNibble_0:                   # 0b0000
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateMultipliedFactor
+  JUN mulMod_updateMultipliedFactor16
 
 __location(0x2:0x8)
 mulMod_processNibble:
@@ -81,10 +78,7 @@ mulMod_processNibble_first:
 __location(0x2:0x10)
 mulMod_processNibble_1:                   # 0b0001
   JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JUN mulMod_updateMultipliedFactor
+  JUN mulMod_updateMultipliedFactor16
 
 __location(0x2:0x20)
 mulMod_processNibble_2:                   # 0b0010
@@ -373,6 +367,41 @@ mulMod_updateMultipliedFactor:
   XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
   CLC
 mulMod_updateMultipliedFactor_return:
+  BBL 0
+
+mulMod_updateMultipliedFactor16:
+  LD rr2
+  JCN z, mulMod_updateMultipliedFactor16_shift
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateMultipliedFactor
+  JUN mulMod_updateMultipliedFactor
+
+mulMod_updateMultipliedFactor16_shift:
+  XCH rr0
+  XCH rr1
+  XCH rr3
+  XCH rr2
+  LD rr2
+  RAL
+  JCN nc, mulMod_updateMultipliedFactor16_ret
+
+  CLC
+  SRC r1
+  RD0
+  ADD rr0
+  XCH rr0
+  RD1
+  ADD rr1
+  XCH rr1
+  RD2
+  ADD rr3
+  XCH rr3
+  RD3
+  ADD rr2
+  XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
+  CLC
+mulMod_updateMultipliedFactor16_ret:
   BBL 0
 
 # INPUT:
