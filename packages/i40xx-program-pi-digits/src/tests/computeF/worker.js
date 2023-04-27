@@ -8,7 +8,7 @@ import { putModulusBasedDataIntoMemory } from '#data/multiplicationModulusData/m
 
 const { romDump, ramDump, symbols, shouldProfile } = workerData;
 
-const responseWithResult = (system, expected, m, testNo, stacktraces) => {
+const responseWithResult = (system, expected, m, testNo, stacktraces, calls) => {
   const result = hwNumberToHex(system.memory[7].registers[VARIABLES.STATUS_MEM_VARIABLE_F].status);
 
   parentPort.postMessage({
@@ -16,6 +16,7 @@ const responseWithResult = (system, expected, m, testNo, stacktraces) => {
     testNo,
     status: parseInt(expected, 16) === (parseInt(result, 16) % m) ? 'success' : 'failed',
     stacktraces,
+    calls,
   });
 };
 
@@ -34,8 +35,8 @@ parentPort.on('message', ({ test, testNo }) => {
   registers.ramControl = 0b1110;
 
   if (shouldProfile) {
-    const { stacktraces } = runWithProfiler(system, symbols);
-    responseWithResult(system, test.expected, mNum, testNo, stacktraces);
+    const { stacktraces, calls } = runWithProfiler(system, symbols);
+    responseWithResult(system, test.expected, mNum, testNo, stacktraces, calls);
   } else {
     while (!system.isFinished()) {
       system.instruction();

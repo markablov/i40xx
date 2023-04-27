@@ -5,6 +5,7 @@ export const runWithProfiler = (system, symbols) => {
   const labelByOffset = Object.fromEntries(symbols.map(({ label, romAddress }) => [romAddress, label]));
 
   const stacktraces = new Map();
+  const calls = new Map();
   const currentStack = [];
   let currentSP = 0;
 
@@ -13,7 +14,7 @@ export const runWithProfiler = (system, symbols) => {
 
     if (currentSP < registers.sp) {
       const functionName = labelByOffset[registers.pc] || 'unknown';
-
+      calls.set(functionName, (calls.get(functionName) || 0n) + 1n);
       currentStack.push({
         name: functionName,
         entranceCycle: system.instructionCycles,
@@ -35,5 +36,5 @@ export const runWithProfiler = (system, symbols) => {
     }
   }
 
-  return { stacktraces };
+  return { stacktraces, calls };
 };

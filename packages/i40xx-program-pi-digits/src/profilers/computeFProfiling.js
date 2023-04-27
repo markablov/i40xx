@@ -30,15 +30,18 @@ const EXPECTED_F = '0x3D5';
 
   registers.ramControl = 0b1110;
 
-  const { stacktraces } = runWithProfiler(system, symbols);
+  const { stacktraces, calls } = runWithProfiler(system, symbols);
 
   const result = hwNumberToHex(memory[7].registers[VARIABLES.STATUS_MEM_VARIABLE_F].status);
-  if (parseInt(EXPECTED_F, 16) !== parseInt(result, 16)) {
+  if (parseInt(EXPECTED_F, 16) !== (parseInt(result, 16) % parseInt(m, 16))) {
     console.log('Wrong answer! Profile could be incorrect.');
     return;
   }
 
   console.log(`Cycles = ${system.instructionCycles.toString()}, seconds = ${system.instructionCycles / CYCLES_PER_SECOND}`);
+  console.log('Calls:');
+  console.log([...calls.entries()].map(([functionName, times]) => `  ${functionName} ${times}`).join('\n'));
+  console.log();
   console.log('Stacktraces:');
   console.log([...stacktraces.entries()].map(([stacktrace, cycles]) => `${stacktrace} ${cycles}`).join('\n'));
 }());

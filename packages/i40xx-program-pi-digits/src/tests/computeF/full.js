@@ -2522,7 +2522,10 @@ const WORKER_AMOUNT = 16;
 const SHOULD_PROFILE = true;
 
 (function () {
+  const testsCount = parseInt(process.argv[2], 10);
+  const tests = testsCount ? TESTS.slice(0, testsCount) : TESTS;
   const combinedStacktraces = new Map();
+  const combinedCalls = new Map();
   let processedTests = 0;
   let runningThreads = 0;
   let total = 0n;
@@ -2531,36 +2534,43 @@ const SHOULD_PROFILE = true;
 
   const { rom, symbols } = compileCodeForTest('submodules/computeF.i4040', 'computeF');
 
-  const onMessage = (worker, { elapsed, testNo, status, stacktraces }) => {
+  const onMessage = (worker, { elapsed, testNo, status, stacktraces, calls }) => {
     // process result of finished test
     console.log(`Finished ${testNo}.`);
     if (status === 'failed') {
-      console.log(`  failed, input = ${JSON.stringify(TESTS[testNo])}`);
+      console.log(`  failed, input = ${JSON.stringify(tests[testNo])}`);
       process.exit();
     }
     if (SHOULD_PROFILE) {
       for (const [stacktrace, cycles] of stacktraces.entries()) {
         combinedStacktraces.set(stacktrace, (combinedStacktraces.get(stacktrace) || 0n) + cycles);
       }
+      for (const [functionName, times] of calls.entries()) {
+        combinedCalls.set(functionName, (combinedCalls.get(functionName) || 0n) + times);
+      }
     }
     total += elapsed;
     runningThreads--;
 
     // run new test
-    if (processedTests >= TESTS.length) {
+    if (processedTests >= tests.length) {
       if (runningThreads === 0) {
-        console.log(`All done, total time = ${total / CYCLES_PER_SECOND}s, avg. time = ${(total / BigInt(TESTS.length)) / CYCLES_PER_SECOND}s`);
+        console.log(`All done, total time = ${total / CYCLES_PER_SECOND}s, avg. time = ${(total / BigInt(tests.length)) / CYCLES_PER_SECOND}s`);
+        console.log('Calls:');
+        console.log([...combinedCalls.entries()].map(([functionName, times]) => `  ${functionName} ${times}`).join('\n'));
+        console.log();
         console.log('Stacktraces:');
         console.log([...combinedStacktraces.entries()].map(([stacktrace, cycles]) => `${stacktrace} ${cycles}`).join('\n'));
         process.exit();
       }
       return;
     }
-    worker.postMessage({ test: TESTS[processedTests], testNo: processedTests });
+    worker.postMessage({ test: tests[processedTests], testNo: processedTests });
     processedTests++;
     runningThreads++;
   };
 
+  console.log(`Tests to execute: ${tests.length}, worker threads = ${WORKER_AMOUNT}`);
   for (let i = 0; i < WORKER_AMOUNT; i++) {
     const worker = new Worker(
       workerPath,
@@ -2568,7 +2578,7 @@ const SHOULD_PROFILE = true;
     );
 
     worker.on('message', (data) => onMessage(worker, data));
-    worker.postMessage({ test: TESTS[processedTests], testNo: processedTests });
+    worker.postMessage({ test: tests[processedTests], testNo: processedTests });
     processedTests++;
     runningThreads++;
   }
