@@ -10,7 +10,7 @@
 # OUTPUT:
 #   [rr0, rr1, rr3, rr2] - result
 # VARIABLES:
-#   [rr12, rr11, rr10, rr15] - shiftedFactor
+#   [rr12, rr11, rr10, rr14] - shiftedFactor
 #   [rr4, rr5, rr9, rr8] - temporal result
 #   [rr0, rr1, rr3, rr2] - multipliedFactor
 # NOTES:
@@ -20,21 +20,21 @@
 mulMod:
   SRC r6
   RD3
-  XCH rr15
+  XCH rr14
   RD0
   XCH rr12
   RD1
   XCH rr11
   RD2
-  XCH rr10                               # rr12 = b[0], rr11 = b[1], rr10 = b[2], rr15 = b[3]
-
-  FIM r2, 0x00
-  FIM r4, 0x00                           # res = 0
+  XCH rr10                               # rr12 = b[0], rr11 = b[1], rr10 = b[2], rr14 = b[3]
 
   CLB
   DCL
 
-  LD rr15
+  FIM r2, 0x00
+  FIM r4, 0x00                           # res = 0
+
+  LD rr14
   JCN nz, mulMod_factor4
   LD rr10
   JCN nz, mulMod_factor3
@@ -48,7 +48,7 @@ mulMod_factor4:
   JMS mulMod_processNibble
   LD rr10
   JMS mulMod_processNibble
-  LD rr15
+  LD rr14
   JUN mulMod_processLastNibble
 
 mulMod_factor3:
