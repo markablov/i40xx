@@ -56,36 +56,34 @@ shift4ByR4:
 __location(0x4:0x10)
 shift_right_1:
   RAR
+  CLC
   XCH rr12
-  CLB
-  BBL $BANK_WITH_VARIABLES
+  BBL 0
 
 __location(0x4:0x18)
 shift_left_1:
   RAL
+  CLC
   XCH rr13
-  CLB
-  BBL $BANK_WITH_VARIABLES
+  BBL 0
 
 __location(0x4:0x20)
 shift_right_2:
+  RAR
+  CLC
+  RAR
+  CLC
   XCH rr12
-  LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_2
-  DCL
-  SRC r6
-  RD1
-  XCH rr12
-  BBL $BANK_WITH_VARIABLES
+  BBL 0
 
 __location(0x4:0x28)
 shift_left_2:
-  XCH rr12
-  LDM $BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_2
-  DCL
-  SRC r6
-  RD0
+  RAL
+  CLC
+  RAL
+  CLC
   XCH rr13
-  BBL $BANK_WITH_VARIABLES
+  BBL 0
 
 __location(0x4:0x30)
 shift_right_3:
@@ -93,7 +91,7 @@ shift_right_3:
   LDM 0x0
   RAL
   XCH rr12
-  BBL $BANK_WITH_VARIABLES
+  BBL 0
 
 __location(0x4:0x38)
 shift_left_3:
@@ -101,16 +99,16 @@ shift_left_3:
   LDM 0x0
   RAR
   XCH rr13
-  BBL $BANK_WITH_VARIABLES
+  BBL 0
 
 __location(0x4:0x40)
 shift_right_4:
   LDM 0x0
   XCH rr12
-  BBL $BANK_WITH_VARIABLES
+  BBL 0
 
 __location(0x4:0x48)
 shift_left_4:
   LDM 0x0
   XCH rr13
-  BBL $BANK_WITH_VARIABLES
+  BBL 0
