@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Form, Table, Button } from 'react-bulma-components';
 
 import emulatorStore from '../../stores/emulatorStore.js';
+import { toHex } from '../../utilities/string.js';
 
 const WATCHERS_STORAGE_KEY = 'watchers';
 
@@ -10,8 +11,8 @@ export default function Memory() {
   const [watchSpec, setWatchSpec] = useState('');
   const [watchers, setWatchers] = useState(() => JSON.parse(localStorage.getItem(WATCHERS_STORAGE_KEY)) || []);
 
-  const { isRunning, registers } = emulatorStore.useState(
-    (state) => ({ isRunning: state.isRunning, registers: state.registers }),
+  const { isRunning, memory, registers } = emulatorStore.useState(
+    (state) => ({ isRunning: state.isRunning, memory: state.ram, registers: state.registers }),
   );
 
   const handleAddWatcherClick = () => {
@@ -24,7 +25,16 @@ export default function Memory() {
     const parts = spec.split(',').map((part) => part.trim());
     const words = parts.map((part) => {
       const [, regNo] = part.match(/rr(\d+)/) || [];
-      return registers.indexBanks?.[registers.selectedRegisterBank][regNo].toString(16).toUpperCase();
+      if (regNo) {
+        return toHex(registers.indexBanks?.[registers.selectedRegisterBank][regNo]);
+      }
+
+      const [, bankNo, memRegNo, charSpec] = part.match(/\[(\d)([0-9A-F])]:((?:s\d)|(?:[0-9A-F]))/);
+      if (charSpec[0] === 's') {
+        return toHex(memory[Number(bankNo)]?.registers[parseInt(memRegNo, 16)]?.status[Number(charSpec[1])] || 0);
+      }
+
+      return toHex(memory[Number(bankNo)]?.registers[parseInt(memRegNo, 16)]?.main[parseInt(charSpec, 16)] || 0);
     });
     return words.join('');
   };
