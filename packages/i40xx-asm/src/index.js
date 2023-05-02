@@ -13,7 +13,12 @@ const parse = (sourceCode) => {
 
   const parsingResult = asmParser.parse(tokens);
   if (!parsingResult) {
-    return { errors: asmParser.errors };
+    return {
+      errors: asmParser.errors.map((err) => ({
+        ...err,
+        line: sourceCode.split('\n')[err.token.startLine - 1],
+      })),
+    };
   }
 
   return parsingResult;
