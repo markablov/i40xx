@@ -45,6 +45,16 @@ const RomPages = class RomPages {
   }
 
   /*
+   * Insert block to specific position without updating cursor
+   */
+  putBlock(block, blockIdx, page, offset) {
+    const absoluteAddress = RomPages.getAbsoluteAddress(page, offset);
+    this.#blocksRomOffsets.set(blockIdx, absoluteAddress);
+    this.#pages[page].set(block.bytecode, offset);
+    return absoluteAddress;
+  }
+
+  /*
    * Append block to ROM and advance cursor
    */
   appendBlock(block, blockIdx, page, offset) {
@@ -400,27 +410,65 @@ const fillRomWithBlocks = (blocks, sortedPrimaryBlocks, romPages, sourceMap, pla
  */
 const getSortedPrimaryBlocks = (blocks) => {
   const primaryCodeBlocks = blocks
-    .map((block, idx) => ({ ...block, idx }))
+    .map((block, idx) => ({ ...block, idx, fullSize: getFullBlockSize(blocks, idx) }))
     .filter(({ isDependant, fixedLocation }) => !isDependant && !fixedLocation);
 
-  return new Set(primaryCodeBlocks.sort((a, b) => getFullBlockSize(blocks, b.idx) - getFullBlockSize(blocks, a.idx)));
+  return new Set(primaryCodeBlocks.sort((a, b) => b.fullSize - a.fullSize));
 };
+
+const getAbsoluteAddressForFixedBlock = ({ fixedLocation: { page, offset } }) => (
+  RomPages.getAbsoluteAddress(page, offset)
+);
 
 /*
  * Places all code blocks, for which location is specified, into ROM
  */
-const fillRomWithFixedBlocks = (blocks, romPages, sourceMap) => {
-  const getAbsoluteAddress = ({ fixedLocation: { page, offset } }) => RomPages.getAbsoluteAddress(page, offset);
-
-  const fixedBlocks = blocks
-    .map((block, idx) => ({ ...block, idx }))
-    .filter(({ fixedLocation }) => !!fixedLocation)
-    .sort((a, b) => getAbsoluteAddress(a) - getAbsoluteAddress(b));
-
+const fillRomWithFixedBlocks = (fixedBlocks, romPages, sourceMap) => {
   for (const block of fixedBlocks) {
     const romAddress = romPages.appendBlock(block, block.idx, block.fixedLocation.page, block.fixedLocation.offset);
     for (const { instructionOffset, line } of block.sourceCodeLines) {
       sourceMap.push({ romOffset: romAddress + instructionOffset, line });
+    }
+  }
+};
+
+/*
+ * Try to fill gaps between fixed blocks with small routines
+ */
+const fillGapsBetweenFixedBlocks = (blocks, fixedBlocks, primaryBlocks, romPages, sourceMap) => {
+  for (const [idx, fixedBlock] of fixedBlocks.entries()) {
+    const nextFixedBlock = fixedBlocks[idx + 1];
+    if (!nextFixedBlock) {
+      break;
+    }
+
+    const { page, offset } = fixedBlock.fixedLocation;
+
+    // in theory, it's possible to put something between blocks from different pages
+    if (nextFixedBlock.fixedLocation.page !== page) {
+      continue;
+    }
+
+    const gapSize = nextFixedBlock.fixedLocation.offset - offset - fixedBlock.bytecode.length;
+    for (const primaryBlock of primaryBlocks) {
+      if (primaryBlock.fullSize > gapSize) {
+        continue;
+      }
+
+      let pageOffset = offset + fixedBlock.bytecode.length;
+      const coupledBlocks = getCoupledBlocksIndexes(blocks, primaryBlock.idx);
+      for (const blockIdx of coupledBlocks) {
+        const block = blocks[blockIdx];
+        const romAddress = romPages.putBlock(block, blockIdx, page, pageOffset);
+        for (const { instructionOffset, line } of block.sourceCodeLines) {
+          sourceMap.push({ romOffset: romAddress + instructionOffset, line });
+        }
+
+        pageOffset += block.bytecode.length;
+      }
+
+      primaryBlocks.delete(primaryBlock);
+      break;
     }
   }
 };
@@ -441,8 +489,14 @@ export function buildRom(codeBlocks, blockAddressedSymbols, { placementCache: ca
   const sourceMap = [];
   const romPages = new RomPages();
 
-  fillRomWithFixedBlocks(codeBlocks, romPages, sourceMap);
   const primaryBlocks = getSortedPrimaryBlocks(codeBlocks);
+  const fixedBlocks = codeBlocks
+    .map((block, idx) => ({ ...block, idx }))
+    .filter(({ fixedLocation }) => !!fixedLocation)
+    .sort((a, b) => getAbsoluteAddressForFixedBlock(a) - getAbsoluteAddressForFixedBlock(b));
+
+  fillRomWithFixedBlocks(fixedBlocks, romPages, sourceMap);
+  fillGapsBetweenFixedBlocks(codeBlocks, fixedBlocks, primaryBlocks, romPages, sourceMap);
   const { placementCache: newCache } = fillRomWithBlocks(codeBlocks, primaryBlocks, romPages, sourceMap, cache);
   updateAddressesInBytecode(codeBlocks, romPages);
 
