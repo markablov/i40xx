@@ -8,9 +8,18 @@ import { extractDirectives } from './workers/directives.js';
  */
 const transformSourceCode = (sourceCode, { defines }) => sourceCode.replace(
   /\$(\w+)(\s*\.\s*([$\w]+))?/g,
-  (match, identifier, _, concat) => (
-    `${defines.get(identifier)}${(concat?.[0] === '$' ? defines.get(concat.substring(1)) : concat) ?? ''}`
-  ),
+  (match, identifier, _, concat) => {
+    if (!defines.has(identifier)) {
+      throw Error(`Unknown identifier: ${identifier}`);
+    }
+
+    const identifierToConcat = concat?.[0] === '$' ? concat.substring(1) : null;
+    if (identifierToConcat && !defines.has(identifierToConcat)) {
+      throw Error(`Unknown identifier: ${identifierToConcat}`);
+    }
+
+    return `${defines.get(identifier)}${identifierToConcat ? defines.get(identifierToConcat) : (concat || '')}`;
+  },
 );
 
 /*
