@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Form, Table, Button } from 'react-bulma-components';
 
 import emulatorStore from '../../stores/emulatorStore.js';
-import { toHex } from '../../utilities/string.js';
+import { toHex, padHex } from '../../utilities/string.js';
 
 const WATCHERS_STORAGE_KEY = 'watchers';
 
@@ -15,13 +15,53 @@ export default function Memory() {
     (state) => ({ isRunning: state.isRunning, memory: state.ram, registers: state.registers }),
   );
 
+  useEffect(() => localStorage.setItem(WATCHERS_STORAGE_KEY, JSON.stringify(watchers)), [watchers]);
+
   const handleAddWatcherClick = () => {
     setWatchers([...watchers, { name: watchName, spec: watchSpec }]);
     setWatchSpec('');
     setWatchName('');
   };
 
-  const renderWatcher = (spec) => {
+  const renderedWatchers = new Map();
+  const renderWatcher = (name, spec) => {
+    if (!spec.includes(',')) {
+      const [, var1, op, var2] = spec.match(/(\w+)\s*([+\-%*])\s*(\w+)/);
+
+      if (!renderedWatchers.has(var1)) {
+        renderWatcher(var1, watchers.find((watcher) => watcher.name === var1).spec);
+      }
+
+      if (!renderedWatchers.has(var2)) {
+        renderWatcher(var2, watchers.find((watcher) => watcher.name === var2).spec);
+      }
+
+      const val1 = parseInt(renderedWatchers.get(var1), 16);
+      const val2 = parseInt(renderedWatchers.get(var2), 16);
+
+      let computedValue = 0;
+      switch (op) {
+        case '%':
+          computedValue = val1 % val2;
+          break;
+        case '+':
+          computedValue = val1 + val2;
+          break;
+        case '-':
+          computedValue = val1 - val2;
+          break;
+        case '*':
+          computedValue = val1 * val2;
+          break;
+        default:
+          break;
+      }
+
+      const renderedValue = padHex(computedValue || 0, 4);
+      renderedWatchers.set(name, renderedValue);
+      return;
+    }
+
     const parts = spec.split(',').map((part) => part.trim());
     const words = parts.map((part) => {
       const [, regNo] = part.match(/rr(\d+)/) || [];
@@ -36,10 +76,18 @@ export default function Memory() {
 
       return toHex(memory[Number(bankNo)]?.registers[parseInt(memRegNo, 16)]?.main[parseInt(charSpec, 16)] || 0);
     });
-    return words.join('');
+
+    const renderedValue = words.join('');
+    renderedWatchers.set(name, renderedValue);
   };
 
-  useEffect(() => localStorage.setItem(WATCHERS_STORAGE_KEY, JSON.stringify(watchers)), [watchers]);
+  for (const { name, spec } of watchers) {
+    if (renderedWatchers.has(name)) {
+      continue;
+    }
+
+    renderWatcher(name, spec);
+  }
 
   return (
     <Table bordered={false} size="narrow" striped={false}>
@@ -61,7 +109,7 @@ export default function Memory() {
             <tr key={`watcher-${watcherIdx}`}>
               <td>{name}</td>
               <td>{spec}</td>
-              <td>{ isRunning && renderWatcher(spec) }</td>
+              <td>{ isRunning && renderedWatchers.get(name) }</td>
               <td>
                 <Button color="warning" onClick={() => setWatchers(watchers.filter((_, idx) => idx !== watcherIdx))}>
                   -
