@@ -16,20 +16,20 @@ entrypoint:
 ${sourceCode}
 `;
 
+const elapsed = (startTS) => Math.round(performance.now() - startTS);
+
 // eslint-disable-next-line consistent-return
 export const compileCodeForTest = (fileName, funcName, options = {}) => {
   const dirName = path.dirname(fileURLToPath(import.meta.url));
 
-  console.log('Preprocessing source code...');
   const t0 = performance.now();
   const preprocessedCode = preprocessFile(path.resolve(dirName, '../', fileName));
   const testCode = (options?.wrapSourceCode || wrapSourceCode)(preprocessedCode, funcName);
-  console.log(`Source code has been preprocessed, time elapsed = ${Math.round(performance.now() - t0)}ms`);
+  console.log(`Source code has been preprocessed, time elapsed = ${elapsed(t0)}ms`);
 
-  console.log('Compiling code...');
   const t1 = performance.now();
   const { blocks, symbols: blockAddressedSymbols, errors } = compile(testCode);
-  console.log(`Source code has been compiled, time elapsed = ${Math.round(performance.now() - t1)}ms`);
+  console.log(`Source code has been compiled, time elapsed = ${elapsed(t1)}ms`);
   if (errors.length) {
     console.log('COULD NOT PARSE SOURCE CODE!');
     console.log(errors);
@@ -38,14 +38,13 @@ export const compileCodeForTest = (fileName, funcName, options = {}) => {
 
   const cacheFile = path.resolve(dirName, '../../.cache', `${path.parse(fileName).name}.cache`);
   const placementCache = fs.existsSync(cacheFile) ? JSON.parse(fs.readFileSync(cacheFile, 'utf-8')) : {};
-  console.log('Linking code...');
   const t2 = performance.now();
   const { rom, symbols, sourceMap, placementCache: updatedPlacementCache, romSize } = buildRom(
     blocks,
     blockAddressedSymbols,
     { placementCache },
   );
-  console.log(`Source code has been linked, time elapsed = ${Math.round(performance.now() - t2)}ms`);
+  console.log(`Source code has been linked, time elapsed = ${elapsed(t2)}ms, rom size = ${romSize} bytes`);
 
   if (updatedPlacementCache) {
     fs.writeFileSync(cacheFile, JSON.stringify(updatedPlacementCache, undefined, 2));
