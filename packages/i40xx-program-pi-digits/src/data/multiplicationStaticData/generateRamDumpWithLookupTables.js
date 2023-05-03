@@ -49,7 +49,7 @@ const addMulTableEntry = (ramDump, a, b, bankNo, lowCharNo) => {
     ...numToHWNumber(0x7 ** 3, 4),
   ];
 
-  ramDump[7][0xC].main = [
+  ramDump[7][0xB].main = [
     ...numToHWNumber(0x3 ** 7, 4),
     ...numToHWNumber(0x3 ** 4, 4),
     ...numToHWNumber(0x5 ** 4, 4),
