@@ -2,7 +2,7 @@
 
 import Emulator from 'i40xx-emu';
 
-import { hexToHWNumber, hwNumberToHex } from '#utilities/numbers.js';
+import { hexToHWNumber, hwNumberToHex, numToHWNumber } from '#utilities/numbers.js';
 import { compileCodeForTest } from '#utilities/compile.js';
 import { writeValueToStatusChars, VARIABLES } from '#utilities/memory.js';
 
@@ -12,29 +12,34 @@ import {
 
 import {
   updateCodeForUseInEmulator, generateMemoryBankSwitch, generateMemoryStatusCharactersInitialization,
+  generateAccumulatorInitialization,
 } from '#utilities/codeGenerator.js';
 
 import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
 const jsser = (obj) => JSON.stringify(obj);
 
-const runComputeFTest = (romDump, labelOffsetForProgress, { N, vmax, m, a }) => {
+const runComputeFTest = (romDump, { N, vmax, m, a }, symbols) => {
   const system = new Emulator({ romDump, ramDump: RAM_DUMP });
   const { memory, registers } = system;
 
   writeValueToStatusChars(hexToHWNumber(a), memory, VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME);
-  writeValueToStatusChars(hexToHWNumber(N), memory, VARIABLES.STATUS_MEM_VARIABLE_N);
+  writeValueToStatusChars(numToHWNumber(0x10000 - (parseInt(N, 16) + 1)), memory, VARIABLES.STATUS_MEM_VARIABLE_N_NEG);
   writeValueToStatusChars([0x0, 0x0, vmax, 0x0], memory, VARIABLES.STATUS_MEM_VARIABLE_V);
   putModulusBasedDataIntoMemory(memory, parseInt(m, 16));
 
   registers.ramControl = 0b1110;
+  registers.acc = vmax === 1 ? 1 : 0;
 
+  const labelForProgress = vmax === 1 ? 'computef_onevmax_loop' : 'computef_loop';
+  const labelOffsetForProgress = symbols.find(({ label }) => label === labelForProgress).romAddress;
+  const progressTrackingFrequency = vmax === 1 ? 10 : 100;
   let iters = 0;
   while (!system.isFinished()) {
     if (registers.pc === labelOffsetForProgress) {
       iters++;
-      if (iters % 100 === 0) {
-        console.log(`  Function inner loop iterations executed: ${iters} / ${parseInt(N, 16)}...`);
+      if (iters % progressTrackingFrequency === 0) {
+        console.log(`  Function inner loop iterations executed: ${iters}...`);
       }
     }
 
@@ -152,26 +157,41 @@ const COMPUTE_F_TESTS = [
   { input: { N: '0x1AC5', vmax: 1, m: '0x3581', a: '0x3581' }, expected: '0xFAA' },
 ];
 
+const wrapSourceCode = (sourceCode) => `
+entrypoint:
+  JCN z, computeF_regular 
+  JMS computeF_oneVMax
+  HLT
+computeF_regular:
+  JMS computeF
+  HLT
+
+${sourceCode}
+`;
+
 const testComputeF = () => {
-  console.log('Testing computeF routine...');
+  const { rom, symbols, sourceMap, sourceCode, romSize } = compileCodeForTest(
+    'submodules/computeF.i4040',
+    '',
+    { wrapSourceCode },
+  );
 
-  const { rom, symbols, sourceMap, sourceCode, romSize } = compileCodeForTest('submodules/computeF.i4040', 'computeF');
-
-  const labelOffsetForProgress = symbols.find(({ label }) => label === 'computef_loop').romAddress;
   let sum = 0n;
   for (const [idx, { input, expected }] of COMPUTE_F_TESTS.entries()) {
     console.log(`Run test ${idx + 1} / ${COMPUTE_F_TESTS.length} : ${jsser(input)}...`);
-    const { result, elapsed } = runComputeFTest(rom, labelOffsetForProgress, input);
+    const { result, elapsed } = runComputeFTest(rom, input, symbols);
     if (parseInt(expected, 16) !== (parseInt(result, 16) % parseInt(input.m, 16))) {
       console.log(`Test failed, input = ${jsser(input)}, expected = ${expected}, result = ${result}`);
       console.log('Code to reproduce:');
       const { N, m, a, vmax } = input;
+      const negativeN = numToHWNumber(0x10000 - (parseInt(N, 16) + 1));
       const initializators = [
         generateMemoryBankSwitch(0x7),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_V, [0x0, 0x0, vmax, 0x00]),
-        generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_N, hexToHWNumber(N)),
+        generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_N_NEG, negativeN),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, hexToHWNumber(a)),
         ...generateCodeToPrepareModulusBasedDataForEmulator(parseInt(m, 16)),
+        generateAccumulatorInitialization(vmax === 1 ? 1 : 0),
       ];
       console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols, rom, romSize));
       process.exit(1);

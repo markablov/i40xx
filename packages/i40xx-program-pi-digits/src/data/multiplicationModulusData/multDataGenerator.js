@@ -5,7 +5,7 @@ import { generateMemoryBankSwitch, generateMemoryStatusCharactersInitialization 
 export function putModulusBasedDataIntoMemory(memory, m) {
   // modulus and inverted modulus
   writeValueToStatusChars(numToHWNumber(m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS);
-  writeValueToStatusChars(numToHWNumber(0x10000 - m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+  writeValueToStatusChars(numToHWNumber(0x10000 - m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_NEG);
 
   // first lookup table for 4-word numbers
   for (let digit = 1; digit <= 0xF; digit++) {
@@ -32,6 +32,6 @@ export function generateCodeToPrepareModulusBasedDataForEmulator(m) {
     generateMemoryStatusCharactersInitialization(0, [m > 0x1000 ? 0x0 : 0x1, ...maxSafeModulusMultipleFor12Bit]),
     generateMemoryBankSwitch(0x7),
     generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS, numToHWNumber(m)),
-    generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV, numToHWNumber(0x10000 - m)),
+    generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS_NEG, numToHWNumber(0x10000 - m)),
   ];
 }

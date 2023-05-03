@@ -2,7 +2,7 @@ import { workerData, parentPort } from 'node:worker_threads';
 import Emulator from 'i40xx-emu';
 
 import { VARIABLES, writeValueToStatusChars } from '#utilities/memory.js';
-import { hexToHWNumber, hwNumberToHex } from '#utilities/numbers.js';
+import { hexToHWNumber, hwNumberToHex, numToHWNumber } from '#utilities/numbers.js';
 import { runWithProfiler } from '#utilities/profiling.js';
 import { putModulusBasedDataIntoMemory } from '#data/multiplicationModulusData/multDataGenerator.js';
 
@@ -28,10 +28,11 @@ parentPort.on('message', ({ test, testNo }) => {
   const { memory, registers } = system;
 
   writeValueToStatusChars(hexToHWNumber(a), memory, VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME);
-  writeValueToStatusChars(hexToHWNumber(N), memory, VARIABLES.STATUS_MEM_VARIABLE_N);
+  writeValueToStatusChars(numToHWNumber(0x10000 - (parseInt(N, 16) + 1)), memory, VARIABLES.STATUS_MEM_VARIABLE_N_NEG);
   writeValueToStatusChars([0x0, 0x0, vmax, 0x0], memory, VARIABLES.STATUS_MEM_VARIABLE_V);
   putModulusBasedDataIntoMemory(memory, mNum);
 
+  registers.acc = vmax === 1 ? 1 : 0;
   registers.ramControl = 0b1110;
 
   if (shouldProfile) {

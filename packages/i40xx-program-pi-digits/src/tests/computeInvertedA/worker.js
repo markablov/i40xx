@@ -20,7 +20,7 @@ parentPort.on('message', ({ tests }) => {
 
     const mNum = parseInt(m, 16);
     writeValueToStatusChars(numToHWNumber(mNum), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS);
-    writeValueToStatusChars(numToHWNumber(0x10000 - mNum), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+    writeValueToStatusChars(numToHWNumber(0x10000 - mNum), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_NEG);
     writeValueToStatusChars(hexToHWNumber(a), memory, VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_A);
 
     registers.ramControl = 0b1110;

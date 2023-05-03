@@ -18,21 +18,21 @@ computeInvertedA:
   RD1
   XCH rr1
   RD2
-  XCH rr2
+  XCH rr3
   RD3
-  XCH rr3                                                       # rx = A
+  XCH rr2                                                       # rx = A
 
   LD rr0
   AN7
   ADD rr1
-  ADD rr2
   ADD rr3
+  ADD rr2
   JCN nz, computeInvertedA_nonTrivialA
   JCN nc, computeInvertedA_trivialA                             # if (rx === 1)
 
 computeInvertedA_nonTrivialA:
   SB1
-  FIM r0, $STATUS_MEM_VARIABLE_MODULUS_INV . 0
+  FIM r0, $STATUS_MEM_VARIABLE_MODULUS_NEG . 0
   FIM r1, $STATUS_MEM_VARIABLE_MODULUS . 0
   SRC r1
   SB0
@@ -56,12 +56,12 @@ computeInvertedA_rx_normalize_loop:
   LD rr0
   RAR
   JCN c, computeInvertedA_loop                                  # if (rx % 2 === 1)
-  LD rr3
-  RAR
-  XCH rr3
   LD rr2
   RAR
   XCH rr2
+  LD rr3
+  RAR
+  XCH rr3
   LD rr1
   RAR
   XCH rr1
@@ -146,11 +146,11 @@ computeInvertedA_odd_ry:
   CMC
   XCH rr9
   LD rr10
-  SUB rr2
+  SUB rr3
   CMC
   XCH rr10
   LD rr11
-  SUB rr3
+  SUB rr2
   XCH rr11                                                      # ry = ry - rx
   JCN c, computeInvertedA_shiftRyAndUpdateU                     # if (ry > rx)
 
@@ -161,11 +161,11 @@ computeInvertedA_odd_ry:
   ADD rr1
   XCH rr1
   LD rr10
-  ADD rr2
-  XCH rr2
-  LD rr11
   ADD rr3
-  XCH rr3                                                       # rx = ry + rx = (old ry - rx) + rx = old ry
+  XCH rr3
+  LD rr11
+  ADD rr2
+  XCH rr2                                                       # rx = ry + rx = (old ry - rx) + rx = old ry
 
   SB1
   LD rr8
@@ -314,14 +314,15 @@ computeInvertedA_odd_u:
   XCH rr12                                                       # u = u >> 1
 
 computeInvertedA_loop_check_cond:
-  LD rr8
-  DAC
   CLC
-  ADD rr9
+  LD rr9
   ADD rr10
   ADD rr11
   JCN nz, computeInvertedA_loop
-  JCN c, computeInvertedA_loop                                  # if (ry === 1)
+  JCN c, computeInvertedA_loop                                  # if (ry > 0xF)
+  LDM 0xE
+  ADD rr8
+  JCN c, computeInvertedA_loop                                  # if (ry > 1)
 
   LD rr15
   RAL

@@ -2,7 +2,7 @@
 
 import Emulator from 'i40xx-emu';
 
-import { hexToHWNumber, hwNumberToHex } from '#utilities/numbers.js';
+import { hexToHWNumber, hwNumberToHex, numToHWNumber } from '#utilities/numbers.js';
 import { compileCodeForTest } from '#utilities/compile.js';
 import { VARIABLES, writeValueToStatusChars } from '#utilities/memory.js';
 import { runWithProfiler } from '#utilities/profiling.js';
@@ -24,7 +24,7 @@ const EXPECTED_F = '0x3D5';
 
   const { m, a, N, vmax } = STARTING_VALUES;
   writeValueToStatusChars(hexToHWNumber(a), memory, VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME);
-  writeValueToStatusChars(hexToHWNumber(N), memory, VARIABLES.STATUS_MEM_VARIABLE_N);
+  writeValueToStatusChars(numToHWNumber(0x10000 - (parseInt(N, 16) + 1)), memory, VARIABLES.STATUS_MEM_VARIABLE_N_NEG);
   writeValueToStatusChars([0x0, 0x0, vmax, 0x0], memory, VARIABLES.STATUS_MEM_VARIABLE_V);
   putModulusBasedDataIntoMemory(memory, parseInt(m, 16));
 

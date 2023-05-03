@@ -39,7 +39,7 @@ const runSingleTestEuclid = (romDump, { A, m }, variant) => {
   registers.ramControl = 0b1110;
 
   writeValueToStatusChars(hexToHWNumber(m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS, 7);
-  writeValueToStatusChars(numToHWNumber(0x10000 - parseInt(m, 16)), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV);
+  writeValueToStatusChars(numToHWNumber(0x10000 - parseInt(m, 16)), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS_NEG);
   writeValueToStatusChars(hexToHWNumber(A), memory, VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_A, 7);
 
   while (!system.isFinished()) {
@@ -2584,7 +2584,7 @@ const TESTS = [
         const initializators = [
           generateMemoryBankSwitch(0x7),
           generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS, numToHWNumber(mNum)),
-          generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS_INV, numToHWNumber(invM)),
+          generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_MODULUS_NEG, numToHWNumber(invM)),
           generateMemoryStatusCharactersInitialization(
             VARIABLES.STATUS_MEM_VARIABLE_F_COMPUTATION_A,
             hexToHWNumber(input.A),

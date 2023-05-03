@@ -2521,6 +2521,18 @@ const WORKER_AMOUNT = 16;
 
 const SHOULD_PROFILE = true;
 
+const wrapSourceCode = (sourceCode) => `
+entrypoint:
+  JCN z, computeF_regular 
+  JMS computeF_oneVMax
+  HLT
+computeF_regular:
+  JMS computeF
+  HLT
+
+${sourceCode}
+`;
+
 (function () {
   const testsCount = parseInt(process.argv[2], 10);
   const tests = testsCount ? TESTS.slice(0, testsCount) : TESTS;
@@ -2532,7 +2544,11 @@ const SHOULD_PROFILE = true;
 
   const workerPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), './worker.js');
 
-  const { rom, symbols } = compileCodeForTest('submodules/computeF.i4040', 'computeF');
+  const { rom, symbols } = compileCodeForTest(
+    'submodules/computeF.i4040',
+    '',
+    { wrapSourceCode },
+  );
 
   const onMessage = (worker, { elapsed, testNo, status, stacktraces, calls }) => {
     // process result of finished test
@@ -2556,11 +2572,21 @@ const SHOULD_PROFILE = true;
     if (processedTests >= tests.length) {
       if (runningThreads === 0) {
         console.log(`All done, total time = ${total / CYCLES_PER_SECOND}s, avg. time = ${(total / BigInt(tests.length)) / CYCLES_PER_SECOND}s`);
+
         console.log('Calls:');
-        console.log([...combinedCalls.entries()].map(([functionName, times]) => `  ${functionName} ${times}`).join('\n'));
+        const maxDigitsForCallTimes = String(Math.max(...[...combinedCalls.values()].map((x) => Number(x)))).length;
+        const callsInfoLines = [...combinedCalls.entries()].sort((a, b) => (a[1] > b[1] ? -1 : 1)).map(
+          ([functionName, times]) => `  ${String(times).padStart(maxDigitsForCallTimes, ' ')} ${functionName}`,
+        );
+        console.log(callsInfoLines.join('\n'));
         console.log();
+
         console.log('Stacktraces:');
-        console.log([...combinedStacktraces.entries()].map(([stacktrace, cycles]) => `${stacktrace} ${cycles}`).join('\n'));
+        const stacktraceInfoLines = [...combinedStacktraces.entries()].map(
+          ([stacktrace, cycles]) => `${stacktrace} ${cycles}`,
+        );
+        console.log(stacktraceInfoLines.join('\n'));
+
         process.exit();
       }
       return;
