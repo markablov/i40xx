@@ -51,11 +51,14 @@ export const updateCodeForUseInEmulator = (sourceCode, initializators, sourceMap
     return sourceLines.filter(Boolean).join('\n');
   }
 
-  const lines = ['__location(00:0x00)', '  JUN prepareTestData'];
-  const sourceLinesTrim = sourceLines.map((line) => line.replace(/#.+/, '').trim());
+  const sourceLinesInfo = sourceLines.map((line) => {
+    const [instruction, comment] = line.split('#');
+    return { instruction: instruction.trim(), comment: comment?.trim() };
+  });
   const romOffsetToLine = new Map(sourceMap.map(({ romOffset, line }) => [romOffset, line]));
   const romOffsetToLabel = new Map(symbols.map(({ romAddress, label }) => [romAddress, label]));
-  const maxSourceCodeLineLen = Math.max(...sourceLinesTrim.map((line) => line.length));
+  const maxSourceCodeLineLen = Math.max(...sourceLinesInfo.map(({ instruction }) => instruction.length));
+  const lines = ['__location(00:0x00)', '  JUN prepareTestData'];
 
   const insertedDirectives = new Set();
   // skip auto-generated jump to entrypoint
@@ -68,15 +71,19 @@ export const updateCodeForUseInEmulator = (sourceCode, initializators, sourceMap
       lines.push(`${romOffsetToLabel.get(romOffset)}:`);
     }
 
-    const sourceCodeLine = romOffsetToLine.has(romOffset) ? sourceLinesTrim[romOffsetToLine.get(romOffset) - 1] : null;
+    const sourceCodeLine = romOffsetToLine.has(romOffset) ? sourceLinesInfo[romOffsetToLine.get(romOffset) - 1] : null;
     const romOffsetStr = `[${toHex(romOffset >> 8)}:${toHex(romOffset & 0xFF)}]`;
     if (sourceCodeLine) {
+      const { instruction: instructionLine, comment } = sourceCodeLine;
       const isTwoByteInstruction = isTwoByteInstructionByOpcode(rom[romOffset]);
       const romBytesStr = isTwoByteInstruction
         ? `${toHex(rom[romOffset])} ${toHex(rom[romOffset + 1])}`
         : toHex(rom[romOffset]);
-      const commentsPadding = ' '.repeat(maxSourceCodeLineLen - sourceCodeLine.length + 1);
-      lines.push(`  ${sourceCodeLine}${commentsPadding}# ${romOffsetStr} ${romBytesStr}`);
+      const commentsPadding = ' '.repeat(maxSourceCodeLineLen - instructionLine.length + 1);
+      lines.push(...[
+        ...(comment ? [`  # ${comment}`] : []),
+        `  ${instructionLine}${commentsPadding}# ${romOffsetStr} ${romBytesStr}`,
+      ]);
 
       if (isTwoByteInstruction) {
         romOffset++;
