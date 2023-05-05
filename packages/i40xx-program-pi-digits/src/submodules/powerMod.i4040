@@ -1,11 +1,11 @@
 %include "memory.i4040"
-%include "mulMod_binary_fast.i4040"
+%include "alternatives/mulMod_binary_fast.i4040"
 %include "shiftMulti.i4040"
 
 # INPUT:
 #   rr0..rr3 - base
 #   memMainVar[0x0A] - exponent
-#   memMainVar[0x07] - divisor
+#   memMainVar[0x07] - modulus
 # OUTPUT:
 #   memStatusCharVar[0x07] - result
 # VARIABLES:

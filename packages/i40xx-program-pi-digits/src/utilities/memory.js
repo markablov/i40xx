@@ -24,6 +24,7 @@ export const writeValueToStatusChars = (value, memory, regIdx, bankIdx = 7) => (
 );
 
 export const VARIABLES = Object.freeze({
+  STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION: 0x1,
   STATUS_MEM_VARIABLE_MODULUS: 0x4,
   STATUS_MEM_VARIABLE_V: 0x6,
   STATUS_MEM_VARIABLE_MODULUS_NEG: 0x7,

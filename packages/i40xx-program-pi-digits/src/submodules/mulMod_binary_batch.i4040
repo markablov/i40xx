@@ -14,7 +14,7 @@
 #   [rr4, rr5, rr9, rr8] - temporal result
 #   [rr0, rr1, rr3, rr2] - multipliedFactor
 # NOTES:
-#   - keeps rr13, rr6, rr7 unmodified
+#   - keeps rr13, rr6, rr7, rr10 unmodified
 #   - clears carry flag
 
 mulMod:
@@ -204,7 +204,9 @@ mulMod_processNibble_F:                   # 0b1111
 
 __location(0x3:0x00)
 mulMod_processLastNibble_0:                   # 0b0000
-  BBL 0
+  FIM r0, 0x00
+  FIM r1, 0x00
+  BBL $BANK_WITH_VARIABLES
 
 __location(0x3:0x8)
 mulMod_processLastNibble:

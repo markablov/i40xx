@@ -84,7 +84,6 @@ shiftRightVarFromMainMemory_loop:
   SRC r0
   RDM
   JMS shift4ByR2                            # rr13 = var[digitIdx + 1] << (4 - shiftValue)
-  DCL
   LD rr13
   XCH rr6
   LD rr1
@@ -94,17 +93,16 @@ shiftRightVarFromMainMemory_loop:
   SRC r0
   RDM
   JMS shift4ByR1                            # rr12 = var[digitIdx] >> shiftValue
-  DCL
   LD rr12
   ADD rr6
   WRM                                       # var[digitIdx] = rr12 | rr13
   INC rr1
   ISZ rr9, shiftRightVarFromMainMemory_loop
 shiftRightVarFromMainMemory_lastDigit:
+  CLB
   SRC r0
   RDM
   JMS shift4ByR1                            # rr12 = var[varDigitsAmount - 1] >> shiftValue
-  DCL
   LD rr12
   WRM
   BBL 0

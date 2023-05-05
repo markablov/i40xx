@@ -1,4 +1,4 @@
-%include "memory.i4040"
+%include "..\memory.i4040"
 
 # INPUT:
 #   rr15 - variable number for first term and for result
