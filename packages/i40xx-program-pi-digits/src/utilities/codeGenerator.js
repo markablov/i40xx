@@ -56,9 +56,16 @@ export const updateCodeForUseInEmulator = (sourceCode, initializators, sourceMap
     return { instruction: instruction.trim(), comment: comment?.trim() };
   });
   const romOffsetToLine = new Map(sourceMap.map(({ romOffset, line }) => [romOffset, line]));
-  const romOffsetToLabel = new Map(symbols.map(({ romAddress, label }) => [romAddress, label]));
   const maxSourceCodeLineLen = Math.max(...sourceLinesInfo.map(({ instruction }) => instruction.length));
   const lines = ['__location(00:0x00)', '  JUN prepareTestData'];
+
+  const romOffsetToLabel = new Map();
+  for (const { romAddress, label } of symbols) {
+    if (!romOffsetToLabel.has(romAddress)) {
+      romOffsetToLabel.set(romAddress, []);
+    }
+    romOffsetToLabel.get(romAddress).push(label);
+  }
 
   const insertedDirectives = new Set();
   // skip auto-generated jump to entrypoint
@@ -68,7 +75,7 @@ export const updateCodeForUseInEmulator = (sourceCode, initializators, sourceMap
         lines.push('', `__location(0x${toHex(romOffset >> 8)}:0x${toHex(romOffset & 0xFF)})`);
         insertedDirectives.add(romOffset);
       }
-      lines.push(`${romOffsetToLabel.get(romOffset)}:`);
+      lines.push(...romOffsetToLabel.get(romOffset).map((label) => `${label}:`));
     }
 
     const sourceCodeLine = romOffsetToLine.has(romOffset) ? sourceLinesInfo[romOffsetToLine.get(romOffset) - 1] : null;
