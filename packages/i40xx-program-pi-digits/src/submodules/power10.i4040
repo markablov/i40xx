@@ -4,6 +4,8 @@
 # INPUT:
 #   rr6 - 0x0
 #   rr7 - 0x4
+#   rr6' - 0x0
+#   rr7' - 0x4
 #   rr13 - 0x0
 #   STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
 # OUTPUT:

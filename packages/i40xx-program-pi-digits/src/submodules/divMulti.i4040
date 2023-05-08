@@ -31,11 +31,6 @@ divMWxMW:
   XCH rr15
   LDM 0x0A
   JMS clearVarFromMainMemory
-  FIM r0, 0x89
-  STC                               # set carry to have "greater or equal" check instead of just "greater"
-  JMS compareVarsFromMainMemory     # if dividend is smaller than divisor, just exit
-  JCN nc, divMWxMW_return
-  CLC
   SB1
   FIM r0, 0x90
   LD rr15
@@ -106,11 +101,7 @@ divMWxMW_denormalize:
   XCH rr3
   LDM 0x8
   XCH rr5
-  # shift reminder and divisor to right by NLZ
-  FIM r0, 0x80
-  LD rr15
-  XCH rr6
-  JMS shiftRightVarFromMainMemory
+  # shift divisor to right by NLZ
   FIM r0, 0x90
   LD rr15
   XCH rr6

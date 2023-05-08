@@ -1,6 +1,8 @@
 %include "memory.i4040"
 %include "mulMod_binary_fast.i4040"
 
+%define STATUS_MEM_VARIABLE_MOD_POWER_BASE  0xA
+
 # INPUT:
 #   STATUS_MEM_VARIABLE_CURRENT_PRIME - base
 #   rr6 - exponent

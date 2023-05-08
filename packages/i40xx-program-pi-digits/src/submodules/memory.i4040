@@ -17,7 +17,7 @@
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_ZERO_V_MULTIPLIER_B         0x2
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_REDUCED_COEF_B              0x3
 %define STATUS_MEM_VARIABLE_MODULUS                                   0x4
-%define STATUS_MEM_VARIABLE_CHUNKS_COUNT                              0x6
+%define STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG                          0x6
 %define STATUS_MEM_VARIABLE_V                                         0x6
 %define STATUS_MEM_VARIABLE_VMAX                                      0x6
 %define STATUS_MEM_VARIABLE_MODULUS_NEG                               0x7
@@ -28,10 +28,12 @@
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_MULTIPLIER_B                0x8
 %define STATUS_MEM_VARIABLE_CURRENT_PRIME                             0x9
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_ZERO_V_LOOP_LIMIT           0x9
+%define STATUS_MEM_VARIABLE_UPDATE_DIGITS_POWERED_L                   0x9
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_REDUCED_COEF_A              0xA
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_ZERO_V_MULTIPLIER_B_FACTOR  0xA
-%define STATUS_MEM_VARIABLE_MOD_POWER_BASE                            0xA
 %define STATUS_MEM_VARIABLE_CURRENT_PRIME_POW                         0xA
+%define STATUS_MEM_VARIABLE_UPDATE_DIGITS_CHUNK_NO                    0xA
+%define STATUS_MEM_VARIABLE_UPDATE_DIGITS_CHUNK_COUNTER               0xA
 %define STATUS_MEM_VARIABLE_F                                         0xB
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_A                           0xC
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_K                           0xD

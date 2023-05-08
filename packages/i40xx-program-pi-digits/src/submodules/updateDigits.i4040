@@ -1,0 +1,394 @@
+%include "memory.i4040"
+%include "mulMod_binary_batch.i4040"
+%include "power10.i4040"
+%include "divMulti.i4040"
+
+# INPUT:
+# OUTPUT:
+updateDigits:
+  BBL 0
+
+# INPUT:
+# OUTPUT:
+updateDigits_oneVMax:
+  BBL 0
+
+# INPUT:
+#   STATUS_MEM_VARIABLE_MODULUS
+#   STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG
+#   STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
+#   STATUS_MEM_VARIABLE_F
+#   MAIN_MEM_VARIABLE_DIV_DIVISOR - m
+#   rr6 - 0x0
+#   rr7 - 0x4
+#   rr6' - 0x0
+#   rr7' - 0x4
+#   rr13 - 0x0
+#   digits chunks
+# OUTPUT:
+#   digits chunks
+# VARIABLES:
+#   STATUS_MEM_VARIABLE_UPDATE_DIGITS_POWERED_L
+#   STATUS_MEM_VARIABLE_UPDATE_DIGITS_CHUNK_NO
+#   STATUS_MEM_VARIABLE_UPDATE_DIGITS_CHUNK_COUNTER
+updateDigits_computedF:
+  JMS power10
+
+  LD rr0
+  ADD rr1
+  ADD rr2
+  ADD rr3
+  JCN nz, updateDigits_computedF_updateChunks
+  JCN c, updateDigits_computedF_updateChunks               # if (poweredL !== 0)
+  BBL 0
+
+updateDigits_computedF_updateChunks:
+  FIM r4, $STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG . 0
+  SRC r4
+  RD0
+  XCH rr14
+  RD1
+  XCH rr15
+
+  FIM r4, $STATUS_MEM_VARIABLE_UPDATE_DIGITS_CHUNK_NO . 0
+  SRC r4
+  LD rr14
+  WR2
+  LD rr15
+  WR3                                                      # counter = 0x100 - chunkCount
+  CLB
+  WR0
+  WR1                                                      # chunkNo = 0x00
+
+  FIM r4, $STATUS_MEM_VARIABLE_UPDATE_DIGITS_POWERED_L . 0
+  SRC r4
+
+updateDigits_computedF_updateChunks_loop:
+  LD rr0
+  WR0
+  LD rr1
+  WR1
+  LD rr3
+  WR2
+  LD rr2
+  WR3
+
+  FIM r6, $STATUS_MEM_VARIABLE_F . 0
+  JMS mulMod
+  DCL                                                      # tmp = (poweredL * f) % m
+
+  FIM r7, $STATUS_MEM_VARIABLE_MODULUS_NEG . 0
+  SRC r7
+  RD0
+  ADD rr0
+  XCH rr10
+  RD1
+  ADD rr1
+  XCH rr11
+  RD2
+  ADD rr3
+  XCH rr12
+  RD3
+  ADD rr2
+  XCH rr13
+  JCN nc, updateDigits_computedF_updateChunks_divide       # if (tmp < m)
+
+  LD rr10
+  XCH rr0
+  LD rr11
+  XCH rr1
+  LD rr12
+  XCH rr3
+  LD rr13
+  XCH rr2                                                  # tmp = tmp - m
+
+updateDigits_computedF_updateChunks_divide:
+  CLC
+  FIM r7, $MAIN_MEM_VARIABLE_DIV_DIVIDEND . C
+  SRC r7
+  LD rr0
+  RAL
+  CLC
+  RAL
+  CLC
+  WRM
+  INC rr15
+  SRC r7
+  LD rr0
+  RAR
+  CLC
+  RAR
+  CLC
+  XCH rr0
+  LD rr1
+  RAL
+  CLC
+  RAL
+  CLC
+  ADD rr0
+  WRM
+  INC rr15
+  SRC r7
+  LD rr1
+  RAR
+  CLC
+  RAR
+  CLC
+  XCH rr1
+  LD rr3
+  RAL
+  CLC
+  RAL
+  CLC
+  ADD rr1
+  WRM
+  INC rr15
+  SRC r7
+  LD rr3
+  RAR
+  CLC
+  RAR
+  CLC
+  XCH rr3
+  LD rr2
+  RAL
+  CLC
+  RAL
+  CLC
+  ADD rr3
+  WRM
+  INC rr15
+  SRC r7
+  LD rr2
+  RAR
+  CLC
+  RAR
+  CLC
+  WRM
+  CLB
+  INC rr15
+  SRC r7
+  WRM
+  INC rr15
+  SRC r7
+  WRM
+  INC rr15
+  SRC r7
+  WRM
+  INC rr15
+  SRC r7
+  WRM
+
+  JMS divMWxMW
+
+  SB1
+  FIM r4, $MAIN_MEM_VARIABLE_DIV_QUOTIENT . 8
+  SRC r4
+  RDM
+  XCH rr0
+  INC rr9
+  SRC r4
+  RDM
+  XCH rr1
+  INC rr9
+  SRC r4
+  RDM
+  XCH rr2
+  INC rr9
+  SRC r4
+  RDM
+  XCH rr3
+  INC rr9
+  SRC r4
+  RDM
+  XCH rr4
+  INC rr9
+  SRC r4
+  RDM
+  XCH rr5
+  INC rr9
+  SRC r4
+  RDM
+  XCH rr6
+  INC rr9
+  SRC r4
+  RDM
+  XCH rr7
+  SB0
+  FIM r0, $MAIN_MEM_VARIABLE_DIV_QUOTIENT . 0
+  SRC r0
+  RDM
+  XCH rr8
+  INC rr1
+  SRC r0
+  RDM
+  XCH rr9
+  INC rr1
+  SRC r0
+  RDM
+  XCH rr10
+  INC rr1
+  SRC r0
+  RDM
+  XCH rr11
+  INC rr1
+  SRC r0
+  RDM
+  XCH rr12
+  INC rr1
+  SRC r0
+  RDM
+  XCH rr13
+  INC rr1
+  SRC r0
+  RDM
+  XCH rr14
+  INC rr1
+  SRC r0
+  RDM
+  XCH rr15                                                 # Di = [rr8..rr15, rr0..rr7] = (((poweredL * f) % m) << 50) / m
+
+  RD0
+  XCH rr0
+  RD1
+  DCL
+  CLB
+  XCH rr1
+  SRC r0
+  LD rr8
+  ADM
+  WRM
+  INC rr1
+  SRC r0
+  LD rr9
+  ADM
+  WRM
+  INC rr1
+  SRC r0
+  LD rr10
+  ADM
+  WRM
+  INC rr1
+  SRC r0
+  LD rr11
+  ADM
+  WRM
+  INC rr1
+  SRC r0
+  LD rr12
+  ADM
+  WRM
+  INC rr1
+  SRC r0
+  LD rr13
+  ADM
+  WRM
+  INC rr1
+  SRC r0
+  LD rr14
+  ADM
+  WRM
+  INC rr1
+  SRC r0
+  LD rr15
+  ADM
+  WRM
+  LD rr0
+  XCH rr10
+  LDM 0x8
+  XCH rr11
+  SRC r5
+  SB1
+  LD rr0
+  ADM
+  WRM
+  INC rr11
+  SRC r5
+  LD rr1
+  ADM
+  WRM
+  INC rr11
+  SRC r5
+  LD rr2
+  ADM
+  WRM
+  INC rr11
+  SRC r5
+  LD rr3
+  ADM
+  WRM
+  INC rr11
+  SRC r5
+  LD rr4
+  ADM
+  WRM
+  INC rr11
+  SRC r5
+  LD rr5
+  ADM
+  WRM
+  INC rr11
+  SRC r5
+  LD rr6
+  ADM
+  WRM
+  INC rr11
+  SRC r5
+  LD rr7
+  ADM
+  WRM                                                      # digits[chunkNo] = digits[chunkNo] + Di
+
+  FIM r3, 0x04
+  SB0
+  FIM r3, 0x04
+
+  LDM $BANK_WITH_VARIABLES
+  DCL
+
+  FIM r6, $STATUS_MEM_VARIABLE_UPDATE_DIGITS_CHUNK_NO . 0
+  SRC r6
+  RD2
+  IAC
+  WR2
+  RD3
+  ADD rr13
+  JCN c, updateDigits_computedF_return                     # if (chunkNo >= chunksCount)
+  WR3
+  RD0
+  IAC
+  WR0
+  RD1
+  ADD rr13
+  WR1                                                      # chunkNo++
+
+  FIM r6, $STATUS_MEM_VARIABLE_UPDATE_DIGITS_POWERED_L . 0
+  SRC r6
+  RD0
+  XCH rr0
+  RD1
+  XCH rr1
+  RD2
+  XCH rr3
+  RD3
+  XCH rr2
+
+  FIM r7, 0x30
+  FIM r5, 0x0E
+  FIM r6, 0x80
+  JMS mulMod_shiftedFactorLoaded                           # powered = (poweredL * 1000) % m
+
+  FIM r7, 0x30
+  FIM r5, 0x0E
+  FIM r6, 0x80
+  JMS mulMod_shiftedFactorLoaded                           # powered = (poweredL * 1000) % m
+
+  FIM r7, 0x30
+  FIM r5, 0x0E
+  FIM r6, 0x80
+  JMS mulMod_shiftedFactorLoaded                           # powered = (poweredL * 1000) % m
+  DCL
+  JUN updateDigits_computedF_updateChunks_loop
+
+updateDigits_computedF_return:
+  CLC
+  BBL 0

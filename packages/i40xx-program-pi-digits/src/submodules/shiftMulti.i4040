@@ -36,14 +36,12 @@ shiftLeftVarFromMainMemory_loop:
   SRC r0
   RDM
   JMS shift4ByR2                            # rr12 = var[i - 1] >> (4 - s)
-  DCL
   LD rr12
   XCH rr6
   INC rr1
   SRC r0
   RDM
   JMS shift4ByR1                            # rr13 = var[i] << s
-  DCL
   LD rr13
   ADD rr6
   WRM                                       # var[i] = (var[i] << s) | (var[i - 1] >> (4 - s))
@@ -55,7 +53,6 @@ shiftLeftVarFromMainMemory_loop:
   SRC r0
   RDM
   JMS shift4ByR1
-  DCL
   LD rr13                                   # var[0] = var[0] << s
   WRM
 shiftLeftVarFromMainMemory_ret:
