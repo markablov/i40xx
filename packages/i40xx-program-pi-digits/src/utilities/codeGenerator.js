@@ -160,3 +160,8 @@ export const generateMemoryStatusCharactersInitialization = (memoryRegNo, values
  * Generate instruction to switch memory bank
  */
 export const generateMemoryBankSwitch = (bankNo) => [`LDM ${bankNo}`, 'DCL'];
+
+/*
+ * Generate instruction to switch register index bank
+ */
+export const generateRegisterBankSwitch = (bankNo) => [bankNo === 0 ? 'SB0' : 'SB1'];
