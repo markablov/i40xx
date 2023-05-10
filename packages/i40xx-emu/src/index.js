@@ -14,9 +14,9 @@ class System {
   #instructionCycles = 0n;
 
   constructor({ romDump, ramDump, ramOutputHandler }) {
-    this.#cpu = new CPU();
+    this.#cpu = new CPU(this);
     this.#rom = new ROM(this.#cpu.pins);
-    this.#rom.loadDump(romDump);
+    this.#rom.loadDump(Array.isArray(romDump) ? romDump : [romDump]);
 
     this.#ram = new RAM(
       this.#cpu.pins,

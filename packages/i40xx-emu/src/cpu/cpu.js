@@ -1,4 +1,4 @@
-import CPUPins, { SYNC, D0, D1, D2, D3, CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3 } from './pins.js';
+import CPUPins, { SYNC, D0, D1, D2, D3, CM_RAM0, CM_RAM1, CM_RAM2, CM_RAM3, CM_ROM0, CM_ROM1 } from './pins.js';
 
 const STACK_DEPTH = 7;
 
@@ -15,6 +15,7 @@ class CPU {
     pc: 0,
     // CM-RAM0 should be selected by default
     ramControl: 0b0001,
+    selectedRomBank: 0,
     selectedRegisterBank: 0,
     sp: 0,
     stack: Array.from(Array(STACK_DEPTH), () => 0),
@@ -22,9 +23,15 @@ class CPU {
 
   #pins;
 
-  constructor() {
+  #syncStep = 0;
+
+  #requestToSwitchRomBank = null;
+
+  #system;
+
+  constructor(system) {
     this.#pins = new CPUPins();
-    this.syncStep = 0;
+    this.#system = system;
   }
 
   // it's circular buffer
@@ -205,6 +212,20 @@ class CPU {
           */
           case 0x7:
             this.registers.acc &= this.#readIndexRegister(7);
+            break;
+
+          /*
+          * DB0 instruction
+          */
+          case 0x8:
+            this.#requestToSwitchRomBank = { targetCycle: this.#system.instructionCycles + 2n, bankNo: 0 };
+            break;
+
+          /*
+          * DB1 instruction
+          */
+          case 0x9:
+            this.#requestToSwitchRomBank = { targetCycle: this.#system.instructionCycles + 2n, bankNo: 1 };
             break;
 
           /*
@@ -633,7 +654,7 @@ class CPU {
    */
   tick() {
     // generate SYNC signal every 8 cycles
-    switch (this.syncStep) {
+    switch (this.#syncStep) {
       // X3 stage
       case 0:
         if (this.opr !== undefined) {
@@ -647,6 +668,12 @@ class CPU {
             this.previousOp = { opa: this.opa, opr: this.opr, pc: oldPC };
           }
         }
+
+        if (this.#requestToSwitchRomBank?.targetCycle === this.#system.instructionCycles) {
+          this.registers.selectedRomBank = this.#requestToSwitchRomBank.bankNo;
+          this.#requestToSwitchRomBank = null;
+        }
+
         this.#pins.setPin(SYNC, 1);
         break;
       // A1 stage
@@ -661,6 +688,7 @@ class CPU {
       // A3 stage
       case 3:
         this.#pins.setPinsData([D0, D1, D2, D3], (this.registers.pc & 0x0F00) >> 8);
+        this.#pins.setPinsData([CM_ROM0, CM_ROM1], this.registers.selectedRomBank === 1 ? 0b10 : 0b01);
         break;
       // M1 stage
       case 4:
@@ -675,6 +703,7 @@ class CPU {
         }
         // lowest 4bit of instruction
         this.opa = this.#pins.getPinsData([D0, D1, D2, D3]);
+        this.#pins.setPinsData([CM_ROM0, CM_ROM1], 0b00);
         break;
       // X1 stage
       case 6:
@@ -687,14 +716,14 @@ class CPU {
       // X2 stage
       case 7:
         this.#executeAtX2(this.opr, this.opa);
-        this.syncStep = -1;
+        this.#syncStep = -1;
         break;
 
       default:
         break;
     }
 
-    this.syncStep++;
+    this.#syncStep++;
   }
 }
 

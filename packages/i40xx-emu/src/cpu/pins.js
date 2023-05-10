@@ -1,5 +1,6 @@
 export const SYNC = Symbol('cpu/pins/SYNC');
-export const CM_ROM = Symbol('cpu/pins/CM_ROM');
+export const CM_ROM0 = Symbol('cpu/pins/CM_ROM0');
+export const CM_ROM1 = Symbol('cpu/pins/CM_ROM1');
 export const CM_RAM0 = Symbol('cpu/pins/CM_RAM0');
 export const CM_RAM1 = Symbol('cpu/pins/CM_RAM1');
 export const CM_RAM2 = Symbol('cpu/pins/CM_RAM2');
@@ -12,7 +13,8 @@ export const D3 = Symbol('cpu/pins/D3');
 class CPUPins {
   #pins = {
     [SYNC]: 0,
-    [CM_ROM]: 1,
+    [CM_ROM0]: 1,
+    [CM_ROM1]: 0,
     [CM_RAM0]: 0,
     [CM_RAM1]: 0,
     [CM_RAM2]: 0,

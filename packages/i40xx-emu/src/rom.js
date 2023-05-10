@@ -1,25 +1,30 @@
-import { SYNC, D0, D1, D2, D3 } from './cpu/pins.js';
+import { SYNC, D0, D1, D2, D3, CM_ROM1 } from './cpu/pins.js';
 
 class ROM {
+  state = 0;
+
+  address = 0;
+
+  banks = [new Uint8Array(0), new Uint8Array(0)];
+
+  selectedBank = 0;
+
   constructor(cpuPins) {
     this.cpu = cpuPins;
-    this.data = new Uint8Array(0);
-    this.state = 0;
-    this.address = 0;
   }
 
   /*
    * Check if provided address is in range for ROM
    */
   isAddressValid(address) {
-    return address >= 0 && address < this.data.length;
+    return address >= 0 && address < this.banks[this.selectedBank].length;
   }
 
   /*
    * Load dump to ROM
    */
-  loadDump(dump) {
-    this.data = dump;
+  loadDump(banks) {
+    this.banks = banks;
   }
 
   /*
@@ -43,15 +48,16 @@ class ROM {
       // A3 stage
       case 2:
         this.address |= (this.cpu.getPinsData([D0, D1, D2, D3]) << 8);
+        this.selectedBank = this.cpu.getPin(CM_ROM1) === 1 ? 1 : 0;
         if (!this.isAddressValid(this.address)) {
           throw `Address ${this.address} is not valid`;
         }
 
-        this.cpu.setPinsData([D0, D1, D2, D3], this.data[this.address] >> 4);
+        this.cpu.setPinsData([D0, D1, D2, D3], this.banks[this.selectedBank][this.address] >> 4);
         break;
       // M1 stage
       case 3:
-        this.cpu.setPinsData([D0, D1, D2, D3], this.data[this.address] & 0xF);
+        this.cpu.setPinsData([D0, D1, D2, D3], this.banks[this.selectedBank][this.address] & 0xF);
         break;
       // M2 stage
       case 4:
