@@ -1,20 +1,21 @@
 const MINIMAL_BLOCKS_SET_TO_CACHE = 3;
+const ROM_BANK_COUNT = 2;
 
-const RomPages = class RomPages {
+const RomBank = class RomBank {
   static ROM_PAGES_COUNT = 0x10;
 
   static BYTES_PER_ROM_PAGE = 0x100;
 
   static getAbsoluteAddress(page, offset) {
-    return page * RomPages.BYTES_PER_ROM_PAGE + offset;
+    return page * RomBank.BYTES_PER_ROM_PAGE + offset;
   }
 
   static getPageFromAddress(address) {
-    return Math.trunc(address / RomPages.BYTES_PER_ROM_PAGE);
+    return Math.trunc(address / RomBank.BYTES_PER_ROM_PAGE);
   }
 
   static getPageOffsetFromAddress(address) {
-    return address % RomPages.BYTES_PER_ROM_PAGE;
+    return address % RomBank.BYTES_PER_ROM_PAGE;
   }
 
   #currentPage = 0;
@@ -26,20 +27,20 @@ const RomPages = class RomPages {
   #blocksRomOffsets = new Map();
 
   constructor() {
-    this.#pages = Array.from(new Array(RomPages.ROM_PAGES_COUNT), () => (new Uint8Array(RomPages.BYTES_PER_ROM_PAGE)));
+    this.#pages = Array.from(new Array(RomBank.ROM_PAGES_COUNT), () => (new Uint8Array(RomBank.BYTES_PER_ROM_PAGE)));
   }
 
   goToNextPage() {
     this.#currentPage++;
     this.#currentPageOffset = 0;
-    if (this.#currentPage >= RomPages.ROM_PAGES_COUNT) {
+    if (this.#currentPage >= RomBank.ROM_PAGES_COUNT) {
       throw Error("Couldn't fit all codeblocks into ROM!");
     }
   }
 
   addSingleBytePadding() {
     this.#currentPageOffset++;
-    if (this.#currentPageOffset === RomPages.BYTES_PER_ROM_PAGE) {
+    if (this.#currentPageOffset === RomBank.BYTES_PER_ROM_PAGE) {
       this.goToNextPage();
     }
   }
@@ -47,17 +48,16 @@ const RomPages = class RomPages {
   /*
    * Insert block to specific position without updating cursor
    */
-  putBlock(block, blockIdx, page, offset) {
-    const absoluteAddress = RomPages.getAbsoluteAddress(page, offset);
-    this.#blocksRomOffsets.set(blockIdx, absoluteAddress);
+  putBlock(block, page, offset) {
+    const absoluteAddress = RomBank.getAbsoluteAddress(page, offset);
+    this.#blocksRomOffsets.set(block.id, absoluteAddress);
     this.#pages[page].set(block.bytecode, offset);
-    return absoluteAddress;
   }
 
   /*
    * Append block to ROM and advance cursor
    */
-  appendBlock(block, blockIdx, page, offset) {
+  appendBlock(block, page, offset) {
     if (page !== undefined && offset !== undefined) {
       if (page < this.#currentPage) {
         throw Error('Wrong order of blocks to append to ROM!');
@@ -71,15 +71,15 @@ const RomPages = class RomPages {
       this.#currentPageOffset = offset;
     }
 
-    const absoluteAddress = RomPages.getAbsoluteAddress(this.#currentPage, this.#currentPageOffset);
-    this.#blocksRomOffsets.set(blockIdx, absoluteAddress);
+    const absoluteAddress = RomBank.getAbsoluteAddress(this.#currentPage, this.#currentPageOffset);
+    this.#blocksRomOffsets.set(block.id, absoluteAddress);
 
     const blockSize = block.bytecode.length;
-    const freeSpaceInCurrentPage = RomPages.BYTES_PER_ROM_PAGE - this.#currentPageOffset;
+    const freeSpaceInCurrentPage = RomBank.BYTES_PER_ROM_PAGE - this.#currentPageOffset;
     if (freeSpaceInCurrentPage > blockSize) {
       this.#pages[this.#currentPage].set(block.bytecode, this.#currentPageOffset);
       this.#currentPageOffset += blockSize;
-      return absoluteAddress;
+      return;
     }
 
     this.#pages[this.#currentPage].set(block.bytecode.slice(0, freeSpaceInCurrentPage), this.#currentPageOffset);
@@ -88,20 +88,18 @@ const RomPages = class RomPages {
     let blockOffset = freeSpaceInCurrentPage;
     while (blockOffset < blockSize) {
       const bytesLeft = blockSize - blockOffset;
-      if (bytesLeft >= RomPages.BYTES_PER_ROM_PAGE) {
-        const currentBytecodeChunk = block.bytecode.slice(blockOffset, blockOffset + RomPages.BYTES_PER_ROM_PAGE);
+      if (bytesLeft >= RomBank.BYTES_PER_ROM_PAGE) {
+        const currentBytecodeChunk = block.bytecode.slice(blockOffset, blockOffset + RomBank.BYTES_PER_ROM_PAGE);
         this.#pages[this.#currentPage].set(currentBytecodeChunk, 0);
         this.goToNextPage();
-        blockOffset += RomPages.BYTES_PER_ROM_PAGE;
+        blockOffset += RomBank.BYTES_PER_ROM_PAGE;
         continue;
       }
 
       this.#pages[this.#currentPage].set(block.bytecode.slice(blockOffset), 0);
       this.#currentPageOffset = bytesLeft;
-      return absoluteAddress;
+      return;
     }
-
-    return absoluteAddress;
   }
 
   /*
@@ -110,32 +108,23 @@ const RomPages = class RomPages {
    * For short jumps, 2nd byte of instruction is updated, for long jumps we also modify 1st byte of instruction to
    *   include highest 4bit of address.
    */
-  updateEncodedAddress(blockIdx, addressOffset, referencedBlockIdx, referencedInstructionOffset, isShort) {
-    const absoluteBlockAddress = this.#blocksRomOffsets.get(blockIdx);
-    const absoluteTargetBlockAddress = this.#blocksRomOffsets.get(referencedBlockIdx);
-    const targetAddress = absoluteTargetBlockAddress + referencedInstructionOffset;
-    const absoluteAddressOffset = absoluteBlockAddress + addressOffset;
-    const pageWithLowPartOfAddress = this.#pages[RomPages.getPageFromAddress(absoluteAddressOffset)];
-    const pageOffsetWithLowPartOfAddress = RomPages.getPageOffsetFromAddress(absoluteAddressOffset);
-    pageWithLowPartOfAddress[pageOffsetWithLowPartOfAddress] = targetAddress & 0xFF;
+  updateEncodedAddress(absoluteAddressOffset, absoluteTargetOffset, isShort) {
+    const pageWithLowPartOfAddress = this.#pages[RomBank.getPageFromAddress(absoluteAddressOffset)];
+    const pageOffsetWithLowPartOfAddress = RomBank.getPageOffsetFromAddress(absoluteAddressOffset);
+    pageWithLowPartOfAddress[pageOffsetWithLowPartOfAddress] = absoluteTargetOffset & 0xFF;
     if (isShort) {
       return;
     }
 
     // to handle cases when instruction placed at XX:0xFF location, we need to re-evaluate page number and offsets
-    const pageWithHighPartOfAddress = this.#pages[RomPages.getPageFromAddress(absoluteAddressOffset - 1)];
-    const pageOffsetWithHighPartOfAddress = RomPages.getPageOffsetFromAddress(absoluteAddressOffset - 1);
+    const pageWithHighPartOfAddress = this.#pages[RomBank.getPageFromAddress(absoluteAddressOffset - 1)];
+    const pageOffsetWithHighPartOfAddress = RomBank.getPageOffsetFromAddress(absoluteAddressOffset - 1);
     const instruction = pageWithHighPartOfAddress[pageOffsetWithHighPartOfAddress];
-    pageWithHighPartOfAddress[pageOffsetWithHighPartOfAddress] = instruction | (targetAddress >> 8);
+    pageWithHighPartOfAddress[pageOffsetWithHighPartOfAddress] = instruction | (absoluteTargetOffset >> 8);
   }
 
-  getAbsoluteAddressFromBlockOffset(blockIdx, offset) {
-    const absoluteBlockAddress = this.#blocksRomOffsets.get(blockIdx);
-    if (absoluteBlockAddress === undefined) {
-      return null;
-    }
-
-    return absoluteBlockAddress + offset;
+  get blockOffsets() {
+    return this.#blocksRomOffsets;
   }
 
   get usedSpaceInPage() {
@@ -147,7 +136,7 @@ const RomPages = class RomPages {
   }
 
   get romSize() {
-    return this.#currentPage * RomPages.BYTES_PER_ROM_PAGE + this.#currentPageOffset;
+    return this.#currentPage * RomBank.BYTES_PER_ROM_PAGE + this.#currentPageOffset;
   }
 };
 
@@ -157,20 +146,20 @@ const RomPages = class RomPages {
  *  - caller instruction and callee block first instruction should be on the same ROM page
  */
 const checkPlacementVariant = (blocks, blocksRomOffsets, blocksPlacement) => {
-  for (const blockIdx of blocksPlacement) {
-    const callerBlockRomOffset = blocksRomOffsets.get(blockIdx);
-    for (const { addressOffset, refBlockIdx, refInstructionOffset, isShort } of blocks[blockIdx].references) {
+  for (const blockId of blocksPlacement) {
+    const callerBlockRomOffset = blocksRomOffsets.get(blockId);
+    for (const { addressOffset, refBlockId, refInstructionOffset, isShort } of blocks[blockId].references) {
       if (!isShort) {
         continue;
       }
 
       const absoluteOffset = callerBlockRomOffset + (addressOffset - 1);
-      if ((absoluteOffset % RomPages.BYTES_PER_ROM_PAGE) >= (RomPages.BYTES_PER_ROM_PAGE - 2)) {
+      if ((absoluteOffset % RomBank.BYTES_PER_ROM_PAGE) >= (RomBank.BYTES_PER_ROM_PAGE - 2)) {
         return false;
       }
 
-      const callerRomPage = RomPages.getPageFromAddress(absoluteOffset);
-      const calleeRomPage = RomPages.getPageFromAddress(blocksRomOffsets.get(refBlockIdx) + refInstructionOffset);
+      const callerRomPage = RomBank.getPageFromAddress(absoluteOffset);
+      const calleeRomPage = RomBank.getPageFromAddress(blocksRomOffsets.get(refBlockId) + refInstructionOffset);
       if (callerRomPage !== calleeRomPage) {
         return false;
       }
@@ -183,18 +172,18 @@ const checkPlacementVariant = (blocks, blocksRomOffsets, blocksPlacement) => {
 /*
  * Returns array with block index and indexes of all dependant blocks
  */
-const getCoupledBlocksIndexes = (blocks, firstBlockIdx) => {
+const getCoupledBlocksIds = (blocks, firstBlockId) => {
   const coupledBlocks = new Set();
-  const blocksToAdd = [firstBlockIdx];
+  const blocksToAdd = [firstBlockId];
 
   while (blocksToAdd.length) {
-    const blockIdx = blocksToAdd.shift();
-    if (coupledBlocks.has(blockIdx)) {
+    const blockId = blocksToAdd.shift();
+    if (coupledBlocks.has(blockId)) {
       continue;
     }
 
-    coupledBlocks.add(blockIdx);
-    blocksToAdd.push(...blocks[blockIdx].references.filter((block) => block.isShort).map((block) => block.refBlockIdx));
+    coupledBlocks.add(blockId);
+    blocksToAdd.push(...blocks[blockId].references.filter((block) => block.isShort).map((block) => block.refBlockId));
   }
 
   return [...coupledBlocks];
@@ -203,17 +192,17 @@ const getCoupledBlocksIndexes = (blocks, firstBlockIdx) => {
 /*
  * Returns placement for set of coupled blocks if it's present in cache
  */
-const getCachedPlacementForCoupledBlocks = (placementCache, blocks, coupledBlockIndexes) => {
-  const cacheSection = placementCache[coupledBlockIndexes.length];
+const getCachedPlacementForCoupledBlocks = (placementCache, blocks, coupledBlockIds) => {
+  const cacheSection = placementCache[coupledBlockIds.length];
   if (!cacheSection) {
     return null;
   }
 
   for (const cacheEntry of cacheSection) {
     const { coupledBlocks, offset: cachedOffset } = cacheEntry;
-    const placement = new Array(coupledBlockIndexes.length);
-    for (const blockIdx of coupledBlockIndexes) {
-      const block = blocks[blockIdx];
+    const placement = new Array(coupledBlockIds.length);
+    for (const blockId of coupledBlockIds) {
+      const block = blocks[blockId];
       const similarCacheBlocks = coupledBlocks[`${block.references.length}, ${block.bytecode.length}`];
       const matchingCacheBlock = similarCacheBlocks?.find(
         ({ references: refs, placementPosition }) => (
@@ -226,7 +215,7 @@ const getCachedPlacementForCoupledBlocks = (placementCache, blocks, coupledBlock
         break;
       }
 
-      placement[matchingCacheBlock.placementPosition] = blockIdx;
+      placement[matchingCacheBlock.placementPosition] = blockId;
     }
 
     if (placement.includes(undefined)) {
@@ -247,8 +236,8 @@ const insertCachedPlacementForCoupledBlocks = (placementCache, blocks, pageOffse
   const cacheSection = placementCache[placement.length] || (placementCache[placement.length] = []);
 
   const coupledBlocks = {};
-  for (const [placementPosition, blockIdx] of placement.entries()) {
-    const { references, bytecode } = blocks[blockIdx];
+  for (const [placementPosition, blockId] of placement.entries()) {
+    const { references, bytecode } = blocks[blockId];
     const key = `${references.length}, ${bytecode.length}`;
     (coupledBlocks[key] || (coupledBlocks[key] = [])).push({
       placementPosition,
@@ -259,19 +248,6 @@ const insertCachedPlacementForCoupledBlocks = (placementCache, blocks, pageOffse
   }
 
   cacheSection.push({ coupledBlocks, offset: pageOffset, inUse: true });
-};
-
-/*
- * Append blocks to RAM, following provided placement
- */
-const appendBlocksAccordingPlacement = (placement, blocks, romPages, sourceMap) => {
-  for (const blockIdx of placement) {
-    const block = blocks[blockIdx];
-    const romAddress = romPages.appendBlock(block, blockIdx);
-    for (const { instructionOffset, line } of block.sourceCodeLines) {
-      sourceMap.push({ romOffset: romAddress + instructionOffset, line });
-    }
-  }
 };
 
 /*
@@ -293,16 +269,18 @@ const appendBlocksAccordingPlacement = (placement, blocks, romPages, sourceMap) 
  *      ]
  *    }
  */
-const placeCodeBlock = (blocks, attemptedBlockIdx, romPages, sourceMap, placementCache) => {
-  const pageOffset = romPages.usedSpaceInPage;
-  const coupledBlocks = getCoupledBlocksIndexes(blocks, attemptedBlockIdx);
+const placeCodeBlock = (blocks, attemptedBlockId, romBank, placementCache) => {
+  const pageOffset = romBank.usedSpaceInPage;
+  const coupledBlocks = getCoupledBlocksIds(blocks, attemptedBlockId);
   if (placementCache && coupledBlocks.length >= MINIMAL_BLOCKS_SET_TO_CACHE) {
     const cachedPlacement = getCachedPlacementForCoupledBlocks(placementCache, blocks, coupledBlocks);
     if (cachedPlacement) {
       if (cachedPlacement.offset !== pageOffset) {
         return false;
       }
-      appendBlocksAccordingPlacement(cachedPlacement.placement, blocks, romPages, sourceMap);
+      for (const blockId of cachedPlacement.placement) {
+        romBank.appendBlock(blocks[blockId]);
+      }
       return true;
     }
   }
@@ -315,9 +293,9 @@ const placeCodeBlock = (blocks, attemptedBlockIdx, romPages, sourceMap, placemen
       const blocksPlacement = prefix;
 
       let offset = pageOffset;
-      for (const blockIdx of blocksPlacement) {
-        blocksRelativeRomOffsets.set(blockIdx, offset);
-        offset += blocks[blockIdx].bytecode.length;
+      for (const blockId of blocksPlacement) {
+        blocksRelativeRomOffsets.set(blockId, offset);
+        offset += blocks[blockId].bytecode.length;
       }
 
       if (!checkPlacementVariant(blocks, blocksRelativeRomOffsets, blocksPlacement)) {
@@ -327,7 +305,10 @@ const placeCodeBlock = (blocks, attemptedBlockIdx, romPages, sourceMap, placemen
       if (placementCache && coupledBlocks.length >= MINIMAL_BLOCKS_SET_TO_CACHE) {
         insertCachedPlacementForCoupledBlocks(placementCache, blocks, pageOffset, blocksPlacement);
       }
-      appendBlocksAccordingPlacement(blocksPlacement, blocks, romPages, sourceMap);
+
+      for (const blockId of blocksPlacement) {
+        romBank.appendBlock(blocks[blockId]);
+      }
       return true;
     }
 
@@ -342,100 +323,86 @@ const placeCodeBlock = (blocks, attemptedBlockIdx, romPages, sourceMap, placemen
 /*
  * Return size of block with all dependant blocks
  */
-const getFullBlockSize = (blocks, primaryBlockIdx) => {
+const getFullBlockSize = (blocks, primaryBlockId) => {
   const blocksChecked = new Set([]);
-  const blocksQueue = [primaryBlockIdx];
+  const blocksQueue = [primaryBlockId];
 
   let sum = 0;
   while (blocksQueue.length) {
-    const blockIdx = blocksQueue.shift();
-    if (blocksChecked.has(blockIdx)) {
+    const blockId = blocksQueue.shift();
+    if (blocksChecked.has(blockId)) {
       continue;
     }
 
-    const { bytecode, references } = blocks[blockIdx];
+    const { bytecode, references } = blocks[blockId];
     sum += bytecode.length;
-    blocksQueue.push(...references.filter(({ isShort }) => isShort).map(({ refBlockIdx }) => refBlockIdx));
-    blocksChecked.add(blockIdx);
+    blocksQueue.push(...references.filter(({ isShort }) => isShort).map(({ refBlockId }) => refBlockId));
+    blocksChecked.add(blockId);
   }
 
   return sum;
 };
 
 /*
- * Updates encoded addresses for jump instructions, we can do it only after we formed ROM layout
- */
-const updateAddressesInBytecode = (blocks, romPages) => {
-  for (const [idx, { references }] of blocks.entries()) {
-    for (const { addressOffset, refBlockIdx, refInstructionOffset, isShort } of references) {
-      romPages.updateEncodedAddress(idx, addressOffset, refBlockIdx, refInstructionOffset, isShort);
-    }
-  }
-};
-
-/*
  * Try to place all code blocks into ROM in some kind of optimal manner
  */
-const fillRomWithBlocks = (blocks, sortedPrimaryBlocks, romPages, sourceMap, placementCache) => {
-  while (sortedPrimaryBlocks.size) {
+const fillRomWithBlocks = (primaryBlocks, blocks, romBank, placementCache) => {
+  while (primaryBlocks.size) {
     let hasAnyCodeBlockFit = false;
-    for (const codeBlock of sortedPrimaryBlocks) {
-      if (placeCodeBlock(blocks, codeBlock.idx, romPages, sourceMap, placementCache)) {
-        sortedPrimaryBlocks.delete(codeBlock);
+    for (const codeBlock of primaryBlocks) {
+      if (placeCodeBlock(blocks, codeBlock.id, romBank, placementCache)) {
+        primaryBlocks.delete(codeBlock);
         hasAnyCodeBlockFit = true;
         break;
       }
     }
 
     if (!hasAnyCodeBlockFit) {
-      romPages.addSingleBytePadding();
+      romBank.addSingleBytePadding();
     }
   }
 
   if (placementCache) {
-    const updatedPlacementCache = Object.fromEntries(
-      Object.entries(placementCache)
-        .map(([key, section]) => [key, section.filter(({ inUse }) => inUse).map(({ inUse, ...rest }) => rest)])
-        .filter(([, section]) => section.length),
-    );
+    for (const sectionName of Object.keys(placementCache)) {
+      const updatedSection = placementCache[sectionName].filter(({ inUse }) => inUse).map(({ inUse, ...rest }) => rest);
+      if (!updatedSection.length) {
+        delete placementCache[sectionName];
+        continue;
+      }
 
-    return { placementCache: updatedPlacementCache };
+      placementCache[sectionName] = updatedSection;
+    }
   }
-
-  return { placementCache: null };
 };
 
 /*
  * Return Set with primary blocks, sorted by their sizes (including dependant blocks)
  */
-const getSortedPrimaryBlocks = (blocks) => {
-  const primaryCodeBlocks = blocks
-    .map((block, idx) => ({ ...block, idx, fullSize: getFullBlockSize(blocks, idx) }))
+const getSortedPrimaryBlocks = (romBlocks, blocks) => {
+  const primaryCodeBlocks = romBlocks
+    .map((block) => ({ ...block, fullSize: getFullBlockSize(blocks, block.id) }))
     .filter(({ isDependant, fixedLocation }) => !isDependant && !fixedLocation);
 
   return new Set(primaryCodeBlocks.sort((a, b) => b.fullSize - a.fullSize));
 };
 
 const getAbsoluteAddressForFixedBlock = ({ fixedLocation: { page, offset } }) => (
-  RomPages.getAbsoluteAddress(page, offset)
+  RomBank.getAbsoluteAddress(page, offset)
 );
 
 /*
  * Places all code blocks, for which location is specified, into ROM
  */
-const fillRomWithFixedBlocks = (fixedBlocks, romPages, sourceMap) => {
+const fillRomWithFixedBlocks = (fixedBlocks, romBank) => {
   for (const block of fixedBlocks) {
-    const romAddress = romPages.appendBlock(block, block.idx, block.fixedLocation.page, block.fixedLocation.offset);
-    for (const { instructionOffset, line } of block.sourceCodeLines) {
-      sourceMap.push({ romOffset: romAddress + instructionOffset, line });
-    }
+    romBank.appendBlock(block, block.fixedLocation.page, block.fixedLocation.offset);
   }
 };
 
 /*
  * Try to fill gaps between fixed blocks with small routines
  */
-const fillGapsBetweenFixedBlocks = (blocks, fixedBlocks, primaryBlocks, romPages, sourceMap) => {
+const fillGapsBetweenFixedBlocks = (fixedBlocks, primaryBlocks, blocks, romBank) => {
   for (const [idx, fixedBlock] of fixedBlocks.entries()) {
     const nextFixedBlock = fixedBlocks[idx + 1];
     if (!nextFixedBlock) {
@@ -456,14 +423,10 @@ const fillGapsBetweenFixedBlocks = (blocks, fixedBlocks, primaryBlocks, romPages
       }
 
       let pageOffset = offset + fixedBlock.bytecode.length;
-      const coupledBlocks = getCoupledBlocksIndexes(blocks, primaryBlock.idx);
-      for (const blockIdx of coupledBlocks) {
-        const block = blocks[blockIdx];
-        const romAddress = romPages.putBlock(block, blockIdx, page, pageOffset);
-        for (const { instructionOffset, line } of block.sourceCodeLines) {
-          sourceMap.push({ romOffset: romAddress + instructionOffset, line });
-        }
-
+      const coupledBlocks = getCoupledBlocksIds(blocks, primaryBlock.id);
+      for (const blockId of coupledBlocks) {
+        const block = blocks[blockId];
+        romBank.putBlock(block, page, pageOffset);
         pageOffset += block.bytecode.length;
       }
 
@@ -474,44 +437,111 @@ const fillGapsBetweenFixedBlocks = (blocks, fixedBlocks, primaryBlocks, romPages
 };
 
 /*
- * Returns { rom, sourceMap, symbols }
- *
- * Expects code blocks in format:
- * {
- *   bytecode,
- *   sourceCodeLines: [{ instructionOffset, line }],
- *   references: [{ addressOffset, refBlockIdx, refInstructionOffset, isShort }],
- *   isDependant,
- *   fixedLocation: { page, offset },
- * }
+ * Place blocks into single rom bank
  */
-export function buildRom(codeBlocks, blockAddressedSymbols, { placementCache: cache } = {}) {
-  const sourceMap = [];
-  const romPages = new RomPages();
-
-  const primaryBlocks = getSortedPrimaryBlocks(codeBlocks);
-  const fixedBlocks = codeBlocks
-    .map((block, idx) => ({ ...block, idx }))
+const placeBlocksIntoRomBank = (romBank, blocks, bankNo, placementCache) => {
+  const romBlocks = blocks.filter(({ banksPlacement }) => banksPlacement.has(bankNo));
+  const primaryBlocks = getSortedPrimaryBlocks(romBlocks, blocks);
+  const fixedBlocks = romBlocks
     .filter(({ fixedLocation }) => !!fixedLocation)
     .sort((a, b) => getAbsoluteAddressForFixedBlock(a) - getAbsoluteAddressForFixedBlock(b));
 
-  fillRomWithFixedBlocks(fixedBlocks, romPages, sourceMap);
-  fillGapsBetweenFixedBlocks(codeBlocks, fixedBlocks, primaryBlocks, romPages, sourceMap);
-  const { placementCache: newCache } = fillRomWithBlocks(codeBlocks, primaryBlocks, romPages, sourceMap, cache);
-  updateAddressesInBytecode(codeBlocks, romPages);
+  fillRomWithFixedBlocks(fixedBlocks, romBank);
+  fillGapsBetweenFixedBlocks(fixedBlocks, primaryBlocks, blocks, romBank);
+  fillRomWithBlocks(primaryBlocks, blocks, romBank, placementCache);
+};
 
-  return {
-    placementCache: newCache,
-    sourceMap,
-    rom: romPages.rom,
-    romSize: romPages.romSize,
-    symbols: blockAddressedSymbols
-      .map(
-        ({ label, blockIdx, instructionOffset }) => ({
-          label,
-          romAddress: romPages.getAbsoluteAddressFromBlockOffset(blockIdx, instructionOffset),
-        }),
-      )
-      .filter(({ romAddress }) => romAddress !== null),
-  };
+/*
+ * Set rom bank placement for all blocks, linked via references
+ */
+const assignRomBanks = (blocks, entrypointBlockId) => {
+  const queue = [{ blockId: entrypointBlockId, bankNo: 0 }];
+  while (queue.length) {
+    const { blockId, bankNo } = queue.shift();
+    const block = blocks[blockId];
+    const bankToUse = block.fixedBank || bankNo;
+
+    if (block.banksPlacement.has(bankToUse)) {
+      continue;
+    }
+
+    block.banksPlacement.add(bankToUse);
+
+    queue.push(...block.references.map(({ refBlockId }) => ({ blockId: refBlockId, bankNo: bankToUse })));
+    if (block.fixedLocation) {
+      const samePageBlocks = blocks.filter(({ fixedLocation }) => fixedLocation?.page === block.fixedLocation.page);
+      queue.push(...samePageBlocks.map(({ id }) => ({ blockId: id, bankNo: bankToUse })));
+    }
+  }
+};
+
+/*
+ * Returns { roms: [{ data, size, sourceMap, symbols }], placementCache }
+ *
+ * Expects code blocks in format:
+ * {
+ *   id,
+ *   bytecode,
+ *   sourceCodeLines: [{ instructionOffset, line }],
+ *   references: [{ addressOffset, refBlockId, refInstructionOffset, isShort }],
+ *   isDependant,
+ *   fixedLocation: { page, offset },
+ *   fixedBank,
+ * }
+ */
+export function buildRom(codeBlocks, blockAddressedSymbols, { placementCache } = {}) {
+  for (const block of codeBlocks) {
+    block.banksPlacement = new Set();
+  }
+
+  assignRomBanks(
+    codeBlocks,
+    codeBlocks.find(({ fixedLocation }) => fixedLocation?.page === 0 && fixedLocation?.offset === 0).id,
+  );
+
+  const romBanks = Array.from(new Array(ROM_BANK_COUNT), () => new RomBank());
+  for (const [bankNo, romBank] of romBanks.entries()) {
+    placeBlocksIntoRomBank(romBank, codeBlocks, bankNo, placementCache);
+  }
+
+  const symbolsPerBlock = new Map();
+  for (const { label, blockId, instructionOffset } of blockAddressedSymbols) {
+    if (!symbolsPerBlock.has(blockId)) {
+      symbolsPerBlock.set(blockId, []);
+    }
+    symbolsPerBlock.get(blockId).push({ label, instructionOffset });
+  }
+
+  const roms = romBanks.map((romBank, bankNo) => {
+    const symbols = [];
+    const sourceMap = [];
+
+    for (const [blockId, romAddress] of romBank.blockOffsets.entries()) {
+      const block = codeBlocks[blockId];
+
+      for (const { instructionOffset, line } of block.sourceCodeLines) {
+        sourceMap.push({ romOffset: romAddress + instructionOffset, line });
+      }
+
+      for (const { instructionOffset, label } of (symbolsPerBlock.get(blockId) || [])) {
+        symbols.push({ label, romAddress: romAddress + instructionOffset });
+      }
+
+      for (const { addressOffset, refBlockId, refInstructionOffset, isShort } of block.references) {
+        const { banksPlacement } = codeBlocks[refBlockId];
+        const refBankNo = banksPlacement.has(bankNo) ? bankNo : [...banksPlacement][0];
+        const targetAddress = romBanks[refBankNo].blockOffsets.get(refBlockId) + refInstructionOffset;
+        romBank.updateEncodedAddress(romAddress + addressOffset, targetAddress, isShort);
+      }
+    }
+
+    return {
+      symbols,
+      sourceMap,
+      data: romBank.rom,
+      size: romBank.romSize,
+    };
+  });
+
+  return { roms, placementCache };
 }
