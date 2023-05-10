@@ -116,15 +116,15 @@ const handleEmulatorUpdates = (editor, session) => {
 
   emulatorStore.subscribe(
     (state) => state.registers.pc,
-    (pc, state) => {
-      if (!state.isRunning || state.runningMode !== 'debug') {
+    (pc, { isRunning, registers, runningMode }) => {
+      if (!isRunning || runningMode !== 'debug') {
         return;
       }
 
       // remove previous line highlight
       Object.values(session.getMarkers() || {}).forEach(({ id }) => session.removeMarker(id));
 
-      const line = compilerStore.getRawState().sourceCodeLineByRomOffsetMap.get(pc);
+      const line = compilerStore.getRawState().sourceCodeLineByRomOffsetPerBank[registers.selectedRomBank].get(pc);
       if (line === undefined || line === -1) {
         return;
       }

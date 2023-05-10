@@ -31,7 +31,7 @@ const commands = {
     while (!system.isFinished()) {
       system.instruction();
 
-      if (breakpoints.has(system.registers.pc)) {
+      if (breakpoints.has(`${system.registers.selectedRomBank}:${system.registers.pc}`)) {
         sendState();
         return;
       }
@@ -47,7 +47,7 @@ const commands = {
     postMessage({ command: 'finish' });
   },
 
-  run: async ({ breakpoints: inputBreakpoints, dump, mode, ramDump }) => {
+  run: async ({ breakpoints: inputBreakpoints, mode, ramDump, romDump }) => {
     if (mode !== 'debug' && mode !== 'run') {
       throw 'Unknown emulator mode';
     }
@@ -57,7 +57,7 @@ const commands = {
     system = new Emulator({
       ramDump,
       ramOutputHandler: ({ address, data, type }) => postMessage({ address, command: 'IOOutput', data, type }),
-      romDump: dump,
+      romDump,
     });
 
     sendState();

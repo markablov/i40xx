@@ -88,6 +88,10 @@ export default function Debugger() {
                   <td><Tag>Reg bank</Tag></td>
                 </tr>
                 <tr>
+                  <td>{padHex(registers.selectedRomBank || 0, 2) }</td>
+                  <td><Tag>ROM bank</Tag></td>
+                </tr>
+                <tr>
                   <td>{padHex(registers.pc || 0, 3) }</td>
                   <td><Tag>PC</Tag></td>
                 </tr>

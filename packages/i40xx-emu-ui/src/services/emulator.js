@@ -40,8 +40,18 @@ worker.onmessage = ({ data: { command, error, ...rest } }) => {
 };
 
 const convertBreakpointsFromLineToOffset = (lineBreakpoints) => {
-  const { romOffsetBySourceCodeMap } = compilerStore.getRawState();
-  return new Set([...lineBreakpoints].map((line) => romOffsetBySourceCodeMap.get(line)));
+  const { romOffsetBySourceCodePerBank } = compilerStore.getRawState();
+  const emulatorBreakpoints = new Set();
+
+  for (const line of lineBreakpoints) {
+    for (const [bankNo, romOffsetBySourceCodeMap] of romOffsetBySourceCodePerBank.entries()) {
+      if (romOffsetBySourceCodeMap.has(line)) {
+        emulatorBreakpoints.add(`${bankNo}:${romOffsetBySourceCodeMap.get(line)}`);
+      }
+    }
+  }
+
+  return emulatorBreakpoints;
 };
 
 editorStore.subscribe(
@@ -51,7 +61,7 @@ editorStore.subscribe(
   },
 );
 
-const run = (dump, mode = 'run') => {
+const run = (romDump, mode = 'run') => {
   emulatorStore.update((state) => {
     state.isRunning = true;
     state.runningMode = mode;
@@ -62,9 +72,9 @@ const run = (dump, mode = 'run') => {
   worker.postMessage({
     breakpoints: convertBreakpointsFromLineToOffset(editorStore.getRawState().breakpoints),
     command: 'run',
-    dump,
     mode,
     ramDump: emulatorStore.getRawState().initialRam,
+    romDump,
   });
 };
 

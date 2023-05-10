@@ -5,21 +5,20 @@ onmessage = ({ data: sourceCode }) => {
   const { blocks, errors, symbols: blockAddressedSymbols } = compile(sourceCode);
   if (errors.length) {
     postMessage({
-      dump: null,
       errors: errors.map(({ column, line, message, token }) => ({
         column: token ? token.startColumn : column,
         row: (token ? token.startLine : line) - 1,
         text: message,
       })),
-      sourceMap: [],
+      roms: null,
     });
     return;
   }
 
   try {
-    const { rom, sourceMap } = buildRom(blocks, blockAddressedSymbols);
-    postMessage({ dump: rom, errors: [], sourceMap });
+    const { roms } = buildRom(blocks, blockAddressedSymbols);
+    postMessage({ errors: [], roms });
   } catch (err) {
-    postMessage({ dump: null, errors: [{ column: 1, row: 1, text: err.message }], sourceMap: [] });
+    postMessage({ errors: [{ column: 1, row: 1, text: err.message }], roms: null });
   }
 };
