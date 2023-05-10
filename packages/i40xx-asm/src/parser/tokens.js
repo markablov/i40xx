@@ -19,6 +19,7 @@ addToken('Comment', { pattern: /(?:#|(?:\/\/))[^\n\r]*/, group: Lexer.SKIPPED })
 addToken('WhiteSpace', { pattern: /[^\S\r\n]+/, group: Lexer.SKIPPED });
 
 addToken('KeywordLocationShort', { pattern: /__location/ });
+addToken('KeywordRomBank', { pattern: /__rom_bank/ });
 
 const instructions = [
   'nop', 'rdm', 'rd0', 'rd1', 'rd2', 'rd3', 'rdr', 'wrm', 'wr0', 'wr1', 'wr2', 'wr3', 'wrr', 'wmp', 'adm', 'sbm', 'clb',
@@ -44,9 +45,9 @@ addToken(
   { pattern: /(?:(?:0?\d)|(?:1[0-5])|(?:0x0?[0-9a-f])):(?:(?:[01]\d\d)|(?:2[0-4]\d)|(?:25[0-5])|(?:0x[0-9a-f]{1,2})|(?:\d{1,2}))/ },
 );
 
-// Data is 12-bit maximum, so it could accept 0x000..0xFFF and 0..4095 ranges
+// Imm is 12-bit maximum, so it could accept 0x000..0xFFF and 0..4095 ranges
 // [1000..3999] OR [4000..4089] OR [4090..4095] OR [0x000..0xFFF] OR [000..999]
-addToken('Data', { pattern: /(?:[0-3]\d\d\d)|(?:40[0-8]\d)|(?:409[0-5])|(?:0x[0-9a-f]{1,3})|(?:\d{1,3})/ });
+addToken('Imm', { pattern: /(?:[0-3]\d\d\d)|(?:40[0-8]\d)|(?:409[0-5])|(?:0x[0-9a-f]{1,3})|(?:\d{1,3})/ });
 
 // important to define label name after keywords, because lexer tries to match first rule from array
 // and it could match label first because patterns of instruction names and labels are intersected

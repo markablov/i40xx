@@ -16,9 +16,11 @@ class CodeGenerator {
 
   #fixedLocations = [];
 
+  #fixedRomBanks = [];
+
   // process hex and decimal values
-  static #byteFromNumeric(data) {
-    return data.startsWith('0x') ? parseInt(data.substring(2), 16) : Number(data);
+  static #immToNumber(imm) {
+    return imm.startsWith('0x') ? parseInt(imm.substring(2), 16) : Number(imm);
   }
 
   // addr could be label name or 12-bit number (0 <= addr <= 4095) or "page:offset" string,
@@ -26,10 +28,10 @@ class CodeGenerator {
   #getAddrCode = (addr, type, instructionIdx) => {
     switch (type) {
       case AddrType.FlatAddress:
-        return CodeGenerator.#byteFromNumeric(addr);
+        return CodeGenerator.#immToNumber(addr);
 
       case AddrType.ROMAddress: {
-        const [page, offset] = addr.split(':').map((numeric) => CodeGenerator.#byteFromNumeric(numeric));
+        const [page, offset] = addr.split(':').map((numeric) => CodeGenerator.#immToNumber(numeric));
         return (page << 8) | offset;
       }
 
@@ -42,8 +44,17 @@ class CodeGenerator {
     }
   };
 
+  setBankNumber(bankNoStr) {
+    const bankNo = CodeGenerator.#immToNumber(bankNoStr);
+    if (bankNo !== 0 && bankNo !== 1) {
+      throw new Error('Incorrect bank index, should be 0 or 1');
+    }
+
+    this.#fixedRomBanks.push({ instructionIdx: this.#instructions.length, bankNo });
+  }
+
   addFixedLocation(addressStr) {
-    const [page, offset] = addressStr.split(':').map((numeric) => CodeGenerator.#byteFromNumeric(numeric));
+    const [page, offset] = addressStr.split(':').map((numeric) => CodeGenerator.#immToNumber(numeric));
     this.#fixedLocations.push({ instructionIdx: this.#instructions.length, romPage: page, romOffset: offset });
   }
 
@@ -85,30 +96,30 @@ class CodeGenerator {
     });
   }
 
-  // data is 4-bit number, 0 <= data <= 15
-  pushInstructionWithData4(instruction, data, line) {
-    const dataValue = CodeGenerator.#byteFromNumeric(data);
-    if (dataValue > 0xF) {
+  // imm is 4-bit number, 0 <= imm <= 15
+  pushInstructionWithImm4(instruction, imm, line) {
+    const immValue = CodeGenerator.#immToNumber(imm);
+    if (immValue > 0xF) {
       throw new Error('Argument is too big, should be 0xF or less');
     }
 
     this.#instructions.push({
-      opcode: assemblyInstruction(instruction, dataValue),
+      opcode: assemblyInstruction(instruction, immValue),
       type: instruction === 'bbl' ? INSTRUCTION_TYPES.Return : INSTRUCTION_TYPES.Regular,
       refInstructionIdx: null,
       sourceCodeLine: line,
     });
   }
 
-  // data is 8-bit number, 0 <= data <= 255, regPair is "rX" string, where 0 <= X <= 7
-  pushInstructionWithRegPairAndData8(instruction, regPair, data, line) {
-    const dataValue = CodeGenerator.#byteFromNumeric(data);
-    if (dataValue > 0xFF) {
+  // imm is 8-bit number, 0 <= imm <= 255, regPair is "rX" string, where 0 <= X <= 7
+  pushInstructionWithRegPairAndImm8(instruction, regPair, imm, line) {
+    const immValue = CodeGenerator.#immToNumber(imm);
+    if (immValue > 0xFF) {
       throw new Error('Argument is too big, should be 0xFF or less');
     }
 
     this.#instructions.push({
-      opcode: assemblyInstruction(instruction, regPair, dataValue),
+      opcode: assemblyInstruction(instruction, regPair, immValue),
       type: INSTRUCTION_TYPES.Regular,
       refInstructionIdx: null,
       sourceCodeLine: line,
@@ -167,6 +178,7 @@ class CodeGenerator {
     return {
       instructions: this.#instructions,
       fixedLocations: this.#fixedLocations,
+      fixedRomBanks: this.#fixedRomBanks,
       symbols: [...this.#labelToInstructionMap.entries()].map(([label, instructionIdx]) => ({ label, instructionIdx })),
     };
   }
@@ -176,6 +188,7 @@ class CodeGenerator {
     this.#labelToInstructionMap = new Map();
     this.#referencesByLabel = [];
     this.#fixedLocations = [];
+    this.#fixedRomBanks = [];
   }
 }
 

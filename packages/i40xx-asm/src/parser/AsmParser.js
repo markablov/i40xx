@@ -44,6 +44,7 @@ class AsmParser extends EmbeddedActionsParser {
     $.RULE('keyword', () => {
       $.OR([
         { ALT: () => $.SUBRULE($.keywordLocationShort) },
+        { ALT: () => $.SUBRULE($.keywordRomBank) },
       ]);
     });
 
@@ -55,6 +56,17 @@ class AsmParser extends EmbeddedActionsParser {
 
       $.ACTION(() => {
         codeGenerator.addFixedLocation(address.image);
+      });
+    });
+
+    $.RULE('keywordRomBank', () => {
+      $.CONSUME(Tokens.KeywordRomBank);
+      $.CONSUME(Tokens.LBracket);
+      const bankNo = $.CONSUME(Tokens.Imm);
+      $.CONSUME(Tokens.RBracket);
+
+      $.ACTION(() => {
+        codeGenerator.setBankNumber(bankNo.image);
       });
     });
 
@@ -74,7 +86,7 @@ class AsmParser extends EmbeddedActionsParser {
         { ALT: () => $.SUBRULE($.instructionWithoutArg) },
         { ALT: () => $.SUBRULE($.instructionWithReg) },
         { ALT: () => $.SUBRULE($.instructionWithRegPair) },
-        { ALT: () => $.SUBRULE($.instructionWithData4) },
+        { ALT: () => $.SUBRULE($.instructionWithImm4) },
         { ALT: () => $.SUBRULE($.instructionFIM) },
         { ALT: () => $.SUBRULE($.instructionWithFarAddr) },
         { ALT: () => $.SUBRULE($.instructionISZ) },
@@ -166,19 +178,19 @@ class AsmParser extends EmbeddedActionsParser {
       });
     });
 
-    $.RULE('instructionWithData4', () => {
+    $.RULE('instructionWithImm4', () => {
       const instruction = $.OR([
         { ALT: () => $.CONSUME(Tokens.InstructionBBL) },
         { ALT: () => $.CONSUME(Tokens.InstructionLDM) },
       ]);
 
-      const data = $.CONSUME(Tokens.Data);
+      const imm = $.CONSUME(Tokens.Imm);
 
       $.ACTION(() => {
         try {
-          codeGenerator.pushInstructionWithData4(instruction.image, data.image, instruction.startLine);
+          codeGenerator.pushInstructionWithImm4(instruction.image, imm.image, instruction.startLine);
         } catch (err) {
-          throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), data, instruction));
+          throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), imm, instruction));
         }
       });
     });
@@ -187,20 +199,20 @@ class AsmParser extends EmbeddedActionsParser {
       const { image: instruction, startLine } = $.CONSUME(Tokens.InstructionFIM);
       const { image: regPair } = $.CONSUME(Tokens.RegisterPair);
       const prevToken = $.CONSUME(Tokens.Comma);
-      const { image: data } = $.CONSUME(Tokens.Data);
+      const { image: imm } = $.CONSUME(Tokens.Imm);
 
       $.ACTION(() => {
         try {
-          codeGenerator.pushInstructionWithRegPairAndData8(instruction, regPair, data, startLine);
+          codeGenerator.pushInstructionWithRegPairAndImm8(instruction, regPair, imm, startLine);
         } catch (err) {
-          throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), data, prevToken));
+          throw $.SAVE_ERROR(new MismatchedTokenException(err.toString(), imm, prevToken));
         }
       });
     });
 
     $.RULE('address', () => $.OR([
       { ALT: () => ({ token: $.CONSUME(Tokens.Label), type: AddrType.Label }) },
-      { ALT: () => ({ token: $.CONSUME(Tokens.Data), type: AddrType.FlatAddress }) },
+      { ALT: () => ({ token: $.CONSUME(Tokens.Imm), type: AddrType.FlatAddress }) },
       { ALT: () => ({ token: $.CONSUME(Tokens.ROMAddress), type: AddrType.ROMAddress }) },
     ]));
 

@@ -10,16 +10,16 @@ const transformRefsToBlockReferences = (blocks, block, instructionsMap) => {
       throw Error('Some references to labels are broken: labeled code has not been processed');
     }
 
-    const { blockIdx, instructionOffset } = instructionsMap[refInstructionIdx];
+    const { blockId, instructionOffset } = instructionsMap[refInstructionIdx];
     block.references[refIdx] = {
       addressOffset,
-      refBlockIdx: blockIdx,
+      refBlockId: blockId,
       refInstructionOffset: instructionOffset,
       isShort,
     };
 
-    if (isShort && blocks[blockIdx] !== block) {
-      blocks[blockIdx].isDependant = true;
+    if (isShort && blocks[blockId] !== block) {
+      blocks[blockId].isDependant = true;
     }
   }
 };
@@ -28,8 +28,8 @@ const transformRefsToBlockReferences = (blocks, block, instructionsMap) => {
  * Extend existing block with more bytecode and references
  */
 const extendExistingBlock = (blocks, blockInstructionIdx, instructionsMap, bytecode, references, sourceCodeLines) => {
-  const { blockIdx } = instructionsMap[blockInstructionIdx];
-  const block = blocks[blockIdx];
+  const { blockId } = instructionsMap[blockInstructionIdx];
+  const block = blocks[blockId];
 
   block.bytecode.unshift(...bytecode);
 
@@ -44,14 +44,14 @@ const extendExistingBlock = (blocks, blockInstructionIdx, instructionsMap, bytec
   block.sourceCodeLines.unshift(...sourceCodeLines);
 
   let mergingBlockInstructionIdx = blockInstructionIdx - 1;
-  const mergingBlockIdx = instructionsMap[mergingBlockInstructionIdx].blockIdx;
-  while (instructionsMap[mergingBlockInstructionIdx]?.blockIdx === mergingBlockIdx) {
-    instructionsMap[mergingBlockInstructionIdx].blockIdx = blockIdx;
+  const mergingBlockId = instructionsMap[mergingBlockInstructionIdx].blockId;
+  while (instructionsMap[mergingBlockInstructionIdx]?.blockId === mergingBlockId) {
+    instructionsMap[mergingBlockInstructionIdx].blockId = blockId;
     mergingBlockInstructionIdx--;
   }
 
   let existingBlockInstructionIdx = blockInstructionIdx;
-  while (instructionsMap[existingBlockInstructionIdx]?.blockIdx === blockIdx) {
+  while (instructionsMap[existingBlockInstructionIdx]?.blockId === blockId) {
     instructionsMap[existingBlockInstructionIdx].instructionOffset += bytecode.length;
     existingBlockInstructionIdx++;
   }
@@ -63,13 +63,13 @@ const extendExistingBlock = (blocks, blockInstructionIdx, instructionsMap, bytec
  * Forms code block for routine
  */
 const createCodeBlock = (blocks, firstInstructionIdx, instructions, instructionsMap, romPage, romOffset) => {
-  const blockIdx = blocks.length;
+  const blockId = blocks.length;
   const bytecode = [];
   const references = [];
   const sourceCodeLines = [];
 
   if (instructionsMap[firstInstructionIdx]) {
-    return { isNew: false, block: blocks[instructionsMap[firstInstructionIdx].blockIdx] };
+    return { isNew: false, block: blocks[instructionsMap[firstInstructionIdx].blockId] };
   }
 
   for (let instructionIdx = firstInstructionIdx; instructionIdx < instructions.length; instructionIdx++) {
@@ -85,7 +85,7 @@ const createCodeBlock = (blocks, firstInstructionIdx, instructions, instructions
 
     sourceCodeLines.push({ instructionOffset, line: sourceCodeLine });
 
-    instructionsMap[instructionIdx] = { blockIdx, instructionOffset };
+    instructionsMap[instructionIdx] = { blockId, instructionOffset };
 
     if (refInstructionIdx !== undefined && refInstructionIdx !== null) {
       references.push({
@@ -97,6 +97,7 @@ const createCodeBlock = (blocks, firstInstructionIdx, instructions, instructions
 
     if ([INSTRUCTION_TYPES.FarJump, INSTRUCTION_TYPES.Return, INSTRUCTION_TYPES.Halt].includes(type)) {
       const block = {
+        id: blockId,
         bytecode,
         sourceCodeLines,
         references,
@@ -154,7 +155,7 @@ const getReferencedInstructionsFromFixedBlocks = (fixedBlocks, instructionsMap) 
   return [...instructionIndexes];
 };
 
-const formBlocksFromInstructions = (fixedLocations, instructions, symbols) => {
+const formBlocksFromInstructions = (fixedLocations, instructions, symbols, fixedRomBanks) => {
   const blocks = [];
   const instructionsMap = new Array(instructions.length);
 
@@ -196,6 +197,12 @@ const formBlocksFromInstructions = (fixedLocations, instructions, symbols) => {
 
   for (const block of blocks) {
     transformRefsToBlockReferences(blocks, block, instructionsMap);
+  }
+
+  for (const { instructionIdx, bankNo } of fixedRomBanks) {
+    if (instructionsMap[instructionIdx]) {
+      blocks[instructionsMap[instructionIdx].blockId].fixedBank = bankNo;
+    }
   }
 
   return {

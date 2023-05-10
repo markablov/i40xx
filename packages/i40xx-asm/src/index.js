@@ -29,13 +29,22 @@ const parse = (sourceCode) => {
  * Compile provided code
  */
 const compile = (sourceCode) => {
-  const { fixedLocations, instructions, symbols: instructionAddressedSymbols, errors } = parse(sourceCode);
+  const {
+    fixedLocations, fixedRomBanks, instructions, symbols: instructionAddressedSymbols, errors,
+  } = parse(sourceCode);
+
   if (errors) {
     return { blocks: [], errors };
   }
 
   try {
-    const { blocks, symbols } = formBlocksFromInstructions(fixedLocations, instructions, instructionAddressedSymbols);
+    const { blocks, symbols } = formBlocksFromInstructions(
+      fixedLocations,
+      instructions,
+      instructionAddressedSymbols,
+      fixedRomBanks,
+    );
+
     return { blocks, symbols, errors: [] };
   } catch (err) {
     return { blocks: [], errors: [err] };

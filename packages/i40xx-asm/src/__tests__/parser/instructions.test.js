@@ -85,7 +85,7 @@ describe('Instructions with register pair as argument', () => {
   test('incorrect register', () => matchParseResults('src r9', null, 'Expecting token of type --> RegisterPair <-- but found --> \'r9\' <--'));
 });
 
-describe('Instructions with 4-bit data as argument', () => {
+describe('Instructions with 4-bit imm as argument', () => {
   test('BBL instruction', () => {
     matchParseResults(
       'bbl 10',
