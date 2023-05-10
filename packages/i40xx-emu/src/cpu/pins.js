@@ -37,7 +37,7 @@ class CPUPins {
    */
   setPinsData(pins, value) {
     for (const [idx, pin] of pins.entries()) {
-      this.#pins[pin] = value & (1 << idx);
+      this.#pins[pin] = (value & (1 << idx)) ? 1 : 0;
     }
   }
 
