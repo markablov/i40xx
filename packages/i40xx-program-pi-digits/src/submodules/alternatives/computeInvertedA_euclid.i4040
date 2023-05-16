@@ -1,8 +1,104 @@
 %include "memory.i4040"
+%include "mul4_table.i4040"
 %include "div16_fast.i4040"
-%include "mul16.i4040"
 %include "add16.i4040"
 %include "sub16.i4040"
+
+# INPUT:
+#   rr0..rr3 - first factor
+#   rr10..rr11 - second factor
+# OUTPUT:
+#   [rr8, rr9, rr14, rr15] - product
+# NOTES:
+#   - beside input registers, can use only rr12 and rr13
+#   - partially uses last accessed memory register in variables bank
+mul16x8:
+  LD rr11
+  JCN nz, mul16x8_mulBy8bit
+  LD rr10
+  DAC
+  CLC
+  JCN z, mul16x8_mulBy1
+
+mul16x8_mulBy4bit:
+mul16x8_mulBy4bit_digit0:
+  LD rr0
+  JMS mul4x4                  # low, high = a0 * b
+  LD rr12
+  XCH rr8                     # r0 = low
+  LD rr13
+  XCH rr9                     # r1 = high
+mul16x8_mulBy4bit_digit1:
+  LD rr1
+  JMS mul4x4                  # low, high = a1 * b
+  LD rr12
+  ADD rr9
+  XCH rr9                     # r1, c = low + r1
+  LDM 0x0
+  ADD rr13
+  XCH rr14                    # r2 = high + c
+mul16x8_mulBy4bit_digit2:
+  LD rr2
+  JMS mul4x4                  # low, high = a2 * b
+  LD rr12
+  ADD rr14
+  XCH rr14                    # r2, c = low + r2
+  LDM 0x0
+  ADD rr13
+  XCH rr15                    # r3 = high + c
+mul16x8_mulBy4bit_digit3:
+  LD rr3
+  JMS mul4x4                  # low, high = a3 * b
+  DCL
+  LD rr12
+  ADD rr15
+  XCH rr15                    # r3 = low + r3
+  BBL 0
+
+mul16x8_mulBy8bit:
+  WRM                         # save b1
+  LDM 0x0
+  XCH rr11
+  JMS mul16x8_mulBy4bit
+  RDM
+  XCH rr10
+mul16x8_mulBy8bit_digit0:
+  LD rr0
+  JMS mul4x4                  # low, high = a0 * b1
+  LD rr12
+  ADD rr9
+  XCH rr9                     # r1, c = r1 + low
+  LD rr13
+  ADD rr14
+  XCH rr14                    # r2, c = r2 + c + high
+mul16x8_mulBy8bit_digit1:
+  LD rr1
+  JMS mul4x4                  # low, high = a1 * b1
+  LD rr12
+  ADD rr14
+  XCH rr14                    # r2, c = r2 + low
+  LD rr13
+  ADD rr15
+  XCH rr15                    # r3, c = r3 + c + high
+mul16x8_mulBy8bit_digit2:
+  LD rr2
+  JMS mul4x4                  # low, high = a2 * b1
+  DCL
+  LD rr12
+  ADD rr15
+  XCH rr15                    # r4 = r4 + low
+  BBL 0
+
+mul16x8_mulBy1:
+  LD rr0
+  XCH rr8
+  LD rr1
+  XCH rr9
+  LD rr2
+  XCH rr14
+  LD rr3
+  XCH rr15
+  BBL 0
 
 # INPUT:
 #   STATUS_MEM_VARIABLE_MODULUS
