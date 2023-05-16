@@ -170,7 +170,7 @@ ${sourceCode}
 `;
 
 const testComputeF = () => {
-  const { rom, symbols, sourceMap, sourceCode, romSize } = compileCodeForTest(
+  const { roms, sourceCode } = compileCodeForTest(
     'submodules/computeF.i4040',
     '',
     { wrapSourceCode },
@@ -179,7 +179,7 @@ const testComputeF = () => {
   let sum = 0n;
   for (const [idx, { input, expected }] of COMPUTE_F_TESTS.entries()) {
     console.log(`Run test ${idx + 1} / ${COMPUTE_F_TESTS.length} : ${jsser(input)}...`);
-    const { result, elapsed } = runComputeFTest(rom, input, symbols);
+    const { result, elapsed } = runComputeFTest(roms.map(({ data }) => data), input, roms[0].symbols);
     if (parseInt(expected, 16) !== (parseInt(result, 16) % parseInt(input.m, 16))) {
       console.log(`Test failed, input = ${jsser(input)}, expected = ${expected}, result = ${result}`);
       console.log('Code to reproduce:');
@@ -193,7 +193,7 @@ const testComputeF = () => {
         ...generateCodeToPrepareModulusBasedDataForEmulator(parseInt(m, 16)),
         generateAccumulatorInitialization(vmax === 1 ? 1 : 0),
       ];
-      console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols, rom, romSize));
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators));
       process.exit(1);
     }
     sum += elapsed;
