@@ -27,27 +27,31 @@ const toHex = (val) => val.toString(16).toUpperCase().padStart(2, '0');
     process.exit(1);
   }
 
-  const { rom, symbols, sourceMap, romSize } = buildRom(blocks, blockAddressedSymbols);
-
+  const { roms } = buildRom(blocks, blockAddressedSymbols);
   const sourceLines = sourceCode.split('\n').map((line) => line.replace(/#.+/, '').trim());
-  const romOffsetToLine = new Map(sourceMap.map(({ romOffset, line }) => [romOffset, line]));
-  const romOffsetToLabel = new Map(symbols.map(({ romAddress, label }) => [romAddress, label]));
 
-  for (let romOffset = 0; romOffset < romSize; romOffset++) {
-    const romOffsetStr = `[${toHex(romOffset >> 8)}:${toHex(romOffset & 0xFF)}]`;
-    if (romOffsetToLabel.has(romOffset)) {
-      console.log(`${romOffsetStr}       ${romOffsetToLabel.get(romOffset)}:`);
+  for (const [bankNo, { symbols, sourceMap, data, size }] of roms.entries()) {
+    console.log(`<<< BANK #${bankNo} >>>\n`);
+    const romOffsetToLine = new Map(sourceMap.map(({ romOffset, line }) => [romOffset, line]));
+    const romOffsetToLabel = new Map(symbols.map(({ romAddress, label }) => [romAddress, label]));
+
+    for (let romOffset = 0; romOffset < size; romOffset++) {
+      const romOffsetStr = `[${toHex(romOffset >> 8)}:${toHex(romOffset & 0xFF)}]`;
+      if (romOffsetToLabel.has(romOffset)) {
+        console.log(`${romOffsetStr}       ${romOffsetToLabel.get(romOffset)}:`);
+      }
+
+      const sourceCodeLine = romOffsetToLine.has(romOffset) ? sourceLines[romOffsetToLine.get(romOffset) - 1] : '???';
+      const isTwoByteInstruction = isTwoByteInstructionByOpcode(data[romOffset]);
+      const romBytesStr = isTwoByteInstruction
+        ? ` ${toHex(data[romOffset])} ${toHex(data[romOffset + 1])}   `
+        : ` ${toHex(data[romOffset])}      `;
+      console.log(`${romOffsetStr}${romBytesStr}${sourceCodeLine}`);
+
+      if (isTwoByteInstruction) {
+        romOffset++;
+      }
     }
-
-    const sourceCodeLine = romOffsetToLine.has(romOffset) ? sourceLines[romOffsetToLine.get(romOffset) - 1] : '???';
-    const isTwoByteInstruction = isTwoByteInstructionByOpcode(rom[romOffset]);
-    const romBytesStr = isTwoByteInstruction
-      ? ` ${toHex(rom[romOffset])} ${toHex(rom[romOffset + 1])}   `
-      : ` ${toHex(rom[romOffset])}      `;
-    console.log(`${romOffsetStr}${romBytesStr}${sourceCodeLine}`);
-
-    if (isTwoByteInstruction) {
-      romOffset++;
-    }
+    console.log();
   }
 }());
