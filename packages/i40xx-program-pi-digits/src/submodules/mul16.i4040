@@ -7,9 +7,7 @@
 # OUTPUT:
 #   [rr8, rr9, rr14, rr15] - product
 # NOTES:
-#   - beside input registers, can use only rr12 and rr13
-#   - partially uses last accessed memory register in variables bank
-#   - because mul4x4 uses whole memory (except variables bank), need to switch bank before exit
+#   input registers and rr5..rr7 are not modified
 mul16x8:
   LD rr11
   JCN nz, mul16x8_mulBy8bit
@@ -54,12 +52,13 @@ mul16x8_mulBy4bit_digit3:
   BBL 0
 
 mul16x8_mulBy8bit:
-  WRM                         # save b1
+  XCH rr4                     # rr4 = b1
   LDM 0x0
   XCH rr11
   JMS mul16x8_mulBy4bit
-  RDM
-  XCH rr10
+  XCH rr4
+  XCH rr10                    # rr10 = b1
+  XCH rr4                     # rr4 = b0
 mul16x8_mulBy8bit_digit0:
   LD rr0
   JMS mul4x4                  # low, high = a0 * b1
@@ -85,6 +84,9 @@ mul16x8_mulBy8bit_digit2:
   LD rr12
   ADD rr15
   XCH rr15                    # r4 = r4 + low
+  LD rr4
+  XCH rr10                    # rr10 = b0
+  XCH rr11                    # rr11 = b1
   BBL 0
 
 mul16x8_mulBy1:
