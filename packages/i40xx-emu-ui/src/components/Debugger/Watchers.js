@@ -69,6 +69,7 @@ export default function Memory() {
         return toHex(registers.indexBanks?.[registers.selectedRegisterBank][regNo]);
       }
 
+      // [7F]:s0 or [5A]:F
       const [, bankNo, memRegNo, charSpec] = part.match(/\[(\d)([0-9A-F])]:((?:s\d)|(?:[0-9A-F]))/);
       if (charSpec[0] === 's') {
         return toHex(memory[Number(bankNo)]?.registers[parseInt(memRegNo, 16)]?.status[Number(charSpec[1])] || 0);
