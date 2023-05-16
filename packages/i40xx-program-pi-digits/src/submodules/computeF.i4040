@@ -37,7 +37,7 @@ updateB:
   SUB rr3
   JCN nc, updateB_cont                          # if (a <= k)
 
-  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_K . 0
+  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . 0
   SRC r6
   RD0
   XCH rr0
@@ -47,7 +47,7 @@ updateB:
   XCH rr3
   RD3
   XCH rr2
-  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . 0
+  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_K . 0
   FIM r3, 0x04
   JMS mulMod                                     # b = (b * k) % m
   DCL
@@ -111,7 +111,7 @@ updateB_loop:
   JCN nc, updateB_loop                          # if (bCoef >= a)
 
 updateB_return:
-  FIM r6, $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF . 0
+  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . 0
   SRC r6
   RD0
   XCH rr0
@@ -121,7 +121,7 @@ updateB_return:
   XCH rr3
   RD3
   XCH rr2
-  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . 0
+  FIM r6, $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF . 0
   FIM r3, 0x04
   JMS mulMod                                     # b = (b * bCoef) % m
   DCL
@@ -246,7 +246,7 @@ updateA_loop:
   JCN nc, updateA_loop                                   # if (ACoef >= a)
 
 updateA_return:
-  FIM r6, $STATUS_MEM_VARIABLE_A_COMPUTATION_COEF . 0
+  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_A . 0
   SRC r6
   RD0
   XCH rr0
@@ -256,7 +256,7 @@ updateA_return:
   XCH rr3
   RD3
   XCH rr2
-  FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_A . 0
+  FIM r6, $STATUS_MEM_VARIABLE_A_COMPUTATION_COEF . 0
   FIM r3, 0x04
   JMS mulMod                                             # A = (A * ACoef) % m
   DCL
