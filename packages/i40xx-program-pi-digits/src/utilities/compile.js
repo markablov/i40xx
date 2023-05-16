@@ -39,16 +39,17 @@ export const compileCodeForTest = (fileName, funcName, options = {}) => {
   const cacheFile = path.resolve(dirName, '../../.cache', `${path.parse(fileName).name}.cache`);
   const placementCache = fs.existsSync(cacheFile) ? JSON.parse(fs.readFileSync(cacheFile, 'utf-8')) : {};
   const t2 = performance.now();
-  const { rom, symbols, sourceMap, placementCache: updatedPlacementCache, romSize } = buildRom(
+  const { roms, placementCache: updatedPlacementCache } = buildRom(
     blocks,
     blockAddressedSymbols,
     { placementCache },
   );
-  console.log(`Source code has been linked, time elapsed = ${elapsed(t2)}ms, rom size = ${romSize} bytes`);
+  const romInfo = roms.map(({ size }) => `${size} bytes`).join(', ');
+  console.log(`Source code has been linked, time elapsed = ${elapsed(t2)}ms, roms = [${romInfo}]`);
 
   if (updatedPlacementCache) {
     fs.writeFileSync(cacheFile, JSON.stringify(updatedPlacementCache, undefined, 2));
   }
 
-  return { rom, symbols, sourceMap, sourceCode: testCode, romSize };
+  return { roms, sourceCode: testCode };
 };

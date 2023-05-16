@@ -1,113 +1,14 @@
-const toHex = (val) => val.toString(16).toUpperCase().padStart(2, '0');
-
-/*
- * Return true if instruction has two bytes - JCN, FIM, JUN, JMS, ISZ
- */
-const isTwoByteInstructionByOpcode = (opcode) => (
-  [0x10, 0x40, 0x50, 0x70].includes(opcode & 0xF0)
-  || (((opcode & 0xF0) === 0x20) && ((opcode & 0x1) === 0x00))
-);
-
 /*
  * Updates source code to be more usable inside browser emulator GUI
- *   - source code lines follows bytecode order in resulting ROM
- *   - put ROM location directives to help linker to arrange code blocks
- *   - removes all original comments
- *   - adds comments with ROM location and bytecode info for instruction
  *   - adds preamble that contains initialization code to seed registers and memory with values
  */
-export const updateCodeForUseInEmulator = (sourceCode, initializators, sourceMap, symbols, rom, romSize) => {
-  const sourceLines = sourceCode.split('\n');
-
-  if (!rom) {
-    if (sourceMap && symbols) {
-      for (const [idx, line] of sourceLines.entries()) {
-        if (line.match(/^\s*__location/)) {
-          sourceLines[idx] = undefined;
-        }
-      }
-
-      const offsetToLineMap = new Map(sourceMap.map(({ line, romOffset }) => [romOffset, line - 1]));
-      const insertedDirectives = new Set();
-      for (const { romAddress } of symbols) {
-        if (insertedDirectives.has(romAddress)) {
-          continue;
-        }
-        const lineNo = offsetToLineMap.get(romAddress) - 1;
-        sourceLines[lineNo] = `\n__location(0x${toHex(romAddress >> 8)}:0x${toHex(romAddress & 0xFF)})\n${sourceLines[lineNo]}`;
-        insertedDirectives.add(romAddress);
-      }
-    }
-
-    sourceLines.push(
-      '__location(00:0x00)',
-      '  JUN prepareTestData',
-      '',
-      'prepareTestData:',
-      ...initializators.flat().map((line) => `  ${line}`),
-      '  JUN entrypoint',
-    );
-
-    return sourceLines.filter(Boolean).join('\n');
-  }
-
-  const sourceLinesInfo = sourceLines.map((line) => {
-    const [instruction, comment] = line.split('#');
-    return { instruction: instruction.trim(), comment: comment?.trim() };
-  });
-  const romOffsetToLine = new Map(sourceMap.map(({ romOffset, line }) => [romOffset, line]));
-  const maxSourceCodeLineLen = Math.max(...sourceLinesInfo.map(({ instruction }) => instruction.length));
-  const lines = ['__location(00:0x00)', '  JUN prepareTestData'];
-
-  const romOffsetToLabel = new Map();
-  for (const { romAddress, label } of symbols) {
-    if (!romOffsetToLabel.has(romAddress)) {
-      romOffsetToLabel.set(romAddress, []);
-    }
-    romOffsetToLabel.get(romAddress).push(label);
-  }
-
-  const insertedDirectives = new Set();
-  // skip auto-generated jump to entrypoint
-  for (let romOffset = 2; romOffset < romSize; romOffset++) {
-    if (romOffsetToLabel.has(romOffset)) {
-      if (!insertedDirectives.has(romOffset)) {
-        lines.push('', `__location(0x${toHex(romOffset >> 8)}:0x${toHex(romOffset & 0xFF)})`);
-        insertedDirectives.add(romOffset);
-      }
-      lines.push(...romOffsetToLabel.get(romOffset).map((label) => `${label}:`));
-    }
-
-    const sourceCodeLine = romOffsetToLine.has(romOffset) ? sourceLinesInfo[romOffsetToLine.get(romOffset) - 1] : null;
-    const romOffsetStr = `[${toHex(romOffset >> 8)}:${toHex(romOffset & 0xFF)}]`;
-    if (sourceCodeLine) {
-      const { instruction: instructionLine, comment } = sourceCodeLine;
-      const isTwoByteInstruction = isTwoByteInstructionByOpcode(rom[romOffset]);
-      const romBytesStr = isTwoByteInstruction
-        ? `${toHex(rom[romOffset])} ${toHex(rom[romOffset + 1])}`
-        : toHex(rom[romOffset]);
-      const commentsPadding = ' '.repeat(maxSourceCodeLineLen - instructionLine.length + 1);
-      lines.push(...[
-        ...(comment ? [`  # ${comment}`] : []),
-        `  ${instructionLine}${commentsPadding}# ${romOffsetStr} ${romBytesStr}`,
-      ]);
-
-      if (isTwoByteInstruction) {
-        romOffset++;
-      }
-    } else {
-      lines.push(`  NOP ${' '.repeat(maxSourceCodeLineLen - 3)}# ${romOffsetStr} 00`);
-    }
-  }
-
-  lines.push(
-    'prepareTestData:',
-    ...initializators.flat().map((line) => `  ${line}`),
-    '  JUN entrypoint',
-  );
-
-  return lines.join('\n');
-};
+export const updateCodeForUseInEmulator = (sourceCode, initializators) => (`__location(00:0x00)
+  JUN prepareTestData
+${sourceCode}
+prepareTestData:
+${initializators.flat().map((line) => `  ${line}`).join('\n')}
+  JUN entrypoint
+`);
 
 /*
  * Generate instructions to seed register with value
