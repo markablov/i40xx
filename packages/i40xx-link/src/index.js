@@ -26,15 +26,18 @@ const RomBank = class RomBank {
 
   #blocksRomOffsets = new Map();
 
-  constructor() {
+  #bankNo;
+
+  constructor(bankNo) {
     this.#pages = Array.from(new Array(RomBank.ROM_PAGES_COUNT), () => (new Uint8Array(RomBank.BYTES_PER_ROM_PAGE)));
+    this.#bankNo = bankNo;
   }
 
   goToNextPage() {
     this.#currentPage++;
     this.#currentPageOffset = 0;
     if (this.#currentPage >= RomBank.ROM_PAGES_COUNT) {
-      throw Error("Couldn't fit all codeblocks into ROM!");
+      throw Error(`Couldn't fit all codeblocks into ROM bank ${this.#bankNo}!`);
     }
   }
 
@@ -51,6 +54,7 @@ const RomBank = class RomBank {
   putBlock(block, page, offset) {
     const absoluteAddress = RomBank.getAbsoluteAddress(page, offset);
     this.#blocksRomOffsets.set(block.id, absoluteAddress);
+    block.actualBanksPlacement.add(this.#bankNo);
     this.#pages[page].set(block.bytecode, offset);
   }
 
@@ -73,6 +77,7 @@ const RomBank = class RomBank {
 
     const absoluteAddress = RomBank.getAbsoluteAddress(this.#currentPage, this.#currentPageOffset);
     this.#blocksRomOffsets.set(block.id, absoluteAddress);
+    block.actualBanksPlacement.add(this.#bankNo);
 
     const blockSize = block.bytecode.length;
     const freeSpaceInCurrentPage = RomBank.BYTES_PER_ROM_PAGE - this.#currentPageOffset;
@@ -137,6 +142,10 @@ const RomBank = class RomBank {
 
   get romSize() {
     return this.#currentPage * RomBank.BYTES_PER_ROM_PAGE + this.#currentPageOffset;
+  }
+
+  get bankNo() {
+    return this.#bankNo;
   }
 };
 
@@ -270,6 +279,10 @@ const insertCachedPlacementForCoupledBlocks = (placementCache, blocks, pageOffse
  *    }
  */
 const placeCodeBlock = (blocks, attemptedBlockId, romBank, placementCache) => {
+  if (romBank.blockOffsets.has(attemptedBlockId)) {
+    return true;
+  }
+
   const pageOffset = romBank.usedSpaceInPage;
   const coupledBlocks = getCoupledBlocksIds(blocks, attemptedBlockId);
   if (placementCache && coupledBlocks.length >= MINIMAL_BLOCKS_SET_TO_CACHE) {
@@ -344,14 +357,14 @@ const getFullBlockSize = (blocks, primaryBlockId) => {
 };
 
 /*
- * Try to place all code blocks into ROM in some kind of optimal manner
+ * Try to place specific set of code blocks into ROM in some kind of optimal manner
  */
-const fillRomWithBlocks = (primaryBlocks, blocks, romBank, placementCache) => {
-  while (primaryBlocks.size) {
+const fillRomWithBlocksFromSet = (blocksToPlace, blocks, romBank, placementCache) => {
+  while (blocksToPlace.size) {
     let hasAnyCodeBlockFit = false;
-    for (const codeBlock of primaryBlocks) {
+    for (const codeBlock of blocksToPlace) {
       if (placeCodeBlock(blocks, codeBlock.id, romBank, placementCache)) {
-        primaryBlocks.delete(codeBlock);
+        blocksToPlace.delete(codeBlock);
         hasAnyCodeBlockFit = true;
         break;
       }
@@ -361,6 +374,25 @@ const fillRomWithBlocks = (primaryBlocks, blocks, romBank, placementCache) => {
       romBank.addSingleBytePadding();
     }
   }
+};
+
+/*
+ * Try to place all code blocks into ROM in some kind of optimal manner
+ */
+const fillRomWithBlocks = (primaryBlocks, blocks, romBank, placementCache) => {
+  fillRomWithBlocksFromSet(primaryBlocks, blocks, romBank, placementCache);
+
+  // It could be situation:
+  //   1. block A has long reference to block B
+  //   2. block B has short reference to block C
+  //   3. block C has short reference to block B
+  // B and C would be marked as dependant, so they would not be included in primary blocks
+  // but because A has long reference to B, then B would not be part of dependency tree for A
+  // it means that blocks B and C would not be processed
+  const unplacedBlocks = blocks.filter(
+    (block) => block.desiredBanksPlacement.has(romBank.bankNo) && !block.actualBanksPlacement.has(romBank.bankNo),
+  );
+  fillRomWithBlocksFromSet(new Set(unplacedBlocks), blocks, romBank, placementCache);
 
   if (placementCache) {
     for (const sectionName of Object.keys(placementCache)) {
@@ -440,7 +472,7 @@ const fillGapsBetweenFixedBlocks = (fixedBlocks, primaryBlocks, blocks, romBank)
  * Place blocks into single rom bank
  */
 const placeBlocksIntoRomBank = (romBank, blocks, bankNo, placementCache) => {
-  const romBlocks = blocks.filter(({ banksPlacement }) => banksPlacement.has(bankNo));
+  const romBlocks = blocks.filter(({ desiredBanksPlacement }) => desiredBanksPlacement.has(bankNo));
   const primaryBlocks = getSortedPrimaryBlocks(romBlocks, blocks);
   const fixedBlocks = romBlocks
     .filter(({ fixedLocation }) => !!fixedLocation)
@@ -461,15 +493,18 @@ const assignRomBanks = (blocks, entrypointBlockId) => {
     const block = blocks[blockId];
     const bankToUse = block.fixedBank || bankNo;
 
-    if (block.banksPlacement.has(bankToUse)) {
+    if (block.desiredBanksPlacement.has(bankToUse)) {
       continue;
     }
 
-    block.banksPlacement.add(bankToUse);
+    block.desiredBanksPlacement.add(bankToUse);
 
     queue.push(...block.references.map(({ refBlockId }) => ({ blockId: refBlockId, bankNo: bankToUse })));
     if (block.fixedLocation) {
-      const samePageBlocks = blocks.filter(({ fixedLocation }) => fixedLocation?.page === block.fixedLocation.page);
+      const samePageBlocks = blocks.filter(
+        ({ fixedLocation, id }) => fixedLocation?.page === block.fixedLocation.page && id !== entrypointBlockId,
+      );
+
       queue.push(...samePageBlocks.map(({ id }) => ({ blockId: id, bankNo: bankToUse })));
     }
   }
@@ -491,7 +526,8 @@ const assignRomBanks = (blocks, entrypointBlockId) => {
  */
 export function buildRom(codeBlocks, blockAddressedSymbols, { placementCache } = {}) {
   for (const block of codeBlocks) {
-    block.banksPlacement = new Set();
+    block.desiredBanksPlacement = new Set();
+    block.actualBanksPlacement = new Set();
   }
 
   assignRomBanks(
@@ -499,7 +535,7 @@ export function buildRom(codeBlocks, blockAddressedSymbols, { placementCache } =
     codeBlocks.find(({ fixedLocation }) => fixedLocation?.page === 0 && fixedLocation?.offset === 0).id,
   );
 
-  const romBanks = Array.from(new Array(ROM_BANK_COUNT), () => new RomBank());
+  const romBanks = Array.from(new Array(ROM_BANK_COUNT), (_, idx) => new RomBank(idx));
   for (const [bankNo, romBank] of romBanks.entries()) {
     placeBlocksIntoRomBank(romBank, codeBlocks, bankNo, placementCache);
   }
@@ -528,10 +564,13 @@ export function buildRom(codeBlocks, blockAddressedSymbols, { placementCache } =
       }
 
       for (const { addressOffset, refBlockId, refInstructionOffset, isShort } of block.references) {
-        const { banksPlacement } = codeBlocks[refBlockId];
-        const refBankNo = banksPlacement.has(bankNo) ? bankNo : [...banksPlacement][0];
-        const targetAddress = romBanks[refBankNo].blockOffsets.get(refBlockId) + refInstructionOffset;
-        romBank.updateEncodedAddress(romAddress + addressOffset, targetAddress, isShort);
+        const { desiredBanksPlacement } = codeBlocks[refBlockId];
+        const refBankNo = desiredBanksPlacement.has(bankNo) ? bankNo : [...desiredBanksPlacement][0];
+        const targetBlockAddress = romBanks[refBankNo].blockOffsets.get(refBlockId);
+        if (targetBlockAddress === undefined) {
+          throw Error('Broken reference! Something went wrong internally...');
+        }
+        romBank.updateEncodedAddress(romAddress + addressOffset, targetBlockAddress + refInstructionOffset, isShort);
       }
     }
 
