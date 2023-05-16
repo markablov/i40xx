@@ -387,6 +387,7 @@ updateF_ret:
 #   STATUS_MEM_VARIABLE_V
 # NOTES:
 #   works with prime numbers, that are smaller than sqrt(2 * N)
+__rom_bank(1)
 computeF:
   LDM $STATUS_MEM_VARIABLE_F
   JMS clearVarFromStatusCharMemory                    # f = 0
@@ -447,6 +448,7 @@ computeF_loop:
   ADD rr7
   JCN nc, computeF_loop                                # if rr4..rr7 <= N
 
+  DB0
   CLC
   BBL 0
 
@@ -467,6 +469,7 @@ computeF_loop:
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_REDUCED_COEF_B
 # NOTES:
 #   works with prime numbers, that are bigger than sqrt(2 * N), so vmax is always 1
+__rom_bank(1)
 computeF_oneVMax:
   FIM r1, $STATUS_MEM_VARIABLE_MODULUS . 0
   SRC r1
@@ -842,6 +845,8 @@ computeF_oneVMax_lowCoefA:
 
   JUN computeF_oneVMax_loop
 computeF_oneVMax_return:
+  DB0
+  NOP
   BBL 0
 
 computeF_oneVMax_updateB_multiplier:
