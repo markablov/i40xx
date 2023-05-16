@@ -2,16 +2,287 @@
 %include "mulMod_binary_batch.i4040"
 %include "power10.i4040"
 %include "divMulti.i4040"
+%include "mul16.i4040"
+%include "computeF.i4040"
 
 # INPUT:
+#   STATUS_MEM_VARIABLE_CURRENT_PRIME
+#   STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
+#   STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG
+#   STATUS_MEM_VARIABLE_N_NEG
+#   STATUS_MEM_VARIABLE_DOUBLED_N_NEG
+#   digits chunks
 # OUTPUT:
+#   digits chunks
+# VARIABLES:
+#   rr0..rr3 - m
+#   rr10..rr11 - currentPrime
+#   rr6 - vmax
+#   [rr8, rr9, rr14, rr15] - tmp
+# NOTES:
+#   we knows that current prime < 0x100
 updateDigits:
+  FIM r0, $STATUS_MEM_VARIABLE_CURRENT_PRIME . 0
+  SRC r0
+  RD0
+  XCH rr10
+  RD1
+  XCH rr11                                                 # rr10..rr11 = currentPrime
+
+  FIM r0, $STATUS_MEM_VARIABLE_DOUBLED_N_NEG . 0
+  SRC r0
+
+  FIM r3, 0x10                                             # vmax = 1
+
+  FIM r1, 0x00
+  LD rr10
+  XCH rr0
+  LD rr11
+  XCH rr1                                                  # m = currentPrime
+
+updateDigits_computeM_loop:
+  JMS mul16x8                                              # tmp = m * currentPrime
+  JCN c, updateDigits_computeM_save
+
+  RD0
+  ADD rr8
+  RD1
+  ADD rr9
+  RD2
+  ADD rr14
+  RD3
+  ADD rr15
+  JCN c, updateDigits_computeM_save                        # if (tmp >= 2 * N)
+
+  LD rr8
+  XCH rr0
+  LD rr9
+  XCH rr1
+  LD rr14
+  XCH rr2
+  LD rr15
+  XCH rr3                                                  # m = tmp
+
+  ISZ rr6, updateDigits_computeM_loop                      # vmax++
+
+updateDigits_computeM_save:
+  FIM r4, $STATUS_MEM_VARIABLE_VMAX . 0
+  SRC r4
+  LD rr6
+  WR2
+
+  JMS updateDigits_prepareModulusBasedVariables
+  DCL
+  DB1
+  JMS computeF
+  JMS updateDigits_computedF
   BBL 0
 
 # INPUT:
+#   STATUS_MEM_VARIABLE_CURRENT_PRIME
+#   STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
+#   STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG
+#   STATUS_MEM_VARIABLE_N_NEG
+#   digits chunks
 # OUTPUT:
+#   digits chunks
 updateDigits_oneVMax:
+  LDM $STATUS_MEM_VARIABLE_CURRENT_PRIME
+  JMS loadVarFromStatusCharMemory
+  JMS updateDigits_prepareModulusBasedVariables
+  DCL
+  DB1
+  JMS computeF_oneVMax
+  JMS updateDigits_computedF
   BBL 0
+
+# INPUT:
+#   rr0..rr3 - m
+# OUTPUT:
+#   MAIN_MEM_VARIABLE_DIV_DIVISOR
+#   STATUS_MEM_VARIABLE_MODULUS
+#   STATUS_MEM_VARIABLE_MODULUS_NEG
+#   LUT for modular multiplication
+# VARIABLES:
+#   rr12..rr15 - multipliedM
+updateDigits_prepareModulusBasedVariables:
+  LDM $MAIN_MEM_VARIABLE_DIV_DIVISOR
+  JMS storeVarToMainMemory                                                          # MAIN_MEM_VARIABLE_DIV_DIVISOR = m
+
+  LDM $STATUS_MEM_VARIABLE_MODULUS
+  JMS storeVarToStatusCharMemory                                                    # STATUS_MEM_VARIABLE_MODULUS = m
+  XCH rr5
+
+  LD rr0
+  CMA
+  IAC
+  XCH rr8
+  LD rr1
+  CMA
+  ADD rr5
+  XCH rr9
+  LD rr2
+  CMA
+  ADD rr5
+  XCH rr10
+  LD rr3
+  CMA
+  ADD rr5
+  XCH rr11                                                                          # rr8..rr11 = -m
+
+  FIM r2, $STATUS_MEM_VARIABLE_MODULUS_NEG . 0
+  SRC r2
+  LD rr8
+  WR0
+  XCH rr12
+  LD rr9
+  WR1
+  XCH rr13
+  LD rr10
+  WR2
+  XCH rr14
+  LD rr11
+  WR3                                                                               # STATUS_MEM_VARIABLE_MODULUS_NEG = -m
+  XCH rr15                                                                          # multipliedM = -m
+
+  CLB
+  DCL
+
+  FIM r2, 0x10
+
+updateDigits_prepareModulusBasedVariables_buildLUT_loop:
+  CLB
+  ADD rr12
+  LDM 0x0
+  ADD rr13
+  LDM 0x0
+  ADD rr14
+  LD rr4
+  ADD rr15
+  JCN c, updateDigits_prepareModulusBasedVariables_buildLUT_decreaseMultiplier      # if (multipliedM <= digit * 0x1000)
+
+  SRC r2
+  LD rr12
+  ADD rr0
+  WR0
+  LD rr13
+  ADD rr1
+  WR1
+  LD rr14
+  ADD rr2
+  WR2
+  LD rr15
+  ADD rr3
+  WR3                                                                               # LUT[digit] = multipliedM + m
+
+  ISZ rr4, updateDigits_prepareModulusBasedVariables_buildLUT_loop                  # digit++
+
+  JUN updateDigits_prepareModulusBasedVariables_modulus12Bit_check
+
+updateDigits_prepareModulusBasedVariables_buildLUT_decreaseMultiplier:
+  CLC
+  LD rr12
+  ADD rr8
+  XCH rr12
+  LD rr13
+  ADD rr9
+  XCH rr13
+  LD rr14
+  ADD rr10
+  XCH rr14
+  LD rr15
+  ADD rr11
+  XCH rr15                                                                          #  multipliedM = multipliedM - m
+
+  JCN c, updateDigits_prepareModulusBasedVariables_buildLUT_loop                    # if (multipliedM > 0)
+
+updateDigits_prepareModulusBasedVariables_buildLUT_fillLastEntries_loop:
+  SRC r2
+  LD rr12
+  ADD rr0
+  WR0
+  LD rr13
+  ADD rr1
+  WR1
+  LD rr14
+  ADD rr2
+  WR2
+  LD rr15
+  ADD rr3
+  WR3                                                                               # LUT[digit] = multipliedM + m
+  CLC
+
+  ISZ rr4, updateDigits_prepareModulusBasedVariables_buildLUT_fillLastEntries_loop  # digit++
+
+updateDigits_prepareModulusBasedVariables_modulus12Bit_check:
+  SRC r2
+
+  LD rr3
+  JCN z, updateDigits_prepareModulusBasedVariables_modulus12Bit                     # if (m < 0x1000)
+
+  CLB
+  WR0
+  BBL $BANK_WITH_VARIABLES
+
+updateDigits_prepareModulusBasedVariables_modulus12Bit:
+  LD rr8
+  XCH rr12
+  LD rr9
+  XCH rr13
+  LD rr10
+  XCH rr14                                                                          # multipliedM = -m
+
+  LD rr2
+  IAC
+  JCN c, updateDigits_prepareModulusBasedVariables_modulus12Bit_safeM               # if (m >= 0xF00)
+
+updateDigits_prepareModulusBasedVariables_modulus12Bit_loop:
+  CLB
+  ADD rr12
+  LDM 0x0
+  ADD rr13
+  LDM 0xF
+  ADD rr14
+  JCN nc, updateDigits_prepareModulusBasedVariables_modulus12Bit_save               # if (multipliedM > 0xF00)
+  CLC
+
+  LD rr12
+  ADD rr8
+  XCH rr12
+  LD rr13
+  ADD rr9
+  XCH rr13
+  LD rr14
+  ADD rr10
+  XCH rr14                                                                          # multipliedM = multipliedM - m
+
+  JCN c, updateDigits_prepareModulusBasedVariables_modulus12Bit_loop
+
+updateDigits_prepareModulusBasedVariables_modulus12Bit_save:
+  LDM 0x1
+  WR0
+  LD rr12
+  ADD rr0
+  WR1
+  LD rr13
+  ADD rr1
+  WR2
+  LD rr14
+  ADD rr2
+  WR3                                                                               # maxSafeModulusMultipleFor12Bit = multipliedM + m
+  CLC
+  BBL $BANK_WITH_VARIABLES
+
+updateDigits_prepareModulusBasedVariables_modulus12Bit_safeM:
+  TCC
+  WR0
+  LD rr8
+  WR1
+  LD rr9
+  WR2
+  LD rr10
+  WR3                                                                               # maxSafeModulusMultipleFor12Bit = -m
+  BBL $BANK_WITH_VARIABLES
 
 # INPUT:
 #   STATUS_MEM_VARIABLE_MODULUS
@@ -19,10 +290,6 @@ updateDigits_oneVMax:
 #   STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
 #   STATUS_MEM_VARIABLE_F
 #   MAIN_MEM_VARIABLE_DIV_DIVISOR - m
-#   rr6 - 0x0
-#   rr7 - 0x4
-#   rr6' - 0x0
-#   rr7' - 0x4
 #   rr13 - 0x0
 #   digits chunks
 # OUTPUT:
@@ -32,6 +299,10 @@ updateDigits_oneVMax:
 #   STATUS_MEM_VARIABLE_UPDATE_DIGITS_CHUNK_NO
 #   STATUS_MEM_VARIABLE_UPDATE_DIGITS_CHUNK_COUNTER
 updateDigits_computedF:
+  SB1
+  FIM r3, 0x04
+  SB0
+  FIM r3, 0x04
   JMS power10
 
   LD rr0
