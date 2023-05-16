@@ -56,42 +56,16 @@
 
 # MEMORY VARIABLES IN STATUS CHARACTERS:
 #   GLOBAL:
-#     0x06 - chunksCount[2] | UNUSED[2]
-#     0x07 - UNUSED
 #     0x08 - primeIteratorInfo[4] = segmentSize[2] | previousPrimeRegIdx[1] | previousPrimeBankIdx[1]
 #     0x09 - currentPrimenessSegmentEnd
-#     0x0A - UNUSED
-#     0x0B - UNUSED
-#     0x0C - startingPiDigitsPosition
-#     0x0D - UNUSED
-#     0x0E - N
-#     0x0F - UNUSED
 #   PRIME_LOOP:
-#     0x06 - chunksCount[2] | vmax[1] | v[1]
-#     0x07 - UNUSED
 #     0x08 - primeIteratorInfo[4] = segmentSize[2] | previousPrimeRegIdx[1] | previousPrimeBankIdx[1]
 #     0x09 - currentPrimenessSegmentEnd
-#     0x0A - A
-#     0x0B - f
-#     0x0C - startingPiDigitsPosition
-#     0x0D - UNUSED
-#     0x0E - N
-#     0x0F - b
 
 # MEMORY VARIABLES IN MAIN CHARACTERS:
 #   PRIME_LOOP:
-#     0x06 - k
-#     0x07 - m
-#     0x08 - UNUSED (divMWxMW uses it)
-#     0x09 - a, should be here for division optimisations (XXX / a is frequent operation)
-#     0x0A - UNUSED (divMWxMW uses it)
 #     0x0B - primeLimit = 2 * N, should be here because of comparison for main memory variables
 #   GLOBAL:
-#     0x06 - UNUSED
-#     0x07 - UNUSED
-#     0x08 - UNUSED
-#     0x09 - UNUSED
-#     0x0A - UNUSED
 #     0x0B - primeLimit = 2 * N, should be here because of comparison for main memory variables
 
 main:
