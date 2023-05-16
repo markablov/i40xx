@@ -26,7 +26,7 @@ const WORKER_AMOUNT = 16;
   const workerPath = path.resolve(dirname, './worker.js');
   const tests = JSON.parse(fs.readFileSync(path.resolve(dirname, './tests.dat'), 'utf8'));
 
-  const { rom, symbols, sourceMap, sourceCode, romSize } = compileCodeForTest(
+  const { roms, sourceCode } = compileCodeForTest(
     'submodules/updateDigits.i4040',
     'updateDigits_computedF',
   );
@@ -48,7 +48,7 @@ const WORKER_AMOUNT = 16;
         generateRegisterInitialization(7, 0x4),
         generateRegisterBankSwitch(0),
       ];
-      console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols, rom, romSize));
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators));
       console.log();
 
       const dumpPath = path.resolve('./ram.dump');
@@ -78,7 +78,7 @@ const WORKER_AMOUNT = 16;
   for (let i = 0; i < WORKER_AMOUNT; i++) {
     const worker = new Worker(
       workerPath,
-      { workerData: { romDump: rom, ramDump: RAM_DUMP } },
+      { workerData: { romDump: roms.map(({ data }) => data), ramDump: RAM_DUMP } },
     );
 
     worker.on('message', (data) => onMessage(worker, data));

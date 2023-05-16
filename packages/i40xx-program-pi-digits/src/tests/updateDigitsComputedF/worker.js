@@ -12,11 +12,7 @@ parentPort.on('message', ({ test, testNo }) => {
 
   initMemoryWithInput(memory, test.input);
 
-  registers.indexBanks[0][6] = 0x0;
-  registers.indexBanks[0][7] = 0x4;
   registers.indexBanks[0][13] = 0x0;
-  registers.indexBanks[1][6] = 0x0;
-  registers.indexBanks[1][7] = 0x4;
   registers.ramControl = 0b1110;
 
   while (!system.isFinished()) {
