@@ -6,36 +6,6 @@
 %include "addMod.i4040"
 %include "computeInvertedA_binary.i4040"
 
-computeMaxVAndM:
-  CLB
-  XCH rr7
-  LDM 0x09
-  JMS loadVarFromMainMemory
-  LDM 0x08
-  # tmp = a
-  JMS storeVarToMainMemory
-computeMaxVAndM_loop:
-  INC rr7
-  LDM 0x08
-  JMS loadVarFromMainMemory
-  LDM 0x07
-  JMS storeVarToMainMemory
-  LDM 0x09
-  XCH rr2
-  LDM 0x07
-  XCH rr4
-  # tmp = tmp * a
-  JMS mulMWxMW
-  FIM r0, 0xB8
-  # if 2 * N > tmp
-  JMS compareVarsFromMainMemory
-  JCN c, computeMaxVAndM_loop
-  FIM r0, 0x60
-  SRC r0
-  LD rr7
-  WR2
-  BBL 0
-
 # INPUT:
 #   STATUS_MEM_VARIABLE_MODULUS
 #   STATUS_MEM_VARIABLE_V
