@@ -2,7 +2,7 @@
  * Updates source code to be more usable inside browser emulator GUI
  *   - adds preamble that contains initialization code to seed registers and memory with values
  */
-export const updateCodeForUseInEmulator = (sourceCode, initializators) => (`__location(00:0x00)
+export const updateCodeForUseInEmulator = (sourceCode, initializators = []) => (`__location(00:0x00)
   JUN prepareTestData
 ${sourceCode}
 prepareTestData:
