@@ -16,12 +16,9 @@ const addMulTableEntry = (ramDump, a, b, bankNo, lowCharNo) => {
   );
 
   for (let value = 0; value < 16; value++) {
-    // shift tables
-    ramDump[1][value].status[0] = (value << 2) & 0xF;
-    ramDump[1][value].status[1] = (value >> 2) & 0xF;
-
     // mul tables
     addMulTableEntry(ramDump, value, 0x3, 1, 2);
+    addMulTableEntry(ramDump, value, 0x4, 1, 0);
     addMulTableEntry(ramDump, value, 0x5, 2, 0);
     addMulTableEntry(ramDump, value, 0x6, 2, 2);
     addMulTableEntry(ramDump, value, 0x7, 4, 0);

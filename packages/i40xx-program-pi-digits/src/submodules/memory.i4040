@@ -1,5 +1,5 @@
-%define BANK_WITH_SHIFT_TABLE_FOR_SHIFTS_BY_2       0x1
 %define BANK_WITH_MUL_TABLE_FOR_FACTOR_3            0x1
+%define BANK_WITH_MUL_TABLE_FOR_FACTOR_4            0x1
 %define BANK_WITH_MUL_TABLE_FOR_FACTOR_5            0x2
 %define BANK_WITH_MUL_TABLE_FOR_FACTOR_6            0x2
 %define BANK_WITH_MUL_TABLE_FOR_FACTOR_7            0x3
