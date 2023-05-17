@@ -1,0 +1,114 @@
+%include "memory.i4040"
+
+generateMulTables:
+  FIM r0, 0x13
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_3
+  JMS generateMulTable_bankHighHalf
+
+  FIM r0, 0x14
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_4
+  JMS generateMulTable_bankLowHalf
+
+  FIM r0, 0x15
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_5
+  JMS generateMulTable_bankLowHalf
+
+  FIM r0, 0x16
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_6
+  JMS generateMulTable_bankHighHalf
+
+  FIM r0, 0x17
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_7
+  JMS generateMulTable_bankLowHalf
+
+  FIM r0, 0x19
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_9
+  JMS generateMulTable_bankHighHalf
+
+  FIM r0, 0x1A
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_A
+  JMS generateMulTable_bankLowHalf
+
+  FIM r0, 0x1B
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_B
+  JMS generateMulTable_bankHighHalf
+
+  FIM r0, 0x1C
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_C
+  JMS generateMulTable_bankLowHalf
+
+  FIM r0, 0x1D
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_D
+  JMS generateMulTable_bankHighHalf
+
+  FIM r0, 0x1E
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_E
+  JMS generateMulTable_bankLowHalf
+
+  FIM r0, 0x1F
+  LDM $BANK_WITH_MUL_TABLE_FOR_FACTOR_F
+  JMS generateMulTable_bankHighHalf
+
+  BBL 0
+
+# INPUT:
+#   rr0 - 0x1
+#   rr1 - second factor (b)
+#   acc - bank
+# VARIABLES:
+#   rr0 - first factor (a)
+#   rr3 - loop counter for inner multiplication
+generateMulTable_bankLowHalf:
+  DCL
+generateMulTable_bankLowHalf_factor_loop:
+  FIM r3, 0x00
+  LD rr1
+  CMA
+  IAC
+  XCH rr3
+generateMulTable_bankLowHalf_factor_loop_mul_loop:
+  LD rr6
+  ADD rr0
+  XCH rr6
+  LDM 0x0
+  ADD rr7
+  XCH rr7
+  ISZ rr3, generateMulTable_bankLowHalf_factor_loop_mul_loop    # [rr6, rr7] = a * b
+  SRC r0
+  LD rr6
+  WR0
+  LD rr7
+  WR1
+  ISZ rr0, generateMulTable_bankLowHalf_factor_loop
+  BBL 0
+
+# INPUT:
+#   rr0 - 0x1
+#   rr1 - second factor (b)
+#   acc - bank
+# VARIABLES:
+#   rr0 - first factor (a)
+#   rr3 - loop counter for inner multiplication
+generateMulTable_bankHighHalf:
+  DCL
+generateMulTable_bankHighHalf_factor_loop:
+  FIM r3, 0x00
+  LD rr1
+  CMA
+  IAC
+  XCH rr3
+generateMulTable_bankHighHalf_factor_loop_mul_loop:
+  LD rr6
+  ADD rr0
+  XCH rr6
+  LDM 0x0
+  ADD rr7
+  XCH rr7
+  ISZ rr3, generateMulTable_bankHighHalf_factor_loop_mul_loop    # [rr6, rr7] = a * b
+  SRC r0
+  LD rr6
+  WR2
+  LD rr7
+  WR3
+  ISZ rr0, generateMulTable_bankHighHalf_factor_loop
+  BBL 0
