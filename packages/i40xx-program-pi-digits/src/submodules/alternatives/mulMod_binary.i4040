@@ -3,6 +3,21 @@
 %include "div16.i4040"
 
 # INPUT:
+#   rr0..rr3 - source variable
+# OUTPUT:
+#   rr8..rr11 - destination variable
+cloneRegVarFrom0to4:
+  LD rr0
+  XCH rr8
+  LD rr1
+  XCH rr9
+  LD rr2
+  XCH rr10
+  LD rr3
+  XCH rr11
+  BBL 0
+
+# INPUT:
 #   rr15 - variable number for first term and for result
 #   rr14 - variable number for second term
 #   memStatusCharVar[rr15] - first term (a)
