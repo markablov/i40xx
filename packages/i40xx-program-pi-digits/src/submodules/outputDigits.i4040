@@ -1,0 +1,107 @@
+%include "memory.i4040"
+%include "mul4_table.i4040"
+
+# INPUT:
+#   STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG
+#   digits chunks
+# VARIABLES:
+#   rr4, rr9 - chunkNo
+#   rr6, rr8 - chunkLoopCounter
+outputDigits:
+  FIM r3, $STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG . 3
+  SRC r3
+  RD0
+  XCH rr6
+  RD1
+  XCH rr8                                                       # chunkLoopCounter = 0x100 - chunkCount
+
+  CLB
+  XCH rr9
+  FIM r2, 0x0C                                                  # chunkNo = 0
+
+outputDigits_chunksLoop:
+  LD rr9
+  DCL
+
+  SRC r2
+  RDM
+  AN7
+  WRM                                                           # chunk = chunk & (2^50 - 1)
+  FIM r1, 0x30
+outputDigits_chunksLoop_divBy2_loop:
+  SRC r2
+  RDM
+  RAR
+  WRM
+  TCC
+  XCH rr3
+  LD rr5
+  DAC
+  XCH rr5
+  LD rr3
+  RAR
+  ISZ rr2, outputDigits_chunksLoop_divBy2_loop                  # chunk = chunk >> 1
+
+  CLB
+  INC rr5
+  FIM r5, 0x50
+  FIM r7, 0x04
+outputDigits_chunksLoop_mulBy5_loop:
+  RDM
+  JMS mul4x4
+  LD rr9
+  DCL
+  SRC r2
+  LD rr13
+  XCH rr14
+  ADD rr12
+  WRM
+  LD rr14
+  ADD rr11
+  XCH rr14
+  INC rr5
+  SRC r2
+  ISZ rr15, outputDigits_chunksLoop_mulBy5_loop                 # chunk = (chunk >> 1) * 10 = chunk * 5
+
+  RDM
+  JCN z, outputDigits_chunksLoop_firstDigitInChunkIsZero
+  LDM 0x5
+outputDigits_chunksLoop_firstDigitInChunkIsZero:
+  ADD rr14
+  WMP                                                           # output Math.floor(chunk) = chunk[12]
+
+  FIM r5, 0xA0
+  FIM r1, 0x80
+outputDigits_chunksLoop_output_loop:
+  FIM r7, 0x04
+  CLB
+  XCH rr5
+  SRC r2
+outputDigits_chunksLoop_output_mulBy10_Loop:
+  RDM
+  JMS mul4x4
+  LD rr9
+  DCL
+  SRC r2
+  LD rr13
+  XCH rr14
+  ADD rr12
+  WRM
+  LD rr14
+  ADD rr11
+  XCH rr14
+  INC rr5
+  SRC r2
+  ISZ rr15, outputDigits_chunksLoop_output_mulBy10_Loop         # chunk = chunk * 10
+  LD rr14
+  WMP                                                           # output Math.floor(chunk) = chunk[12]
+  ISZ rr2, outputDigits_chunksLoop_output_loop
+
+  ISZ rr4, outputDigits_chunksLoop_incCounter
+  INC rr9                                                       # chunkNo++
+
+outputDigits_chunksLoop_incCounter:
+  ISZ rr6, outputDigits_chunksLoop
+  ISZ rr8, outputDigits_chunksLoop                              # if (chunkNo < chunksCount)
+
+  BBL 0
