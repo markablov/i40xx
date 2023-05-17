@@ -22,7 +22,7 @@ worker.onmessage = ({ data: { command, error, ...rest } }) => {
 
     case 'IOOutput':
       emulatorStore.update((state) => {
-        state.IOLog.push({ address: state.address, data: state.data, type: state.type });
+        state.IOLog.push({ address: rest.address, data: rest.data, type: rest.type });
       });
       break;
 
