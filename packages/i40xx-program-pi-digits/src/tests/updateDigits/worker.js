@@ -2,8 +2,8 @@ import { workerData, parentPort } from 'node:worker_threads';
 import Emulator from 'i40xx-emu';
 
 import { hwNumberToHex } from '#utilities/numbers.js';
-import { initMemoryWithInput, getMemoryBankFromAbsoluteAddr } from './memory.js';
-import { VARIABLES } from '#utilities/memory.js';
+import { initMemoryWithInput } from './memory.js';
+import { VARIABLES, getMemoryBankFromAbsoluteAddr } from '#utilities/memory.js';
 
 const { romDump, ramDump } = workerData;
 

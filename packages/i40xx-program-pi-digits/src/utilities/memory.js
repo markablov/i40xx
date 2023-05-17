@@ -23,6 +23,19 @@ export const writeValueToStatusChars = (value, memory, regIdx, bankIdx = 7) => (
   writeValueToChars(value, getRegister(memory, bankIdx, regIdx).status, 4)
 );
 
+export function getMemoryBankFromAbsoluteAddr(addr) {
+  const bankNo = Math.floor(addr / 16);
+  // when you are doing DCL 0x3, RAM bank 0x4 is selected and vice versa
+  switch (bankNo) {
+    case 3:
+      return 4;
+    case 4:
+      return 3;
+    default:
+      return bankNo;
+  }
+}
+
 export const VARIABLES = Object.freeze({
   STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION: 0x1,
   STATUS_MEM_VARIABLE_MODULUS: 0x4,

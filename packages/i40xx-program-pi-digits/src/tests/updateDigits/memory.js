@@ -1,18 +1,8 @@
-import { VARIABLES, writeValueToMainChars, writeValueToStatusChars } from '#utilities/memory.js';
 import { hexToHWNumber, numToHWNumber } from '#utilities/numbers.js';
 
-export function getMemoryBankFromAbsoluteAddr(addr) {
-  const bankNo = Math.floor(addr / 16);
-  // when you are doing DCL 0x3, RAM bank 0x4 is selected and vice versa
-  switch (bankNo) {
-    case 3:
-      return 4;
-    case 4:
-      return 3;
-    default:
-      return bankNo;
-  }
-}
+import {
+  VARIABLES, writeValueToMainChars, writeValueToStatusChars, getMemoryBankFromAbsoluteAddr,
+} from '#utilities/memory.js';
 
 export function initMemoryWithInput(memory, input) {
   const { chunks, startingPiDigitsPosition, a, N } = input;
