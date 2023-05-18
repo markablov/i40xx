@@ -1,11 +1,10 @@
-%include "memory.i4040"
 %include "mul4_table.i4040"
 
 # INPUT:
 #   rr0..rr3 - first factor
 #   rr10..rr11 - second factor
 # OUTPUT:
-#   [rr8, rr9, rr14, rr15] - product
+#   [rr8, rr9, rr14, rr15, rr13] - product
 # NOTES:
 #   input registers and rr5..rr7 are not modified
 mul16x8:
