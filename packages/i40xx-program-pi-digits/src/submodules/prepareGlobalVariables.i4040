@@ -1,0 +1,244 @@
+%include "memory.i4040"
+%include "div16x8.i4040"
+%include "mul16.i4040"
+%include "mul4_table.i4040"
+
+# INPUT:
+#   STATUS_MEM_VARIABLE_DIGITS_COUNT
+#   STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
+# OUTPUT:
+#   STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG
+#   STATUS_MEM_VARIABLE_N_NEG
+#   STATUS_MEM_VARIABLE_DOUBLED_N_NEG
+#   STATUS_MEM_VARIABLE_SQRT_OF_DOUBLE_N
+prepareGlobalVariables:
+  FIM r4, 0xF5
+  SRC r4
+  LDM 0x9
+  WR0
+  CLB
+  WR1
+  JMS div16x8
+  FIM r0, $STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG . 0
+  SRC r0
+  LD rr8
+  CMA
+  IAC
+  WR0
+  LD rr9
+  CMA
+  ADD rr1
+  WR1                                                           # chunksCountNeg = -Math.floor(digitsCount / 9)
+
+  LDM $STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
+  JMS loadVarFromStatusCharMemory
+
+  LDM 0xB
+  ADD rr0
+  XCH rr4
+  LDM 0x0
+  ADD rr1
+  XCH rr5
+  LDM 0x0
+  ADD rr2
+  XCH rr6
+  LDM 0x0
+  ADD rr3
+  XCH rr7                                                       # [rr4..rr7] = startingPosition - 9 + 20
+
+  LDM $STATUS_MEM_VARIABLE_DIGITS_COUNT
+  JMS loadVarFromStatusCharMemory
+
+  LD rr0
+  ADD rr4
+  XCH rr0
+  LD rr1
+  ADD rr5
+  XCH rr1
+  LD rr2
+  ADD rr6
+  XCH rr2
+  LD rr3
+  ADD rr7
+  XCH rr3                                                       # n + 20 = [rr0..rr3] = startingPosition + (digitsCount - 9) + 20
+
+  FIM r5, 0xD5
+  JMS mul16x8                                                   # [rr8, rr9, rr14, rr15, rr13] = (n + 20) * 93
+
+  LD rr13
+  RAR
+  XCH rr4
+  LD rr15
+  RAR
+  XCH rr3
+  LD rr14
+  RAR
+  XCH rr2
+  LD rr9
+  RAR
+  XCH rr1
+  LD rr8
+  RAR
+  XCH rr0                                                       # [rr0, rr1, rr2, rr3, rr4] = ((n + 20) * 93) / 2
+
+  LD rr4
+  RAR
+  LD rr3
+  RAR
+  XCH rr3
+  LD rr2
+  RAR
+  XCH rr2
+  LD rr1
+  RAR
+  XCH rr1
+  LD rr0
+  RAR
+  XCH rr0                                                       # [rr0, rr1, rr2, rr3] = ((n + 20) * 93) / 4
+
+  FIM r4, 0xF0
+  SRC r4
+  LDM 0x7
+  WR0
+  CLB
+  WR1
+  JMS div16x8_dividend_loaded                                   # N = [rr8, rr9, rr14, rr15] = ((n + 20) * 93) / 28
+
+  FIM r0, $STATUS_MEM_VARIABLE_N_NEG . 0
+  SRC r0
+  LD rr8
+  CMA
+  WR0
+  LD rr9
+  CMA
+  WR1
+  LD rr14
+  CMA
+  WR2
+  LD rr15
+  CMA
+  WR3                                                           # -(N + 1)
+
+  LD rr8
+  ADD rr8
+  XCH rr0
+  LD rr9
+  ADD rr9
+  XCH rr1
+  LD rr14
+  ADD rr14
+  XCH rr2
+  LD rr15
+  ADD rr15
+  XCH rr3                                                       # [rr0..rr3] = 2 * N
+
+  FIM r3, $STATUS_MEM_VARIABLE_DOUBLED_N_NEG . 0
+  SRC r3
+  LD rr0
+  CMA
+  IAC
+  WR0
+  LD rr1
+  CMA
+  ADD rr7
+  WR1
+  LD rr2
+  CMA
+  ADD rr7
+  WR2
+  LD rr3
+  CMA
+  ADD rr7
+  WR3                                                           # -(2 * N)
+
+  FIM r5, 0x10
+prepareGlobalVariables_squareOfDoubleN_loop:
+  ISZ rr10, prepareGlobalVariables_squareOfDoubleN_computeSquare
+  INC rr11
+prepareGlobalVariables_squareOfDoubleN_computeSquare:
+  JMS square8
+  RD0
+  STC
+  ADD rr4
+  RD1
+  ADD rr5
+  RD2
+  ADD rr6
+  RD3
+  ADD rr7
+  JCN nc, prepareGlobalVariables_squareOfDoubleN_loop           # if (val * val <= 2N)
+
+  FIM r0, $STATUS_MEM_VARIABLE_SQRT_OF_DOUBLE_N . 0
+  SRC r0
+  LD rr10
+  WR0
+  LD rr11
+  WR1                                                           # sqrt(2 * N)
+
+  BBL 0
+
+# INPUT:
+#   rr10..rr11 - base
+# OUTPUT:
+#   rr4..rr7 - square of base
+square8:
+  LD rr11
+  JCN nz, square8_8bit
+
+square8_4bit:
+  LD rr10
+  JMS mul4x4
+  DCL
+  FIM r3, 0x00
+  LD rr12
+  XCH rr4
+  LD rr13
+  XCH rr5
+  BBL 0
+
+# NOTES:
+#   (a1 * 0x10 + a0) ^ 2 = a0 * a0 +  2 * (a1 * a0 * 0x10) + a1 * a1 * 0x100
+square8_8bit:
+  CLB
+  XCH rr11
+  XCH rr8               # rr8 = a1
+  LD rr10
+  JMS mul4x4            # a0 * a0
+  LD rr12
+  XCH rr4               # r0 = low(a0 * a0)
+  LD rr13
+  XCH rr5               # r1 = high(a0 * a0)
+square8_8bit_digit2:
+  LD rr8
+  JMS mul4x4            # a0 * a1
+  LD rr12
+  ADD rr5
+  XCH rr5               # r1 = r1 + low(a1 * a0)
+  LDM 0x0
+  ADD rr13
+  XCH rr6               # r2 = high(a1 * a0) + carry
+  LD rr12
+  ADD rr5
+  XCH rr5               # r1 = r1 + low(a1 * a0)
+  LD rr13
+  ADD rr6
+  XCH rr6               # r2 = r2 + high(a1 * a0) + carry
+  TCC
+  XCH rr7               # r3 = carry
+square8_8bit_digit3:
+  LD rr8
+  XCH rr10
+  XCH rr8               # rr8 = a0
+  LD rr10
+  JMS mul4x4            # a1 * a1
+  DCL
+  LD rr12
+  ADD rr6
+  XCH rr6               # r2 = r2 + low(a1 * a1)
+  Ld rr7
+  ADD rr13
+  XCH rr7               # r3 = r3 + high(a1 * a1) + carry
+  LD rr8
+  XCH rr10
+  XCH rr11
+  BBL 0

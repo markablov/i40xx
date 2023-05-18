@@ -12,12 +12,14 @@
 %define BANK_WITH_MUL_TABLE_FOR_FACTOR_F            0x6
 %define BANK_WITH_VARIABLES                         0x7
 
+%define STATUS_MEM_VARIABLE_SQRT_OF_DOUBLE_N                          0x0
 %define STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION               0x1
 %define STATUS_MEM_VARIABLE_POWER_10_EXPONENT                         0x2
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_ZERO_V_MULTIPLIER_B         0x2
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_REDUCED_COEF_B              0x3
 %define STATUS_MEM_VARIABLE_MODULUS                                   0x4
 %define STATUS_MEM_VARIABLE_DOUBLED_N_NEG                             0x5
+%define STATUS_MEM_VARIABLE_DIGITS_COUNT                              0x5
 %define STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG                          0x6
 %define STATUS_MEM_VARIABLE_V                                         0x6
 %define STATUS_MEM_VARIABLE_VMAX                                      0x6
@@ -58,8 +60,6 @@
 %define MAIN_MEM_VARIABLE_EXP_TABLE_POWER_4     0xB
 %define MAIN_MEM_VARIABLE_EXP_TABLE_POWER_6     0xB
 %define MAIN_MEM_VARIABLE_EXP_TABLE_POWER_7     0xB
-
-# UNALLOCATED VARIABLES IN STATUS CHARACTERS: 0x0
 
 clearMemory:
   FIM r0, 0x80
