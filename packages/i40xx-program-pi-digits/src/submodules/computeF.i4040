@@ -3,7 +3,6 @@
 %include "div16x8.i4040"
 %include "mulMod_binary_batch.i4040"
 %include "powerCurrentPrime_table.i4040"
-%include "addMod.i4040"
 %include "computeInvertedA_binary.i4040"
 
 # INPUT:
