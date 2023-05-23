@@ -1,0 +1,170 @@
+%include "memory.i4040"
+%include "mul4_table.i4040"
+
+# INPUT:
+#   MAIN_MEM_VARIABLE_PRIME_SEGMENT_SIZE
+# OUTPUT:
+#   initial prime segment
+# VARIABLES:
+#   rr0..rr1 - segmentSize
+#   rr2..rr3 - 0x100 - (segmentSize / 2)
+generateInitialPrimeSegment:
+  JMS fillSegmentPrimenessMap
+  XCH rr4
+
+  FIM r3, $MAIN_MEM_VARIABLE_PRIMENESS_MAP_START . 1
+generateInitialPrimeSegment_fillPrimenessMap_loop:
+  SRC r3
+  RDM
+  JCN z, generateInitialPrimeSegment_fillPrimenessMap_incCounter          # if (currentPrimenessMap[primeIdx] === 0)
+
+  LD rr7
+  STC
+  RAL
+  JCN c, generateInitialPrimeSegment_buildInitialSegment                  # if (prime >= 0x10)
+
+  XCH rr10
+  LD rr10
+  JMS mul4x4                                                              # prime * prime
+  DCL
+
+  LD rr12
+  SUB rr0
+  CMC
+  LD rr13
+  SUB rr1
+  JCN c, generateInitialPrimeSegment_buildInitialSegment                  # if (prime * prime >= segmentSize)
+
+  LD rr13
+  RAR
+  XCH rr13
+  LD rr12
+  RAR
+  XCH rr15                                                                # idx = (prime * prime - 1) / 2
+  CLC
+
+generateInitialPrimeSegment_fillPrimenessMap_loop_strike_loop:
+  LDM $MAIN_MEM_VARIABLE_DIGIT_PRIMENESS_MAP_START
+  ADD rr13
+  XCH rr14
+  SRC r7
+  CLB
+  WRM                                                                     # currentPrimenessMap[idx] = 0
+
+  LD rr15
+  ADD rr10
+  XCH rr15
+  LDM 0x0
+  ADD rr13
+  XCH rr13                                                                # idx += prime
+
+  LD rr15
+  ADD rr2
+  LD rr13
+  ADD rr3
+  JCN nc, generateInitialPrimeSegment_fillPrimenessMap_loop_strike_loop   # if (idx < (segmentSize / 2))
+  CLC
+
+generateInitialPrimeSegment_fillPrimenessMap_incCounter:
+  ISZ rr7, generateInitialPrimeSegment_fillPrimenessMap_loop
+
+generateInitialPrimeSegment_buildInitialSegment:
+  FIM r4, $MAIN_MEM_VARIABLE_INITIAL_SEGMENT_START . 0
+  FIM r3, $MAIN_MEM_VARIABLE_PRIMENESS_MAP_START . 1                      # idx = 1
+  ISZ rr2, generateInitialPrimeSegment_buildInitialSegment_loop
+  INC rr3
+
+generateInitialPrimeSegment_buildInitialSegment_loop:
+  SRC r3
+  RDM
+  JCN z, generateInitialPrimeSegment_buildInitialSegment_loop_incPointer  # if (currentPrimenessMap[idx] !== 0)
+
+  SRC r4
+  STC
+  LD rr7
+  RAL
+  WRM
+  INC rr9
+  SRC r4
+  LD rr6
+  RAL
+  ADD rr4
+  WRM                                                                     # initialSegment[initialSegmentIdx] = 2 * idx + 1
+
+  ISZ rr9, generateInitialPrimeSegment_buildInitialSegment_loop_incPointer
+  INC rr8                                                                 # initialSegmentIdx++
+
+generateInitialPrimeSegment_buildInitialSegment_loop_incPointer:
+  ISZ rr7, generateInitialPrimeSegment_buildInitialSegment_loop_incCounter
+  INC rr6
+generateInitialPrimeSegment_buildInitialSegment_loop_incCounter:
+  ISZ rr2, generateInitialPrimeSegment_buildInitialSegment_loop
+  ISZ rr3, generateInitialPrimeSegment_buildInitialSegment_loop
+
+  SRC r4
+  CLB
+  WRM                                                                     # initialSegment[initialSegmentIdx] = 0
+
+  BBL 0
+
+# INPUT:
+# OUTPUT:
+#   acc - 1 if there is no more non-fetched prime numbers inside initial segment
+getNextPrimeFromInitialSegment:
+  BBL 0
+
+# INPUT:
+# OUTPUT:
+#   acc - 1 if there is no more prime numbers less then 2 * N
+getNextPrimeFromFollowingSegment:
+  BBL 0
+
+# INPUT:
+#   MAIN_MEM_VARIABLE_PRIME_SEGMENT_SIZE
+# OUTPUT:
+#   rr0..rr1 - segmentSize
+#   rr2..rr3 - 0x100 - (segmentSize / 2)
+#   rr11 - 0x0
+#   primeness map
+# VARIABLES:
+#   rr10..rr11 - loop counter
+#   rr4..rr5 - pointer to primeness map
+fillSegmentPrimenessMap:
+  FIM r4, $MAIN_MEM_VARIABLE_PRIMENESS_MAP_START . 0
+  FIM r2, $MAIN_MEM_VARIABLE_PRIME_SEGMENT_SIZE . 0
+  SRC r2
+  RDM
+  XCH rr0
+  INC rr5
+  SRC r2
+  RDM
+  XCH rr1
+
+  LD rr1
+  RAR
+  XCH rr3
+  LD rr0
+  RAR
+  CMA
+  IAC
+  XCH rr2
+  LD rr2
+  XCH rr10
+  LD rr3
+  CMA
+  ADD rr9
+  XCH rr3
+  LD rr3
+  XCH rr11                                                      # counter = -(segmentSize / 2)
+
+  LDM 0x1
+fillSegmentPrimenessMap_loop:
+  SRC r4
+  WRM
+  ISZ rr9, fillSegmentPrimenessMap_incCounter
+  INC rr8
+fillSegmentPrimenessMap_incCounter:
+  ISZ rr10, fillSegmentPrimenessMap_loop
+  ISZ rr11, fillSegmentPrimenessMap_loop
+
+  BBL 0x8
