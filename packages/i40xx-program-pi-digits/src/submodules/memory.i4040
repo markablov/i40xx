@@ -154,33 +154,6 @@ storeVarToMainMemory:
 
 # INPUT:
 #   acc - variable number (06..0B)
-# OUTPUT:
-#   rr0, rr1, rr2, rr3 - variable content
-# SIDE EFFECTS:
-#   clears carry flag
-loadVarFromMainMemory:
-  XCH rr4
-  CLB
-  XCH rr5
-  SRC r2
-  RDM
-  XCH rr0
-  INC rr5
-  SRC r2
-  RDM
-  XCH rr1
-  INC rr5
-  SRC r2
-  RDM
-  XCH rr2
-  INC rr5
-  SRC r2
-  RDM
-  XCH rr3
-  BBL 0
-
-# INPUT:
-#   acc - variable number (06..0B)
 clearVarFromMainMemory:
   FIM r0, 0x00
   XCH rr0

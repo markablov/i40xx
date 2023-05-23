@@ -3,6 +3,33 @@
 %include "divMulti.i4040"
 
 # INPUT:
+#   acc - variable number (06..0B)
+# OUTPUT:
+#   rr0, rr1, rr2, rr3 - variable content
+# SIDE EFFECTS:
+#   clears carry flag
+loadVarFromMainMemory:
+  XCH rr4
+  CLB
+  XCH rr5
+  SRC r2
+  RDM
+  XCH rr0
+  INC rr5
+  SRC r2
+  RDM
+  XCH rr1
+  INC rr5
+  SRC r2
+  RDM
+  XCH rr2
+  INC rr5
+  SRC r2
+  RDM
+  XCH rr3
+  BBL 0
+
+# INPUT:
 #   rr15 - variable number for first term and for result
 #   rr14 - variable number for second term
 #   memStatusCharVar[rr15] - first term (a)
