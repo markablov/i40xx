@@ -162,26 +162,6 @@ clearVarFromMainMemory_loop:
   BBL 0
 
 # INPUT:
-#   rr0 - first variable number (06..0B)
-#   rr1 - second variable number (06..0B)
-# OUTPUT:
-#   carry flag if first variable is bigger than second
-compareVarsFromMainMemory:
-  FIM r1, 0x00
-  XCH rr2
-  XCH rr1
-  XCH rr2
-compareVarsFromMainMemory_loop:
-  SRC r0
-  RDM
-  SRC r1
-  CMC
-  SBM
-  INC rr3
-  ISZ rr1, compareVarsFromMainMemory_loop
-  BBL 0
-
-# INPUT:
 #   acc - variable number (06..0B)
 # OUTPUT:
 #   rr1 - index of most significant word for variable
