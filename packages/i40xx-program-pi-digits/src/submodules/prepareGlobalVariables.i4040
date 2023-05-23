@@ -10,7 +10,7 @@
 #   STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG
 #   STATUS_MEM_VARIABLE_N_NEG
 #   STATUS_MEM_VARIABLE_DOUBLED_N_NEG
-#   STATUS_MEM_VARIABLE_SQRT_OF_DOUBLE_N
+#   MAIN_MEM_VARIABLE_PRIME_SEGMENT_SIZE
 prepareGlobalVariables:
   FIM r4, 0xF5
   SRC r4
@@ -168,12 +168,25 @@ prepareGlobalVariables_squareOfDoubleN_computeSquare:
   ADD rr7
   JCN nc, prepareGlobalVariables_squareOfDoubleN_loop           # if (val * val <= 2N)
 
-  FIM r0, $STATUS_MEM_VARIABLE_SQRT_OF_DOUBLE_N . 0
-  SRC r0
   LD rr10
-  WR0
+  RAR
+  JCN nc, prepareGlobalVariables_squareOfDoubleN_write
+  TCC
+  ADD rr10
+  XCH rr10
+  TCC
+  ADD rr11
+  XCH rr11
+
+prepareGlobalVariables_squareOfDoubleN_write:
+  FIM r2, $MAIN_MEM_VARIABLE_PRIME_SEGMENT_SIZE . 0
+  SRC r2
+  LD rr10
+  WRM
+  INC rr3
+  SRC r2
   LD rr11
-  WR1                                                           # sqrt(2 * N)
+  WRM                                                           # segmentSize = sqrt(2 * N) + (sqrt(2 * N) % 2)
 
   BBL 0
 
