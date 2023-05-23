@@ -4,7 +4,7 @@ import Emulator from 'i40xx-emu';
 
 import { compileCodeForTest } from '#utilities/compile.js';
 import { VARIABLES, writeValueToStatusChars } from '#utilities/memory.js';
-import { numToHWNumber } from '#utilities/numbers.js';
+import { numToHWNumber, hwNumberToNum } from '#utilities/numbers.js';
 
 const PROLOGUE_CYCLES_COUNT = 5n;
 const CYCLES_PER_SECOND = 95000n;
@@ -38,8 +38,10 @@ const runTest = (romDump, currentPrimeIdx) => {
     system.instruction();
   }
 
+  const resultFromRegs = (registers.indexBanks[0][10] + (registers.indexBanks[0][11] << 4));
+  const resultFromMemory = hwNumberToNum(memory[7].registers[VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME].status);
   return {
-    result: registers.acc === 1 ? 0 : (registers.indexBanks[0][10] + (registers.indexBanks[0][11] << 4)),
+    result: (registers.acc === 1 || resultFromMemory !== resultFromRegs) ? 0 : resultFromMemory,
     elapsed: system.instructionCycles,
   };
 };

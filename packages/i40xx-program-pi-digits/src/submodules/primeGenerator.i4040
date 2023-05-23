@@ -135,7 +135,12 @@ getNextPrimeFromInitialSegment:
   INC rr1
   SRC r0
   RDM
+  FIM r0, $STATUS_MEM_VARIABLE_CURRENT_PRIME . 0
+  SRC r0
+  WR1
   XCH rr11                                                                # rr10..rr11 = initialSegment[currentInitialSegmentIdx]
+  LD rr10
+  WR0                                                                     # currentPrime = initialSegment[currentInitialSegmentIdx]
 
   SRC r2
   ISZ rr1, getNextPrimeFromInitialSegment_saveLowDigitOfPointer
