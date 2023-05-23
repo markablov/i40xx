@@ -105,13 +105,50 @@ generateInitialPrimeSegment_buildInitialSegment_loop_incCounter:
   CLB
   WRM                                                                     # initialSegment[initialSegmentIdx] = 0
 
+  FIM r0, $STATUS_MEM_VARIABLE_POINTER_TO_PRIME_FROM_INITIAL_SEGMENT . 0
+  SRC r0
+  WR0
+  LDM $MAIN_MEM_VARIABLE_INITIAL_SEGMENT_START
+  WR1                                                                     # currentInitialSegmentIdx = 0
+
   BBL 0
 
 # INPUT:
+#   STATUS_MEM_VARIABLE_POINTER_TO_PRIME_FROM_INITIAL_SEGMENT
+#   initial prime segment
 # OUTPUT:
 #   acc - 1 if there is no more non-fetched prime numbers inside initial segment
+#   rr10..rr11 - prime number
 getNextPrimeFromInitialSegment:
+  FIM r2, $STATUS_MEM_VARIABLE_POINTER_TO_PRIME_FROM_INITIAL_SEGMENT . 0
+  SRC r2
+  RD0
+  XCH rr1
+  RD1
+  XCH rr0
+
+  SRC r0
+  RDM
+  JCN z, getNextPrimeFromInitialSegment_end
+
+  XCH rr10
+  INC rr1
+  SRC r0
+  RDM
+  XCH rr11                                                                # rr10..rr11 = initialSegment[currentInitialSegmentIdx]
+
+  SRC r2
+  ISZ rr1, getNextPrimeFromInitialSegment_saveLowDigitOfPointer
+  INC rr0
+  LD rr0
+  WR1
+getNextPrimeFromInitialSegment_saveLowDigitOfPointer:
+  LD rr1
+  WR0                                                                     # currentInitialSegmentIdx++
   BBL 0
+
+getNextPrimeFromInitialSegment_end:
+  BBL 1
 
 # INPUT:
 # OUTPUT:

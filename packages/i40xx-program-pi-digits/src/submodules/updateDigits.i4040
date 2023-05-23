@@ -6,7 +6,7 @@
 %include "computeF.i4040"
 
 # INPUT:
-#   STATUS_MEM_VARIABLE_CURRENT_PRIME
+#   rr10..rr11 - currentPrime
 #   STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
 #   STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG
 #   STATUS_MEM_VARIABLE_N_NEG
@@ -16,19 +16,11 @@
 #   digits chunks
 # VARIABLES:
 #   rr0..rr3 - m
-#   rr10..rr11 - currentPrime
 #   rr6 - vmax
 #   [rr8, rr9, rr14, rr15] - tmp
 # NOTES:
 #   we knows that current prime < 0x100
 updateDigits:
-  FIM r0, $STATUS_MEM_VARIABLE_CURRENT_PRIME . 0
-  SRC r0
-  RD0
-  XCH rr10
-  RD1
-  XCH rr11                                                 # rr10..rr11 = currentPrime
-
   FIM r0, $STATUS_MEM_VARIABLE_DOUBLED_N_NEG . 0
   SRC r0
 
