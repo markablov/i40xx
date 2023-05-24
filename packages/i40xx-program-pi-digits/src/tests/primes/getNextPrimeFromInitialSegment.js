@@ -4,29 +4,46 @@ import Emulator from 'i40xx-emu';
 
 import { compileCodeForTest } from '#utilities/compile.js';
 import { VARIABLES, writeValueToStatusChars } from '#utilities/memory.js';
-import { numToHWNumber, hwNumberToNum } from '#utilities/numbers.js';
+import { numToHWNumber } from '#utilities/numbers.js';
 
-const PROLOGUE_CYCLES_COUNT = 5n;
+import {
+  generateMemoryBankSwitch, generateMemoryMainCharactersInitialization, generateMemoryStatusCharactersInitialization,
+  updateCodeForUseInEmulator,
+} from '#utilities/codeGenerator.js';
+
 const CYCLES_PER_SECOND = 95000n;
 
 const INITIAL_SEGMENT_PRIMES = [
   3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113,
 ];
 
-const runTest = (romDump, currentPrimeIdx) => {
-  const system = new Emulator({ romDump });
+const runTest = (romDump) => {
+  let currentLowDigit = null;
+  const result = [];
+  const system = new Emulator({
+    romDump,
+    ramOutputHandler: ({ data }) => {
+      if (currentLowDigit !== null) {
+        result.push((data << 4) + currentLowDigit);
+        currentLowDigit = null;
+        return;
+      }
+
+      currentLowDigit = data;
+    },
+  });
 
   const { memory, registers } = system;
 
   writeValueToStatusChars(
-    numToHWNumber(currentPrimeIdx * 2),
+    numToHWNumber(VARIABLES.MAIN_MEM_VARIABLE_INITIAL_SEGMENT_START << 4),
     memory,
     VARIABLES.STATUS_MEM_VARIABLE_POINTER_TO_PRIME_FROM_INITIAL_SEGMENT,
   );
 
   for (const [primeIdx, prime] of [...INITIAL_SEGMENT_PRIMES, 0].entries()) {
     const segmentPtr = primeIdx * 2;
-    const regNo = segmentPtr >> 4;
+    const regNo = VARIABLES.MAIN_MEM_VARIABLE_INITIAL_SEGMENT_START + (segmentPtr >> 4);
     const charNo = segmentPtr & 0xF;
     memory[7].registers[regNo].main[charNo] = prime & 0xF;
     memory[7].registers[regNo].main[charNo + 1] = prime >> 4;
@@ -38,26 +55,63 @@ const runTest = (romDump, currentPrimeIdx) => {
     system.instruction();
   }
 
-  const resultFromRegs = (registers.indexBanks[0][10] + (registers.indexBanks[0][11] << 4));
-  const resultFromMemory = hwNumberToNum(memory[7].registers[VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME].status);
-  return {
-    result: (registers.acc === 1 || resultFromMemory !== resultFromRegs) ? 0 : resultFromMemory,
-    elapsed: system.instructionCycles,
-  };
+  return { result, elapsed: system.instructionCycles };
 };
 
-(function main() {
-  const { roms } = compileCodeForTest('submodules/primeGenerator.i4040', 'getNextPrimeFromInitialSegment');
+const wrapSourceCode = (sourceCode) => `
+entrypoint:
+test_loop:
+  JMS getNextPrimeFromInitialSegment
+  JCN nz, test_end
+  LD rr10
+  WMP
+  LD rr11
+  WMP
+  JUN test_loop
+test_end:
+  HLT
 
-  let sum = 0n;
-  for (const [primeIdx, prime] of [...INITIAL_SEGMENT_PRIMES, 0].entries()) {
-    const { result, elapsed } = runTest(roms.map(({ data }) => data), primeIdx);
-    if (result !== prime) {
-      console.log(`Test failed, expected = ${prime}, result = ${result}`);
-      process.exit(1);
+${sourceCode}
+`;
+
+(function main() {
+  const { roms, sourceCode } = compileCodeForTest('submodules/primeGenerator.i4040', '', { wrapSourceCode });
+
+  const expected = INITIAL_SEGMENT_PRIMES;
+  const { result, elapsed } = runTest(roms.map(({ data }) => data));
+  if (expected.length !== result.length || expected.some((prime, idx) => result[idx] !== prime)) {
+    console.log(`Test failed, result = ${result}`);
+    console.log('Code to reproduce:');
+
+    const regs = [];
+    for (const [primeIdx, prime] of [...INITIAL_SEGMENT_PRIMES, 0].entries()) {
+      const segmentPtr = primeIdx * 2;
+      const regNo = (segmentPtr >> 4);
+      const charNo = segmentPtr & 0xF;
+      if (!regs[regNo]) {
+        regs[regNo] = [];
+      }
+
+      regs[regNo][charNo] = prime & 0xF;
+      regs[regNo][charNo + 1] = prime >> 4;
     }
-    sum += elapsed;
+
+    const initializators = [
+      generateMemoryBankSwitch(0x7),
+      generateMemoryStatusCharactersInitialization(
+        VARIABLES.STATUS_MEM_VARIABLE_POINTER_TO_PRIME_FROM_INITIAL_SEGMENT,
+        numToHWNumber(VARIABLES.MAIN_MEM_VARIABLE_INITIAL_SEGMENT_START << 4),
+      ),
+      ...regs.map(
+        (reg, idx) => (
+          generateMemoryMainCharactersInitialization(idx + VARIABLES.MAIN_MEM_VARIABLE_INITIAL_SEGMENT_START, reg)
+        ),
+      ),
+    ];
+    console.log(updateCodeForUseInEmulator(sourceCode, initializators));
+    process.exit(1);
   }
 
-  console.log(`Total time = ${(sum - PROLOGUE_CYCLES_COUNT) / CYCLES_PER_SECOND}s, ${sum} cycles`);
+  const pureElapsed = elapsed - BigInt(result.length) * 11n - 1n;
+  console.log(`Total time = ${pureElapsed / CYCLES_PER_SECOND}s, ${pureElapsed} cycles`);
 }());
