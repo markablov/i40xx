@@ -70,10 +70,9 @@ updateB_loop:
   JMS div16x8                                    # bCoef / a
 
   LD rr0
-  ADD rr1
-  ADD rr2
-  ADD rr3
-  JCN c, updateB_return
+  XCH rr4
+  LD rr1
+  OR4
   JCN nz, updateB_return                         # if bCoef % a !== 0
 
   FIM r2, $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF . 0
@@ -204,10 +203,9 @@ updateA_loop:
   JMS div16x8                                            # ACoef / a
 
   LD rr0
-  ADD rr1
-  ADD rr2
-  ADD rr3
-  JCN c, updateA_return
+  XCH rr4
+  LD rr1
+  OR4
   JCN nz, updateA_return                                 # if ACoef % a !== 0
 
   FIM r2, $STATUS_MEM_VARIABLE_A_COMPUTATION_COEF . 0
