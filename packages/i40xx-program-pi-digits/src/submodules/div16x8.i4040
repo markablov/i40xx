@@ -13,6 +13,7 @@
 #   rr8, rr9, rr14, rr15 - quotient
 # NOTES:
 #   uses all registers
+#   carry sensitive
 div16x8:
   LD rr9
   JMS loadVarFromStatusCharMemory                # rr0..rr3 = dividend

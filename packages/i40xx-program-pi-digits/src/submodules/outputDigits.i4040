@@ -7,6 +7,8 @@
 # VARIABLES:
 #   rr4, rr9 - chunkNo
 #   rr6, rr8 - chunkLoopCounter
+# NOTES:
+#   clears carry flag
 outputDigits:
   FIM r3, $STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG . 3
   SRC r3
