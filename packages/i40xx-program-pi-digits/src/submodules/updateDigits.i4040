@@ -71,7 +71,7 @@ updateDigits_computeM_save:
   BBL 0
 
 # INPUT:
-#   STATUS_MEM_VARIABLE_CURRENT_PRIME
+#   rr0..rr3 - current prime
 #   STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
 #   STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG
 #   STATUS_MEM_VARIABLE_N_NEG
@@ -79,8 +79,6 @@ updateDigits_computeM_save:
 # OUTPUT:
 #   digits chunks
 updateDigits_oneVMax:
-  LDM $STATUS_MEM_VARIABLE_CURRENT_PRIME
-  JMS loadVarFromStatusCharMemory
   JMS updateDigits_prepareModulusBasedVariables
   DCL
   DB1

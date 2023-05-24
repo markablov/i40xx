@@ -1,5 +1,6 @@
 %include "memory.i4040"
 %include "mul4_table.i4040"
+%include "div16x8.i4040"
 
 # INPUT:
 #   MAIN_MEM_VARIABLE_PRIME_SEGMENT_SIZE
@@ -11,6 +12,10 @@
 generateInitialPrimeSegment:
   JMS fillSegmentPrimenessMap
   XCH rr4
+
+  SRC r4
+  LDM 0x2
+  WRM
 
   FIM r3, $MAIN_MEM_VARIABLE_PRIMENESS_MAP_START . 1
 generateInitialPrimeSegment_fillPrimenessMap_loop:
@@ -43,7 +48,7 @@ generateInitialPrimeSegment_fillPrimenessMap_loop:
   XCH rr15                                                                # idx = (prime * prime - 1) / 2
   CLC
 
-generateInitialPrimeSegment_fillPrimenessMap_loop_strike_loop:
+generateInitialPrimeSegment_fillPrimenessMap_loop_sieve_loop:
   LDM $MAIN_MEM_VARIABLE_DIGIT_PRIMENESS_MAP_START
   ADD rr13
   XCH rr14
@@ -62,7 +67,7 @@ generateInitialPrimeSegment_fillPrimenessMap_loop_strike_loop:
   ADD rr2
   LD rr13
   ADD rr3
-  JCN nc, generateInitialPrimeSegment_fillPrimenessMap_loop_strike_loop   # if (idx < (segmentSize / 2))
+  JCN nc, generateInitialPrimeSegment_fillPrimenessMap_loop_sieve_loop    # if (idx < (segmentSize / 2))
   CLC
 
 generateInitialPrimeSegment_fillPrimenessMap_incCounter:
@@ -117,6 +122,7 @@ generateInitialPrimeSegment_buildInitialSegment_loop_incCounter:
 #   STATUS_MEM_VARIABLE_POINTER_TO_PRIME_FROM_INITIAL_SEGMENT
 #   initial prime segment
 # OUTPUT:
+#   STATUS_MEM_VARIABLE_POINTER_TO_PRIME_FROM_INITIAL_SEGMENT
 #   acc - 1 if there is no more non-fetched prime numbers inside initial segment
 #   rr10..rr11 - prime number
 getNextPrimeFromInitialSegment:
@@ -135,8 +141,8 @@ getNextPrimeFromInitialSegment:
   INC rr1
   SRC r0
   RDM
-  FIM r0, $STATUS_MEM_VARIABLE_CURRENT_PRIME . 0
-  SRC r0
+  FIM r1, $STATUS_MEM_VARIABLE_CURRENT_PRIME . 0
+  SRC r1
   WR1
   XCH rr11                                                                # rr10..rr11 = initialSegment[currentInitialSegmentIdx]
   LD rr10
@@ -156,9 +162,271 @@ getNextPrimeFromInitialSegment_end:
   BBL 1
 
 # INPUT:
+#   STATUS_MEM_VARIABLE_BASE_VALUE_FOR_PRIMENESS_MAP
+#   STATUS_MEM_VARIABLE_POINTER_TO_PRIMENESS_MAP_CELL
+#   STATUS_MEM_VARIABLE_DOUBLED_N_NEG
+#   MAIN_MEM_VARIABLE_PRIME_SEGMENT_SIZE
+#   primeness map
+#   initial segment
 # OUTPUT:
+#   STATUS_MEM_VARIABLE_BASE_VALUE_FOR_PRIMENESS_MAP
+#   STATUS_MEM_VARIABLE_POINTER_TO_PRIMENESS_MAP_CELL
+#   rr0..rr3 - prime
 #   acc - 1 if there is no more prime numbers less then 2 * N
 getNextPrimeFromFollowingSegment:
+  FIM r3, $STATUS_MEM_VARIABLE_POINTER_TO_PRIMENESS_MAP_CELL . 2
+  SRC r3
+  RD0
+  XCH rr3
+  RD1
+  XCH rr2
+  SRC r1
+  RDM
+  JCN z, getNextPrimeFromFollowingSegment_continue
+
+  AN7
+  JCN z, getNextPrimeFromFollowingSegment_returnPrime
+
+  FIM r1, $MAIN_MEM_VARIABLE_PRIME_SEGMENT_SIZE . 0
+  SRC r1
+  RDM
+  XCH rr0
+  INC rr3
+  SRC r1
+  RDM
+  XCH rr1                                                                 # rr0..rr1 = segmentSize
+
+  FIM r2, $STATUS_MEM_VARIABLE_BASE_VALUE_FOR_PRIMENESS_MAP . 0
+  SRC r2
+  RD0
+  ADD rr0
+  WR0
+  RD1
+  ADD rr1
+  WR1
+  RD2
+  ADD rr5
+  WR2
+  RD3
+  ADD rr5
+  WR3
+  CLB                                                                     # baseValueForPrimenessMap = baseValueForPrimenessMap + segmentSize
+
+  JMS regeneratePrimenessMap
+  JUN getNextPrimeFromFollowingSegment
+
+getNextPrimeFromFollowingSegment_continue:
+  SRC r3
+  ISZ rr3, getNextPrimeFromFollowingSegment_writeLowDigitOfPointer
+  INC rr2
+  LD rr2
+  WR1
+getNextPrimeFromFollowingSegment_writeLowDigitOfPointer:
+  LD rr3
+  WR0                                                                     # currentPrimenessMapIdx++
+  JUN getNextPrimeFromFollowingSegment
+
+getNextPrimeFromFollowingSegment_returnPrime:
+  LD rr3
+  RAL
+  XCH rr0
+  LD rr2
+  RAL
+  XCH rr1                                                                 # rr0..rr1 = currentPrimenessMapIdx * 2
+
+  SRC r3
+  ISZ rr3, getNextPrimeFromFollowingSegment_writeLowDigitOfPointer2
+  INC rr2
+  LD rr2
+  WR1
+getNextPrimeFromFollowingSegment_writeLowDigitOfPointer2:
+  LD rr3
+  WR0                                                                     # currentPrimenessMapIdx++
+
+  FIM r3, $STATUS_MEM_VARIABLE_BASE_VALUE_FOR_PRIMENESS_MAP . 0
+  SRC r3
+  RD0
+  ADD rr0
+  XCH rr0
+  RD1
+  ADD rr1
+  XCH rr1
+  RD2
+  ADD rr7
+  XCH rr2
+  RD3
+  ADD rr7
+  XCH rr3                                                                 # prime = baseValueForPrimenessMap + currentPrimenessMapIdx * 2
+
+  FIM r3, $STATUS_MEM_VARIABLE_DOUBLED_N_NEG . 0
+  SRC r3
+  RD0
+  ADD rr0
+  RD1
+  ADD rr1
+  RD2
+  ADD rr2
+  RD3
+  ADD rr3
+  JCN c, getNextPrimeFromFollowingSegment_noMorePrimes                    # if (prime >= 2N)
+  BBL 0
+
+getNextPrimeFromFollowingSegment_noMorePrimes:
+  BBL 1
+
+# INPUT:
+#   STATUS_MEM_VARIABLE_BASE_VALUE_FOR_PRIMENESS_MAP
+#   initial segment
+#   primeness map
+# OUTPUT:
+#   STATUS_MEM_VARIABLE_POINTER_TO_PRIMENESS_MAP_CELL
+#   primeness map
+regeneratePrimenessMap:
+  FIM r3, $STATUS_MEM_VARIABLE_POINTER_TO_PRIMENESS_MAP_CELL . 0
+  SRC r3
+  CLB
+  WR0
+  LDM $MAIN_MEM_VARIABLE_DIGIT_PRIMENESS_MAP_START
+  WR1                                                                     # currentPrimenessMapIdx = 0
+
+  JMS fillSegmentPrimenessMap
+
+  FIM r7, $STATUS_MEM_VARIABLE_REGENERATE_PRIMENESS_MAP_SEGMENT_SIZE . 0
+  SRC r7
+  LD rr2
+  WR0
+  LDM 0xC
+  ADD rr3
+  WR1                                                                     # tmp = 0x100 - (segmentSize / 2) - 0x40
+
+  FIM r7, $STATUS_MEM_VARIABLE_BASE_VALUE_FOR_PRIMENESS_MAP . 0
+  SRC r7
+  RD0
+  XCH rr0
+  RD1
+  XCH rr1
+  RD2
+  XCH rr2
+  RD3
+  XCH rr3
+  FIM r7, $STATUS_MEM_VARIABLE_REGENERATE_PRIMENESS_MAP_DIVIDEND . 0
+  SRC r7
+  LD rr0
+  WR0
+  LDM 0x7
+  ADD rr1
+  WR1
+  LDM 0x0
+  ADD rr2
+  WR2
+  LDM 0x0
+  ADD rr3
+  WR3                                                                     # dividend = baseValueForPrimenessMap + 0x80
+
+  FIM r7, $MAIN_MEM_VARIABLE_INITIAL_SEGMENT_START . 0
+regeneratePrimenessMap_loop:
+  CLC
+  SRC r7
+  RDM
+  JCN z, regeneratePrimenessMap_end
+
+  XCH rr2
+  INC rr15
+  SRC r7
+  RDM
+  FIM r3, $STATUS_MEM_VARIABLE_PRIME_FROM_INITIAL_SEGMENT . 0
+  SRC r3
+  WR1
+  LD rr2
+  WR0
+  ISZ rr15, regeneratePrimenessMap_savePointer
+  INC rr14
+regeneratePrimenessMap_savePointer:
+  LD rr14
+  WR2
+  LD rr15
+  WR3                                                                     # currentInitialSegmentIdx++
+
+  FIM r4, $STATUS_MEM_VARIABLE_PRIME_FROM_INITIAL_SEGMENT . $STATUS_MEM_VARIABLE_DIGIT_REGENERATE_PRIMENESS_MAP_DIVIDEND
+  JMS div16x8                                                             # baseValueForPrimenessMap / prime
+
+  FIM r2, $STATUS_MEM_VARIABLE_PRIME_FROM_INITIAL_SEGMENT . 0
+  SRC r2
+  RD2
+  XCH rr14
+  RD3
+  XCH rr15
+  RD0
+  XCH rr12
+  RD1
+  XCH rr13
+
+  LD rr0
+  XCH rr4
+  LD rr1
+  OR4
+  JCN z, regeneratePrimenessMap_sieve                                     # if (baseValueForPrimenessMap % prime === 0)
+
+  LD rr12
+  SUB rr0
+  CMC
+  XCH rr5
+  LD rr13
+  SUB rr1
+  XCH rr4                                                                 # sievedNumberIdx = prime - baseValueForPrimenessMap % prime
+
+  LD rr0
+  RAR
+  JCN c, regeneratePrimenessMap_sieve                                     # if sievedNumberIdx is even == (baseValueForPrimenessMap % prime) is odd
+
+  LD rr5
+  ADD rr12
+  XCH rr5
+  LD rr4
+  ADD rr13
+  XCH rr4                                                                 # sievedNumberIdx = sievedNumberIdx + prime
+
+regeneratePrimenessMap_sieve:
+  CLC
+  FIM r3, $STATUS_MEM_VARIABLE_REGENERATE_PRIMENESS_MAP_SEGMENT_SIZE . 0
+  SRC r3
+  RD0
+  XCH rr8
+  RD1
+  XCH rr9
+
+  LD rr4
+  RAR
+  XCH rr4
+  LD rr5
+  RAR
+  XCH rr5                                                                 # sievedNumberIdx = sievedNumberIdx / 2
+
+  LDM $MAIN_MEM_VARIABLE_PRIMENESS_MAP_START
+  ADD rr4
+  XCH rr4
+
+regeneratePrimenessMap_sieve_loop:
+  LD rr5
+  ADD rr8
+  LD rr4
+  ADD rr9
+  JCN c, regeneratePrimenessMap_loop                                      # if (sievedNumberIdx >= segmentSize / 2)
+
+  SRC r2
+  CLB
+  WRM
+
+  LD rr5
+  ADD rr12
+  XCH rr5
+  LD rr4
+  ADD rr13
+  XCH rr4                                                                 # sievedNumberIdx = sievedNumberIdx + prime
+  JCN c, regeneratePrimenessMap_loop
+  JUN regeneratePrimenessMap_sieve_loop
+
+regeneratePrimenessMap_end:
   BBL 0
 
 # INPUT:
