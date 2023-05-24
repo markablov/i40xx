@@ -234,6 +234,7 @@ div16x8_dividend3_divisor2_quotient1_correction:
   ADD rr7
   XCH rr6                                                       # rhat = rhat + divisor[1]
   JCN nc, div16x8_dividend3_divisor2_quotient1_check
+  CLC
   LD rr5
   JMS mul4x4
 div16x8_dividend3_divisor2_quotient1_mulsub:
@@ -305,6 +306,7 @@ div16x8_dividend3_divisor2_quotient2_correction:
   ADD rr7
   XCH rr6                                                       # rhat = rhat + divisor[1]
   JCN nc, div16x8_dividend3_divisor2_quotient2_check
+  CLC
   LD rr5
   JMS mul4x4
 div16x8_dividend3_divisor2_quotient2_mulsub:
