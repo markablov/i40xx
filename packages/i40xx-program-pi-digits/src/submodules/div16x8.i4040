@@ -9,7 +9,7 @@
 #   rr8 - variable number in status characters memory for divisor
 #   rr9 - variable number in status characters memory for dividend
 # OUTPUT:
-#   rr0..rr3 - reminder
+#   rr0..rr1 - reminder
 #   rr8, rr9, rr14, rr15 - quotient
 # NOTES:
 #   uses all registers
@@ -123,7 +123,6 @@ div16x8_dividend3_divisor1:
   FIM r0, 0x00                                   # reminder[1] = 0x0
   LD rr13
   XCH rr0                                        # reminder[0] = [r, dividend[0]] % divisor[0]
-  XCH rr2                                        # reminder[2] = 0x0
   BBL 0
 
 div16x8_dividend4:
@@ -154,7 +153,6 @@ div16x8_dividend4_divisor1:
   LD rr12
   XCH rr8                                        # quotient[0] = [r, dividend[0]] / divisor[0]
   FIM r0, 0x00                                   # reminder[1] = 0x0
-  FIM r1, 0x00                                   # [reminder[2], reminder[3]] = 0x0
   LD rr13
   XCH rr0                                        # reminder[0] = [r, dividend[0]] % divisor[0]
   BBL 0
@@ -364,7 +362,6 @@ div16x8_dividend3_divisor2_denormalize:
   LD rr12
   XCH rr1                                                       # reminder[1] = dividend[1] >> s
 div16x8_dividend3_divisor2_return:
-  FIM r1, 0x00                                                  # reminder[2] = 0x00, reminder[3] = 0x00
   FIM r7, 0x00
   LDM $BANK_WITH_VARIABLES
   DCL
@@ -653,7 +650,6 @@ div16x8_dividend4_divisor2_denormalize:
   LD rr12
   XCH rr1                                                       # reminder[1] = dividend[1] >> s
 div16x8_dividend4_divisor2_return:
-  FIM r1, 0x00                                                  # reminder[2] = 0x00, reminder[3] = 0x00
   CLB
   XCH rr15
   LDM $BANK_WITH_VARIABLES
