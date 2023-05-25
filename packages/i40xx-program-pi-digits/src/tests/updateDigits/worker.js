@@ -1,7 +1,7 @@
 import { workerData, parentPort } from 'node:worker_threads';
 import Emulator from 'i40xx-emu';
 
-import { hwNumberToHex } from '#utilities/numbers.js';
+import { hwNumberToHex, numToHWNumber } from '#utilities/numbers.js';
 import { initMemoryWithInput } from './memory.js';
 import { VARIABLES, getMemoryBankFromAbsoluteAddr } from '#utilities/memory.js';
 
@@ -11,10 +11,20 @@ parentPort.on('message', ({ test, testNo }) => {
   const system = new Emulator({ romDump, ramDump });
   const { memory, registers } = system;
 
+  const aNum = parseInt(test.input.a, 16);
+  const vmaxIsOne = aNum ** 2 > (2 * parseInt(test.input.N, 16));
+
   initMemoryWithInput(memory, test.input);
 
   registers.ramControl = 0b1110;
-  registers.acc = parseInt(test.input.a, 16) ** 2 > (2 * parseInt(test.input.N, 16)) ? 1 : 0;
+  registers.acc = vmaxIsOne ? 1 : 0;
+  if (vmaxIsOne) {
+    const regBank = registers.indexBanks[0];
+    [regBank[0], regBank[1], regBank[2], regBank[3]] = numToHWNumber(aNum, 4);
+  } else {
+    registers.indexBanks[0][10] = aNum & 0xF;
+    registers.indexBanks[0][11] = aNum >> 4;
+  }
 
   while (!system.isFinished()) {
     system.instruction();

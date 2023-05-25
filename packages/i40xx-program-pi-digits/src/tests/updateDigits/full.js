@@ -6,10 +6,12 @@ import * as fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { compileCodeForTest } from '#utilities/compile.js';
+import { numToHWNumber } from '#utilities/numbers.js';
 import { initMemoryWithInput } from './memory.js';
 
 import {
   generateMemoryBankSwitch, updateCodeForUseInEmulator, generateAccumulatorInitialization,
+  generateRegisterInitialization,
 } from '#utilities/codeGenerator.js';
 
 import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
@@ -50,11 +52,27 @@ ${sourceCode}
     console.log(`Finished ${testNo}.`);
     if (status !== 'success') {
       const { input } = tests[testNo];
+      const aNum = parseInt(input.a, 16);
+      const aHW = numToHWNumber(aNum, 4);
+      const vmaxIsOne = aNum ** 2 > (2 * parseInt(input.N, 16));
+
       console.log(`  failed, a = ${input.a}, N = ${input.N} status = ${status}`);
 
       const initializators = [
         generateMemoryBankSwitch(0x7),
-        generateAccumulatorInitialization(parseInt(input.a, 16) ** 2 > (2 * parseInt(input.N, 16)) ? 1 : 0),
+        ...(vmaxIsOne
+          ? [
+            generateRegisterInitialization(0, aHW[0]),
+            generateRegisterInitialization(1, aHW[1]),
+            generateRegisterInitialization(2, aHW[2]),
+            generateRegisterInitialization(3, aHW[3]),
+          ]
+          : [
+            generateRegisterInitialization(10, aHW[0]),
+            generateRegisterInitialization(11, aHW[1]),
+          ]
+        ),
+        generateAccumulatorInitialization(vmaxIsOne ? 1 : 0),
       ];
       console.log(updateCodeForUseInEmulator(sourceCode, initializators));
       console.log();
