@@ -1,106 +1,26 @@
 %include "memory.i4040"
 %include "mul4_table.i4040"
 
-# routine is 15 bytes long
-powerCurrentPrime_exp2_4bit:
-  RD0
-  XCH rr10
-  LD rr10
-  JMS mul4x4
-  DCL
-  SRC r4
-  LD rr12
-  WR0
-  LD rr13
-  WR1
-  CLB
-  WR2
-  WR3
-  BBL 0
-
-__location(0x3:0x1A)
-powerCurrentPrime_exp3:
-  FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_3 . 3
-  RAL
-  SUB rr11
-  XCH rr11
-  BBL 0
-
-# we need to do execute some common code after specific routines for exponent values
-# so we can't just do JIN from main function, or otherwise we would not gain control back
-__location(0x3:0x18)
-powerCurrentPrime_trampoline:
-  JIN r7
-
-__location(0x3:0x2A)
-powerCurrentPrime_exp4:
-  FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_4 . 3
-  RAL
-  SUB rr11
-  XCH rr11
-  BBL 0
-
-__location(0x3:0x3A)
-powerCurrentPrime_exp5:
-  FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_5 . 8
-  BBL 0
-
-__location(0x3:0x4A)
-powerCurrentPrime_exp6:
-  FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_6 . C
-  BBL 0
-
-__location(0x3:0x5A)
-powerCurrentPrime_exp7:
-  FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_7 . 0
-  BBL 0
-
 # INPUT:
-#   STATUS_MEM_VARIABLE_CURRENT_PRIME - base
 #   acc - (exponent - 1), so it would have range [1..6]
-#   rr9 - 0
 # OUTPUT:
 #   STATUS_MEM_VARIABLE_CURRENT_PRIME_POW
 # NOTES:
 #   clears carry flag
 powerCurrentPrime:
-  FIM r5, $STATUS_MEM_VARIABLE_CURRENT_PRIME . 0
-  FIM r4, $STATUS_MEM_VARIABLE_CURRENT_PRIME_POW . 0
-  SRC r5
   DAC
-  JCN z, powerCurrentPrime_exp2
-  XCH rr14                                        # rr8 = exponent - 2
-  RD0
-  JMS powerCurrentPrime_trampoline
-  SRC r5
-  RDM
-  SRC r4
-  WR0
-  INC rr11
-  SRC r5
-  RDM
-  SRC r4
-  WR1
-  INC rr11
-  SRC r5
-  RDM
-  SRC r4
-  WR2
-  INC rr11
-  SRC r5
-  RDM
-  SRC r4
-  WR3
-  BBL 0
+  FIM r5, 0x40
+  JMS mul4x4                                     # (exponent - 2) * 4
+  DCL
 
-powerCurrentPrime_exp2:
-  RD1
-  JCN z, powerCurrentPrime_exp2_4bit
-  FIM r5, $MAIN_MEM_VARIABLE_EXP_TABLE_POWER_2 . 3
-  RD0
-  RAL
-  SUB rr11
+  LDM 1                                          # we always have carry, so need to add (MAIN_MEM_VARIABLE_EXPONENTIATION_TABLE_START - 1)
+  ADD rr13
+  XCH rr10
+  LD rr12
   XCH rr11
+
+  FIM r4, $STATUS_MEM_VARIABLE_CURRENT_PRIME_POW . 0
+
   SRC r5
   RDM
   SRC r4
@@ -115,6 +35,9 @@ powerCurrentPrime_exp2:
   RDM
   SRC r4
   WR2
-  CLB
+  INC rr11
+  SRC r5
+  RDM
+  SRC r4
   WR3
   BBL 0

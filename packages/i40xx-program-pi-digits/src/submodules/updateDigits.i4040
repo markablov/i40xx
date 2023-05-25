@@ -16,15 +16,17 @@
 #   digits chunks
 # VARIABLES:
 #   rr0..rr3 - m
-#   rr6 - vmax
+#   rr5 - vmax
+#   rr6..r7 - pointer to next slot in exponentiation table
 #   [rr8, rr9, rr14, rr15] - tmp
 # NOTES:
-#   we knows that current prime < 0x100
+#   we know that current prime < 0x100
 updateDigits:
   FIM r0, $STATUS_MEM_VARIABLE_DOUBLED_N_NEG . 0
   SRC r0
 
-  FIM r3, 0x10                                             # vmax = 1
+  FIM r2, 0x01                                             # vmax = 1
+  FIM r3, $MAIN_MEM_VARIABLE_EXPONENTIATION_TABLE_START . 0
 
   FIM r1, 0x00
   LD rr10
@@ -46,6 +48,28 @@ updateDigits_computeM_loop:
   ADD rr15
   JCN c, updateDigits_computeM_save                        # if (tmp >= 2 * N)
 
+  SRC r3
+  LD rr8
+  WRM
+  INC rr7
+  SRC r3
+  LD rr9
+  WRM
+  INC rr7
+  SRC r3
+  LD rr14
+  WRM
+  INC rr7
+  SRC r3
+  LD rr15
+  WRM
+  ISZ rr7, updateDigits_computeM_loop_selectRegisterWithDoubledN
+  INC rr6
+
+updateDigits_computeM_loop_selectRegisterWithDoubledN:
+  FIM r0, $STATUS_MEM_VARIABLE_DOUBLED_N_NEG . 0
+  SRC r0
+
   LD rr8
   XCH rr0
   LD rr9
@@ -55,12 +79,12 @@ updateDigits_computeM_loop:
   LD rr15
   XCH rr3                                                  # m = tmp
 
-  ISZ rr6, updateDigits_computeM_loop                      # vmax++
+  ISZ rr5, updateDigits_computeM_loop                      # vmax++
 
 updateDigits_computeM_save:
   FIM r4, $STATUS_MEM_VARIABLE_VMAX . 0
   SRC r4
-  LD rr6
+  LD rr5
   WR2
 
   JMS updateDigits_prepareModulusBasedVariables
