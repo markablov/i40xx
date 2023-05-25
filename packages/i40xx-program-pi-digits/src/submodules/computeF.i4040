@@ -1,5 +1,4 @@
 %include "memory.i4040"
-%include "mulMulti.i4040"
 %include "div16x8.i4040"
 %include "mulMod_binary_batch.i4040"
 %include "powerCurrentPrime_table.i4040"
