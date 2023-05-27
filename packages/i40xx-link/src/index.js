@@ -496,7 +496,7 @@ const assignRomBanks = (blocks, entrypointBlockId) => {
   while (queue.length) {
     const { blockId, bankNo } = queue.shift();
     const block = blocks[blockId];
-    const bankToUse = block.fixedBank || bankNo;
+    const bankToUse = block.fixedBank ?? bankNo;
 
     if (block.desiredBanksPlacement.has(bankToUse)) {
       continue;
