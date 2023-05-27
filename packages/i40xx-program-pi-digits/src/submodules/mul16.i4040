@@ -67,6 +67,9 @@ mul16x8_mulBy8bit_digit0:
   LD rr13
   ADD rr14
   XCH rr14                    # r2, c = r2 + c + high
+  LDM 0x0
+  ADD rr15
+  XCH rr15                    # r3 = r3 + c
 mul16x8_mulBy8bit_digit1:
   LD rr1
   JMS mul4x4                  # low, high = a1 * b1
