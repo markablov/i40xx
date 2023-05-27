@@ -1,0 +1,56 @@
+%include "prepareGlobalVariables.i4040"
+%include "outputDigits.i4040"
+%include "primeGenerator.i4040"
+%include "updateDigits.i4040"
+
+# INPUT:
+#   STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
+#   STATUS_MEM_VARIABLE_DIGITS_COUNT
+# NOTES:
+#   we can overflow call stack if this routine would be called with JMS instruction, so we need to have alternative return
+computePiDigits:
+  JMS prepareGlobalVariables
+  JMS generateInitialPrimeSegment
+
+computePiDigits_initialPrimeSegment_loop:
+  JMS getNextPrimeFromInitialSegment
+  JCN nz, computePiDigits_preparePrimenessMap
+  JMS updateDigits
+  JUN computePiDigits_initialPrimeSegment_loop
+
+computePiDigits_preparePrimenessMap:
+  # we want to have stored baseValueForPrimnessMap = real baseValueForPrimenessMap - $MAIN_MEM_VARIABLE_PRIMENESS_MAP_START * 0x20
+  # it would help with arithmetic inside getNextPrimeFromFollowingSegment(), conversion from pointer to map cell into prime number would be simplier
+  FIM r3, $STATUS_MEM_VARIABLE_BASE_VALUE_FOR_PRIMENESS_MAP . F
+  FIM r0, $MAIN_MEM_VARIABLE_PRIME_SEGMENT_SIZE . 0
+  SRC r0
+  RDM
+  IAC
+  XCH rr2
+  INC rr1
+  SRC r0
+  LDM 0x8
+  ADM
+  SRC r3
+  WR1
+  LD rr2
+  WR0
+  LDM 0x0
+  ADD rr7
+  WR2
+  LDM 0x0
+  ADD rr7
+  WR3                                                                     # baseValueForPrimnessMap = segmentSize + 1 - 0x80 = segmentSize + 0xFF81
+
+  JMS regeneratePrimenessMap
+
+computePiDigits_oneVMax_loop:
+  JMS getNextPrimeFromFollowingSegment
+  JCN nz, computePiDigits_printDigits
+  JMS updateDigits_oneVMax
+  JUN computePiDigits_oneVMax_loop
+
+computePiDigits_printDigits:
+  JMS outputDigits
+  # XXX: always jump to 00:0x02, read NOTES for explanation
+  JUN 0x00:0x02
