@@ -1,26 +1,39 @@
 /* eslint-disable no-console */
 
-export const runWithProfiler = (system, symbols) => {
+const CYCLES_PER_SECOND = 95000n;
+const REPORT_FREQ_IN_SECONDS = 100n;
+
+export const runWithProfiler = (system, symbolsPerRom) => {
   const { registers } = system;
-  const labelByOffset = Object.fromEntries(symbols.map(({ label, romAddress }) => [romAddress, label]));
+
+  const labelsByRom = symbolsPerRom.map(
+    (symbols) => Object.fromEntries(symbols.map(({ label, romAddress }) => [romAddress, label])),
+  );
 
   const stacktraces = new Map();
   const calls = new Map();
   const currentStack = [];
   let currentSP = 0;
+  let lastReportTick = 0n;
 
   while (!system.isFinished()) {
     system.instruction();
 
     if (currentSP < registers.sp) {
-      const functionName = labelByOffset[registers.pc] || 'unknown';
+      const currentTick = system.instructionCycles;
+      const functionName = labelsByRom[registers.selectedRomBank][registers.pc] || 'unknown';
       calls.set(functionName, (calls.get(functionName) || 0n) + 1n);
       currentStack.push({
         name: functionName,
-        entranceCycle: system.instructionCycles,
+        entranceCycle: currentTick,
         subroutinesExecutionCycles: 0n,
       });
       currentSP = registers.sp;
+
+      if (currentTick - lastReportTick > REPORT_FREQ_IN_SECONDS * CYCLES_PER_SECOND) {
+        console.log(`Elapsed ${currentTick / CYCLES_PER_SECOND} seconds...`);
+        lastReportTick = currentTick;
+      }
     } else if (currentSP > registers.sp) {
       const stacktrace = currentStack.map(({ name }) => name).join(';');
       const { entranceCycle, subroutinesExecutionCycles } = currentStack.pop();
