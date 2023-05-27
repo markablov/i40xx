@@ -147,6 +147,9 @@ getNextPrimeFromInitialSegment:
   XCH rr11                                                                # rr10..rr11 = initialSegment[currentInitialSegmentIdx]
   LD rr10
   WR0                                                                     # currentPrime = initialSegment[currentInitialSegmentIdx]
+  CLB
+  WR2
+  WR3
 
   SRC r2
   ISZ rr1, getNextPrimeFromInitialSegment_saveLowDigitOfPointer
