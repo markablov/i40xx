@@ -330,9 +330,9 @@ updateDigits_computedF:
 updateDigits_computedF_updateChunks:
   FIM r4, $STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG . 0
   SRC r4
-  RD0
+  RD2
   XCH rr14
-  RD1
+  RD3
   XCH rr15
 
   FIM r4, $STATUS_MEM_VARIABLE_UPDATE_DIGITS_CHUNK_NO . 0

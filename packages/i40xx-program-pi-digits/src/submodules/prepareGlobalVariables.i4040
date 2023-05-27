@@ -25,11 +25,11 @@ prepareGlobalVariables:
   LD rr8
   CMA
   IAC
-  WR0
+  WR2
   LD rr9
   CMA
   ADD rr1
-  WR1                                                           # chunksCountNeg = -Math.floor(digitsCount / 9)
+  WR3                                                           # chunksCountNeg = -Math.floor(digitsCount / 9)
 
   LDM $STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
   JMS loadVarFromStatusCharMemory

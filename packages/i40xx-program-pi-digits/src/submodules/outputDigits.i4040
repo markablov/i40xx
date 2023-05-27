@@ -12,9 +12,9 @@
 outputDigits:
   FIM r3, $STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG . 3
   SRC r3
-  RD0
+  RD2
   XCH rr6
-  RD1
+  RD3
   XCH rr8                                                       # chunkLoopCounter = 0x100 - chunkCount
 
   CLB
