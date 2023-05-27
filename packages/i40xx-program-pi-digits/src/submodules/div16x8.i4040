@@ -655,3 +655,17 @@ div16x8_dividend4_divisor2_return:
   LDM $BANK_WITH_VARIABLES
   DCL
   BBL 0
+
+__rom_bank(1)
+div16x8_bank0_trampoline:
+  JMS div16x8
+  DB0
+  CLB
+  BBL 0
+
+__rom_bank(1)
+div16x8_dividend_loaded_bank0_trampoline:
+  JMS div16x8_dividend_loaded
+  DB0
+  CLB
+  BBL 0

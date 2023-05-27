@@ -348,7 +348,8 @@ regeneratePrimenessMap_savePointer:
   WR3                                                                     # currentInitialSegmentIdx++
 
   FIM r4, $STATUS_MEM_VARIABLE_PRIME_FROM_INITIAL_SEGMENT . $STATUS_MEM_VARIABLE_DIGIT_REGENERATE_PRIMENESS_MAP_DIVIDEND
-  JMS div16x8                                                             # baseValueForPrimenessMap / prime
+  DB1
+  JMS div16x8_bank0_trampoline                                            # baseValueForPrimenessMap / prime
 
   FIM r2, $STATUS_MEM_VARIABLE_PRIME_FROM_INITIAL_SEGMENT . 0
   SRC r2

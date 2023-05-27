@@ -18,7 +18,8 @@ prepareGlobalVariables:
   WR0
   CLB
   WR1
-  JMS div16x8
+  DB1
+  JMS div16x8_bank0_trampoline
   FIM r0, $STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG . 0
   SRC r0
   LD rr8
@@ -102,7 +103,8 @@ prepareGlobalVariables:
   WR0
   CLB
   WR1
-  JMS div16x8_dividend_loaded                                   # N = [rr8, rr9, rr14, rr15] = ((n + 20) * 93) / 28
+  DB1
+  JMS div16x8_dividend_loaded_bank0_trampoline                  # N = [rr8, rr9, rr14, rr15] = ((n + 20) * 93) / 28
 
   FIM r0, $STATUS_MEM_VARIABLE_N_NEG . 0
   SRC r0
