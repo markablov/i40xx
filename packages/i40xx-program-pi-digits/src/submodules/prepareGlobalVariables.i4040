@@ -185,7 +185,7 @@ prepareGlobalVariables_squareOfDoubleN_write:
   SRC r2
   LD rr10
   WRM
-  INC rr3
+  INC rr5
   SRC r2
   LD rr11
   WRM                                                           # segmentSize = sqrt(2 * N) + (sqrt(2 * N) % 2)
