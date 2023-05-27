@@ -1,5 +1,10 @@
+/* eslint-disable no-console, max-classes-per-file */
+
 const MINIMAL_BLOCKS_SET_TO_CACHE = 3;
 const ROM_BANK_COUNT = 2;
+
+class RomBankSizeError extends Error {}
+class RomBankOrderError extends Error {}
 
 const RomBank = class RomBank {
   static ROM_PAGES_COUNT = 0x10;
@@ -37,7 +42,7 @@ const RomBank = class RomBank {
     this.#currentPage++;
     this.#currentPageOffset = 0;
     if (this.#currentPage >= RomBank.ROM_PAGES_COUNT) {
-      throw Error(`Couldn't fit all codeblocks into ROM bank ${this.#bankNo}!`);
+      throw new RomBankSizeError(`Couldn't fit all codeblocks into ROM bank ${this.#bankNo}!`);
     }
   }
 
@@ -64,11 +69,11 @@ const RomBank = class RomBank {
   appendBlock(block, page, offset) {
     if (page !== undefined && offset !== undefined) {
       if (page < this.#currentPage) {
-        throw Error('Wrong order of blocks to append to ROM!');
+        throw new RomBankOrderError('Wrong order of blocks to append to ROM!');
       }
 
       if (page === this.#currentPage && offset < this.#currentPageOffset) {
-        throw Error('Wrong order of blocks to append to ROM!');
+        throw new RomBankOrderError('Wrong order of blocks to append to ROM!');
       }
 
       this.#currentPage = page;
@@ -510,6 +515,49 @@ const assignRomBanks = (blocks, entrypointBlockId) => {
   }
 };
 
+const romAddressStr = (address) => address.toString(16).toUpperCase().padStart(3, '0');
+const blockSizeStr = (size) => size.toString().padStart(3, ' ');
+
+/*
+ * Print information about block placement in rom page and non-placed blocks
+ */
+const printBlocksPlacementInfo = (codeBlocks, blockOffsets, symbolsPerBlock, bankNo) => {
+  const gaps = [];
+
+  console.log('Current blocks placement:');
+  const orderedBlockOffsets = [...blockOffsets.entries()].sort(([, a], [, b]) => a - b);
+  for (const [idx, [blockId, romAddress]] of orderedBlockOffsets.slice(0, -1).entries()) {
+    const blockLabel = symbolsPerBlock.get(blockId).find(({ instructionOffset }) => !instructionOffset).label;
+    console.log(`  [${romAddressStr(romAddress)}, ${blockSizeStr(codeBlocks[blockId].bytecode.length)}] ${blockLabel}`);
+
+    const endOfBlock = romAddress + codeBlocks[blockId].bytecode.length;
+    if (orderedBlockOffsets[idx + 1] && orderedBlockOffsets[idx + 1][1] !== endOfBlock) {
+      const gap = orderedBlockOffsets[idx + 1][1] - endOfBlock;
+      console.log(`  [${romAddressStr(endOfBlock)}, ${blockSizeStr(gap)}] FREE`);
+      gaps.push(gap);
+    }
+  }
+
+  console.log();
+  console.log(`Free space left in ROM: ${gaps.reduce((sum, gap) => sum + gap, 0)} bytes`);
+  console.log(`Maximum gap between blocks: ${Math.max(...gaps)} bytes`);
+
+  console.log();
+  console.log('Non-placed blocks:');
+  let totalSizeOfNonPlacedBlocks = 0;
+  const [lastBlockId] = orderedBlockOffsets.at(-1);
+  const placedBlocks = new Set(orderedBlockOffsets.map(([blockId]) => blockId).filter((id) => id !== lastBlockId));
+  for (const { desiredBanksPlacement, id, bytecode: { length: blockSize } } of codeBlocks) {
+    if (desiredBanksPlacement.has(bankNo) && !placedBlocks.has(id)) {
+      const blockLabel = symbolsPerBlock.get(id).find(({ instructionOffset }) => !instructionOffset).label;
+      console.log(`  [${blockSize}] ${blockLabel}`);
+      totalSizeOfNonPlacedBlocks += blockSize;
+    }
+  }
+  console.log(`Size of non-placed blocks: ${totalSizeOfNonPlacedBlocks} bytes`);
+  console.log();
+};
+
 /*
  * Returns { roms: [{ data, size, sourceMap, symbols }], placementCache }
  *
@@ -525,6 +573,14 @@ const assignRomBanks = (blocks, entrypointBlockId) => {
  * }
  */
 export function buildRom(codeBlocks, blockAddressedSymbols, { placementCache } = {}) {
+  const symbolsPerBlock = new Map();
+  for (const { label, blockId, instructionOffset } of blockAddressedSymbols) {
+    if (!symbolsPerBlock.has(blockId)) {
+      symbolsPerBlock.set(blockId, []);
+    }
+    symbolsPerBlock.get(blockId).push({ label, instructionOffset });
+  }
+
   for (const block of codeBlocks) {
     block.desiredBanksPlacement = new Set();
     block.actualBanksPlacement = new Set();
@@ -537,15 +593,14 @@ export function buildRom(codeBlocks, blockAddressedSymbols, { placementCache } =
 
   const romBanks = Array.from(new Array(ROM_BANK_COUNT), (_, idx) => new RomBank(idx));
   for (const [bankNo, romBank] of romBanks.entries()) {
-    placeBlocksIntoRomBank(romBank, codeBlocks, bankNo, placementCache);
-  }
-
-  const symbolsPerBlock = new Map();
-  for (const { label, blockId, instructionOffset } of blockAddressedSymbols) {
-    if (!symbolsPerBlock.has(blockId)) {
-      symbolsPerBlock.set(blockId, []);
+    try {
+      placeBlocksIntoRomBank(romBank, codeBlocks, bankNo, placementCache);
+    } catch (err) {
+      if (err instanceof RomBankSizeError) {
+        printBlocksPlacementInfo(codeBlocks, romBank.blockOffsets, symbolsPerBlock, bankNo);
+      }
+      throw err;
     }
-    symbolsPerBlock.get(blockId).push({ label, instructionOffset });
   }
 
   const roms = romBanks.map((romBank, bankNo) => {
