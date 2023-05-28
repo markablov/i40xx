@@ -1,106 +1,122 @@
 %include "submodules/memory.i4040"
-%include "submodules/piDigits.i4040"
+%include "submodules/computePiDigits.i4040"
+%include "submodules/mulTableGeneration.i4040"
 
 # MEMORY LAYOUT:
 #  Bank #0:
-#    Registers #0-#F:
+#    Registers #0..#F:
 #      Main characters: chunks with digits
-#      Status characters #0: lookup table for left shifts with shift value 1 (regNo << 1)
-#      Status characters #1: lookup table for left shifts with shift value 3 (regNo << 3)
-#      Status characters #2: lookup table for right shifts with shift value 1 (regNo >> 1)
-#      Status characters #3: lookup table for right shifts with shift value 3 (regNo >> 3)
+#      Status characters: lookup table for modular multiplication (multipliers of m)
 #  Bank #1:
-#    Registers #0-#F:
+#    Registers #0..#F:
 #      Main characters: chunks with digits
-#      Status characters #0: lookup table for left shifts with shift value 2 (regNo << 2)
-#      Status characters #1: lookup table for right shifts with shift value 2 (regNo >> 2)
+#      Status characters #0, #1: lookup table for 4-bit multiplications by factor 0x4 (regNo * 0x3)
 #      Status characters #2, #3: lookup table for 4-bit multiplications by factor 0x3 (regNo * 0x3)
 #  Bank #2:
-#    Registers #0-#F:
+#    Registers #0..#F:
 #      Main characters: chunks with digits
 #      Status characters #0, #1: lookup table for 4-bit multiplications by factor 0x5 (regNo * 0x5)
 #      Status characters #2, #3: lookup table for 4-bit multiplications by factor 0x6 (regNo * 0x6)
 #  Bank #3:
-#    Registers #0-#F:
+#    Registers #0..#F:
 #      Main characters: chunks with digits
 #      Status characters #0, #1: lookup table for 4-bit multiplications by factor 0x7 (regNo * 0x7)
 #      Status characters #2, #3: lookup table for 4-bit multiplications by factor 0x9 (regNo * 0x9)
 #  Bank #4:
-#    Registers #0-#F:
+#    Registers #0..#F:
 #      Main characters: chunks with digits
 #      Status characters #0, #1: lookup table for 4-bit multiplications by factor 0xA (regNo * 0xA)
 #      Status characters #2, #3: lookup table for 4-bit multiplications by factor 0xB (regNo * 0xB)
 #  Bank #5:
-#    Registers #0-#F:
+#    Registers #0..#F:
 #      Main characters: chunks with digits
 #      Status characters #0, #1: lookup table for 4-bit multiplications by factor 0xC (regNo * 0xC)
 #      Status characters #2, #3: lookup table for 4-bit multiplications by factor 0xD (regNo * 0xD)
 #  Bank #6:
-#    Registers #0-#F:
+#    Registers #0..#F:
 #      Main characters: chunks with digits
 #      Status characters #0, #1: lookup table for 4-bit multiplications by factor 0xE (regNo * 0xE)
 #      Status characters #2, #3: lookup table for 4-bit multiplications by factor 0xF (regNo * 0xF)
 #  Bank #7:
-#    Registers #0-#1:
+#    Registers #0..#1:
 #      Main characters: chunks with digits
 #      Status characters: variables
-#    Registers #2-#5:
-#      Main characters: current segment of prime numbers
+#    Registers #2..#3:
+#      Main characters: exponentiation table
 #      Status characters: variables
-#    Registers #6-#B:
+#    Registers #4..#7:
+#      Main characters: current primeness map
+#      Status characters: variables
+#    Registers #8..#B:
 #      Main characters: variables
 #      Status characters: variables
-#    Registers #C-#F:
+#    Registers #C..#F:
 #      Main characters: initial segment of prime numbers
 #      Status characters: variables
 
-# MEMORY VARIABLES IN STATUS CHARACTERS:
-#   GLOBAL:
-#     0x08 - primeIteratorInfo[4] = segmentSize[2] | previousPrimeRegIdx[1] | previousPrimeBankIdx[1]
-#     0x09 - currentPrimenessSegmentEnd
-#   PRIME_LOOP:
-#     0x08 - primeIteratorInfo[4] = segmentSize[2] | previousPrimeRegIdx[1] | previousPrimeBankIdx[1]
-#     0x09 - currentPrimenessSegmentEnd
-
-# MEMORY VARIABLES IN MAIN CHARACTERS:
-#   PRIME_LOOP:
-#     0x0B - primeLimit = 2 * N, should be here because of comparison for main memory variables
-#   GLOBAL:
-#     0x0B - primeLimit = 2 * N, should be here because of comparison for main memory variables
-
 main:
-  LDM 0x03
-  WMP                                # first digit is 3, we knows that for sure
-  JMS clearMemory
-  LDM 0x07
+  JMS generateMulTables
+
+  LDM $BANK_WITH_VARIABLES
   DCL
+
+  LDM 3
+  WMP                                                      # first Pi digit
+
   FIM r0, 0x00
   FIM r1, 0x00
-  LDM 0x0C
-  JMS storeVarToStatusCharMemory
-  FIM r0, 0x20
-  FIM r1, 0x40
-  LDM 0x0B
-  JMS storeVarToMainMemory
-  JMS getPiDigits                    # getPiDigits(0, 1026)
-  JMS clearMemory
-  LDM 0x07
-  DCL
-  FIM r0, 0x20
-  FIM r1, 0x40
-  LDM 0x0C
-  JMS storeVarToStatusCharMemory
-  FIM r0, 0x20
-  FIM r1, 0x40
-  LDM 0x0B
-  JMS storeVarToMainMemory
-  JMS getPiDigits                    # getPiDigits(1026, 1026)
-  LDM 0x0F
-  WMP                                # signal that job is done
-main_done:
-  JUN main_done
-  BBL 0
+  LDM $STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
+  JMS storeVarToStatusCharMemory                           # startingPiDigitsPosition = 0
 
-__location(00:00)
+  FIM r0, 0x20
+  FIM r1, 0x40
+  LDM $STATUS_MEM_VARIABLE_DIGITS_COUNT
+  JMS storeVarToStatusCharMemory                           # digitsCount = 1026 = 0x402
+
+  JUN computePiDigits
+
+main_stage2:
+  JMS clearMemory
+  JMS generateMulTables
+  LDM $BANK_WITH_VARIABLES
+  DCL
+
+  FIM r0, 0x20
+  FIM r1, 0x40
+  LDM $STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
+  JMS storeVarToStatusCharMemory                           # startingPiDigitsPosition = 1026 = 0x402
+
+  FIM r0, 0x20
+  FIM r1, 0x40
+  LDM $STATUS_MEM_VARIABLE_DIGITS_COUNT
+  JMS storeVarToStatusCharMemory                           # digitsCount = 1026 = 0x402
+
+  FIM r0, $MAIN_MEM_VARIABLE_COMPUTATION_STAGE . F
+  SRC r0
+  LDM 0x1
+  WRM
+
+  JUN computePiDigits
+
+__rom_bank(0)
+__location(00:0x02)
+main_stage_end:
+  LDM $BANK_WITH_VARIABLES
+  DCL
+  FIM r0, $MAIN_MEM_VARIABLE_COMPUTATION_STAGE . F
+  SRC r0
+  RDM
+  JCN nz, main_end
+  JUN main_stage2
+
+__rom_bank(0)
+__location(00:0x0C)
+main_end:
+  LDM 0x0F
+  WMP                                                      # signal that job is done
+  HLT
+
+__rom_bank(0)
+__location(00:0x00)
 entrypoint:
   JUN main
