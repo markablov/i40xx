@@ -2,6 +2,7 @@
 
 # INPUT:
 #   STATUS_MEM_VARIABLE_MODULUS
+#   STATUS_MEM_VARIABLE_MODULUS_NEG
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_A
 # OUTPUT:
 #   [rr0, rr1, rr3, rr2] - result
@@ -14,19 +15,19 @@ computeInvertedA:
   FIM r3, $STATUS_MEM_VARIABLE_F_COMPUTATION_A . E
   SRC r3
   RD0
-  XCH rr0
+  XCH rr8
   RD1
-  XCH rr1
+  XCH rr9
   RD2
-  XCH rr3
+  XCH rr11
   RD3
-  XCH rr2                                                       # rx = A
+  XCH rr10                                                      # rx = A
 
-  LD rr0
+  LD rr8
   AN7
-  ADD rr1
-  ADD rr3
-  ADD rr2
+  ADD rr9
+  ADD rr11
+  ADD rr10
   JCN nz, computeInvertedA_nonTrivialA
   JCN nc, computeInvertedA_trivialA                             # if (rx === 1)
 
@@ -34,8 +35,36 @@ computeInvertedA_nonTrivialA:
   SB1
   FIM r0, $STATUS_MEM_VARIABLE_MODULUS_NEG . 0
   FIM r1, $STATUS_MEM_VARIABLE_MODULUS . 0
-  SRC r1
+  SRC r0
   SB0
+
+  CLC
+  RD0
+  ADD rr8
+  XCH rr0
+  RD1
+  ADD rr9
+  XCH rr1
+  RD2
+  ADD rr11
+  XCH rr3
+  RD3
+  ADD rr10
+  XCH rr2
+  JCN c, computeInvertedA_readM                                 # if (A >= m)
+
+  LD rr8
+  XCH rr0
+  LD rr9
+  XCH rr1
+  LD rr11
+  XCH rr3
+  LD rr10
+  XCH rr2
+
+computeInvertedA_readM:
+  FIM r4, $STATUS_MEM_VARIABLE_MODULUS . 0
+  SRC r4
 
   RD0
   XCH rr8
