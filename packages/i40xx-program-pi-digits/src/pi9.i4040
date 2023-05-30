@@ -1,0 +1,34 @@
+%include "submodules/memory.i4040"
+%include "submodules/computePiDigits.i4040"
+%include "submodules/mulTableGeneration.i4040"
+
+main:
+  JMS generateMulTables
+
+  LDM $BANK_WITH_VARIABLES
+  DCL
+
+  LDM 3
+  WMP                                                      # first Pi digit
+
+  FIM r0, 0x00
+  FIM r1, 0x00
+  LDM $STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
+  JMS storeVarToStatusCharMemory                           # startingPiDigitsPosition = 0
+
+  FIM r0, 0x90
+  FIM r1, 0x00
+  LDM $STATUS_MEM_VARIABLE_DIGITS_COUNT
+  JMS storeVarToStatusCharMemory                           # digitsCount = 9
+
+  JUN computePiDigits
+
+__location(00:0x02)
+main_end:
+  LDM 0x0F
+  WMP                                                      # signal that job is done
+  HLT
+
+__location(00:0x00)
+entrypoint:
+  JUN main

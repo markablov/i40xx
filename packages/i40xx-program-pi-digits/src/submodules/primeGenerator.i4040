@@ -261,6 +261,7 @@ getNextPrimeFromFollowingSegment_writeLowDigitOfPointer2:
   ADD rr7
   XCH rr3                                                                 # prime = baseValueForPrimenessMap + currentPrimenessMapIdx * 2
 
+  CLC
   FIM r3, $STATUS_MEM_VARIABLE_DOUBLED_N_NEG . 0
   SRC r3
   RD0
