@@ -1,0 +1,273 @@
+%define STATUS_MEM_VARIABLE_VMAX                          0x6
+%define STATUS_MEM_VARIABLE_V                             0x6
+%define STATUS_MEM_VARIABLE_F_COMPUTATION_INV_A           0x7
+%define STATUS_MEM_VARIABLE_D                             0x7
+%define STATUS_MEM_VARIABLE_B_COMPUTATION_COEF            0x7
+%define STATUS_MEM_VARIABLE_A_COMPUTATION_COEF            0x7
+%define STATUS_MEM_VARIABLE_F_COMPUTATION_FK              0x7
+%define STATUS_MEM_VARIABLE_F_COMPUTATION_A               0xA
+%define STATUS_MEM_VARIABLE_F                             0xB
+%define STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION   0xC
+%define STATUS_MEM_VARIABLE_POWER_MOD_POWER_BASE          0xD
+%define STATUS_MEM_VARIABLE_F_COMPUTATION_K               0xD
+%define STATUS_MEM_VARIABLE_F_COMPUTATION_TMP             0xD
+%define STATUS_MEM_VARIABLE_N                             0xE
+%define STATUS_MEM_VARIABLE_F_COMPUTATION_B               0xF
+
+%define STATUS_MEM_VARIABLE_DIGIT_D                     7
+%define STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_FK      7
+%define STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_INV_A   7
+%define STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_A       A
+%define STATUS_MEM_VARIABLE_DIGIT_POWER_MOD_POWER_BASE  D
+%define STATUS_MEM_VARIABLE_DIGIT_F_COMPUTATION_B       F
+
+%define MAIN_MEM_VARIABLE_D                   0x6
+%define MAIN_MEM_VARIABLE_F_COMPUTATION_K     0x6
+%define MAIN_MEM_VARIABLE_M                   0x7
+%define MAIN_MEM_VARIABLE_A_COMPUTATION_COEF  0x8
+%define MAIN_MEM_VARIABLE_M_COMPUTATION_M     0x8
+%define MAIN_MEM_VARIABLE_DIV_REMINDER        0x8
+%define MAIN_MEM_VARIABLE_DIV_DIVIDEND        0x8
+%define MAIN_MEM_VARIABLE_10E15               0x9
+%define MAIN_MEM_VARIABLE_DIV_DIVISOR         0x9
+%define MAIN_MEM_VARIABLE_CURRENT_PRIME       0x9
+%define MAIN_MEM_VARIABLE_DIV_QUOTIENT        0xA
+%define MAIN_MEM_VARIABLE_DI                  0xA
+%define MAIN_MEM_VARIABLE_POWER_MOD_EXP       0xA
+%define MAIN_MEM_VARIABLE_DOUBLED_N           0xB
+
+%define MAIN_MEM_VARIABLE_DIGIT_M_COMPUTATION_M   8
+
+# INPUT:
+#   acc - variable number (06..0F)
+#   rr0, rr1, rr2, rr3 - variable content
+storeVarToStatusCharMemory:
+  XCH rr4
+  SRC r2
+  LD rr0
+  WR0
+  LD rr1
+  WR1
+  LD rr2
+  WR2
+  LD rr3
+  WR3
+  BBL 0
+
+# INPUT:
+#   acc - variable number (06..0F)
+# OUTPUT:
+#   rr0, rr1, rr2, rr3 - variable content
+loadVarFromStatusCharMemory:
+  XCH rr0
+  SRC r0
+  RD0
+  XCH rr0
+  RD1
+  XCH rr1
+  RD2
+  XCH rr2
+  RD3
+  XCH rr3
+  BBL 0
+
+# INPUT:
+#   acc - variable number (06..0F)
+clearVarFromStatusCharMemory:
+  XCH rr0
+  SRC r0
+  CLB
+  WR0
+  WR1
+  WR2
+  WR3
+  BBL 0
+
+# INPUT:
+#   acc - variable number (06..0B)
+#   rr0, rr1, rr2, rr3 - variable content
+storeVarToMainMemory:
+  XCH rr4
+  CLB
+  XCH rr5
+  SRC r2
+  LD rr0
+  WRM
+  INC rr5
+  SRC r2
+  LD rr1
+  WRM
+  INC rr5
+  SRC r2
+  LD rr2
+  WRM
+  INC rr5
+  SRC r2
+  LD rr3
+  WRM
+  BBL 0
+
+# INPUT:
+#   acc - variable number (06..0B)
+# OUTPUT:
+#   rr0, rr1, rr2, rr3 - variable content
+# SIDE EFFECTS:
+#   CLEARS CARRY FLAG
+loadVarFromMainMemory:
+  XCH rr4
+  CLB
+  XCH rr5
+  SRC r2
+  RDM
+  XCH rr0
+  INC rr5
+  SRC r2
+  RDM
+  XCH rr1
+  INC rr5
+  SRC r2
+  RDM
+  XCH rr2
+  INC rr5
+  SRC r2
+  RDM
+  XCH rr3
+  BBL 0
+
+# INPUT:
+#   acc - variable number (06..0B)
+clearVarFromMainMemory:
+  FIM r0, 0x00
+  XCH rr0
+clearVarFromMainMemory_loop:
+  SRC r0
+  WRM
+  ISZ rr1, clearVarFromMainMemory_loop
+  BBL 0
+
+# INPUT:
+#   rr0 - first variable number (06..0B)
+#   rr1 - second variable number (06..0B)
+# OUTPUT:
+#   carry flag if first variable is bigger than second
+compareVarsFromMainMemory:
+  FIM r1, 0x00
+  XCH rr2
+  XCH rr1
+  XCH rr2
+compareVarsFromMainMemory_loop:
+  SRC r0
+  RDM
+  SRC r1
+  CMC
+  SBM
+  INC rr3
+  ISZ rr1, compareVarsFromMainMemory_loop
+  BBL 0
+
+# INPUT:
+#   acc - variable number (06..0B)
+# OUTPUT:
+#   rr1 - index of most significant word for variable
+#   carry flag is set if variable is zero
+MSWForVarFromMainMemory:
+  FIM r0, 0x0F
+  XCH rr0
+MSWForVarFromMainMemory_loop:
+  SRC r0
+  RDM
+  JCN nz, MSWForVarFromMainMemory_return
+  LD rr1
+  DAC
+  CMC
+  XCH rr1
+  JCN nc, MSWForVarFromMainMemory_loop
+MSWForVarFromMainMemory_return:
+  BBL 0
+
+# INPUT:
+#   rr0..rr3 - source variable
+# OUTPUT:
+#   rr8..rr11 - destination variable
+cloneRegVarFrom0to4:
+  LD rr0
+  XCH rr8
+  LD rr1
+  XCH rr9
+  LD rr2
+  XCH rr10
+  LD rr3
+  XCH rr11
+  BBL 0
+
+# INPUT:
+#   rr0 - source variable number
+#   rr1 - zero
+#   rr2 - destination variable number
+#   rr3 - zero
+cloneVar:
+  FIM r2, 0x00
+cloneVar_loop:
+  SRC r0
+  RDM
+  SRC r1
+  WRM
+  INC rr1
+  INC rr3
+  ISZ rr4, cloneVar_loop
+  BBL 0
+
+# OUTPUT:
+#   memMainVar[0x09] - 1_000_000_000_000_000
+write1e15:
+  FIM r0, $MAIN_MEM_VARIABLE_10E15 . 0
+  SRC r0
+  CLB
+  WRM                                # 0x0
+  INC rr1
+  SRC r0
+  WRM                                # 0x0
+  INC rr1
+  SRC r0
+  WRM                                # 0x0
+  INC rr1
+  SRC r0
+  LDM 0x08
+  WRM                                # 0x8
+  INC rr1
+  SRC r0
+  LDM 0x06
+  WRM                                # 0x6
+  INC rr1
+  SRC r0
+  LDM 0x0C
+  WRM                                # 0xC
+  INC rr1
+  SRC r0
+  LDM 0x04
+  WRM                                # 0x4
+  INC rr1
+  SRC r0
+  LDM 0x0A
+  WRM                                # 0xA
+  INC rr1
+  SRC r0
+  LDM 0x0E
+  WRM                                # 0xE
+  INC rr1
+  SRC r0
+  LDM 0x07
+  WRM                                # 0x7
+  INC rr1
+  SRC r0
+  LDM 0x0D
+  WRM                                # 0xD
+  INC rr1
+  SRC r0
+  LDM 0x08
+  WRM                                # 0x8
+  INC rr1
+  SRC r0
+  LDM 0x03
+  WRM                                # 0x3
+  BBL 0                              # 0x38D7EA4C68000 = 1_000_000_000_000_000

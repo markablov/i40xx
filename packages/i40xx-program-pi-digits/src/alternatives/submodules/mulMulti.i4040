@@ -1,0 +1,83 @@
+%include "memory.i4040"
+%include "mul4.i4040"
+
+# CARRY INSENSITIVE
+# INPUT:
+#   rr2 - variable number in main memory for first factor
+#   rr4 - variable number in main memory for second factor
+# OUTPUT:
+#   memMainVar[0x08] - product
+# VARIABLES:
+#   r0 = rr0 / rr1 - register/character idx for product
+#   r1 = rr2 / rr3 - register/character idx for first factor
+#   r2 = rr4 / rr5 - register/character idx for second factor
+#   rr6 - iterator for outer loop
+#   rr8 - iterator for inner loop
+#   rr9 - carry
+#   rr14 - inverted length of second factor (for loop iterator)
+#   rr15 - length of second factor
+mulMWxMW:
+  LDM 0x08
+  JMS clearVarFromMainMemory
+  CLB
+  XCH rr3
+  LD rr4
+  JMS MSWForVarFromMainMemory
+  LD rr1
+  CMA
+  XCH rr14                           # inv_m = 16 - len(b)
+  LD rr1
+  XCH rr15
+  INC rr15                           # m = len(b)
+  LD rr2
+  JMS MSWForVarFromMainMemory
+  LD rr1
+  CMA
+  XCH rr6                            # rr6 = 16 - len(a)
+  FIM r0, 0x80
+mulMWxMW_loopOuter:
+  LD rr14
+  XCH rr8
+  CLB
+  XCH rr9                            # carry = 0
+  CLB
+  XCH rr5
+mulMWxMW_loopInner:
+  SRC r1
+  RDM
+  XCH rr10
+  SRC r2
+  RDM
+  XCH rr11
+  JMS mul4x4                         # [rr12, rr13] = a[i] * b[j]
+  LD rr3
+  ADD rr5
+  XCH rr1
+  SRC r0
+  RDM
+  ADD rr12
+  XCH rr12
+  LDM 0x00
+  ADD rr13
+  XCH rr13
+  LD rr9
+  ADD rr12
+  XCH rr12
+  LDM 0x00
+  ADD rr13
+  XCH rr13                           # product = a[i] * b[j] + result[i + j] + carry
+  LD rr12
+  WRM                                # result[i + j] = product_low
+  LD rr13
+  XCH rr9                            # carry = product_high
+  INC rr5
+  ISZ rr8, mulMWxMW_loopInner
+  LD rr15
+  ADD rr3
+  XCH rr1
+  SRC r0
+  LD rr9
+  WRM                                # result[i + m] = carry
+  INC rr3
+  ISZ rr6, mulMWxMW_loopOuter
+  BBL 0

@@ -1,0 +1,31 @@
+# INPUT:
+#   rr0 - high digit of dividend
+#   rr1 - low digit dividend
+#   rr2 - divisor
+# OUTPUT:
+#   rr1 - reminder
+#   rr4 - low digit of quotient
+#   rr5 - high digit of quotient
+div8x4:
+  FIM r2, 0x00
+  LDM 0x00
+  XCH rr10
+div8x4_loop:
+  CLC
+  LD rr1
+  SUB rr2
+  XCH rr1
+  CMC
+  LD rr0
+  # acc = acc - borrow
+  SUB rr10
+  XCH rr0
+  JCN nc, div8x4_return
+  ISZ rr4, div8x4_loop
+  ISZ rr5, div8x4_loop
+div8x4_return:
+  LD rr1
+  ADD rr2
+  XCH rr1
+  CLC
+  BBL 0

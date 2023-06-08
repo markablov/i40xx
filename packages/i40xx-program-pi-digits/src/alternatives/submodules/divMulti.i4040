@@ -1,0 +1,280 @@
+%include "memory.i4040"
+%include "nlz.i4040"
+%include "shiftMulti.i4040"
+%include "mul4.i4040"
+%include "div8.i4040"
+
+# CARRY INSENSITIVE
+# USES ALL REGISTERS (rr0..rr15 / rr0"..rr7")
+# INPUT:
+#   memMainVar[0x08] - dividend
+#   memMainVar[0x09] - divisor
+# OUTPUT:
+#   memMainVar[0x08] - reminder
+#   memMainVar[0x0A] - quotient
+# VARIABLES:
+#   rr2" - shift value for normalization
+#   rr3" - 4 - shift value for normalization
+#   rr14 - index of currently calculated quotient digit
+#   rr15 - MSW of divisor
+divMWxMW:
+  LDM 0x08
+  JMS MSWForVarFromMainMemory
+  LD rr1
+  XCH rr10
+  LDM 0x09
+  JMS MSWForVarFromMainMemory
+  LD rr1
+  XCH rr15
+  LDM 0x0A
+  JMS clearVarFromMainMemory
+  FIM r0, 0x89
+  STC                               # set carry to have "greater or equal" check instead of just "greater"
+  JMS compareVarsFromMainMemory     # if dividend is smaller than divisor, just exit
+  JCN nc, divMWxMW_return
+  FIM r0, 0x90
+  LD rr15
+  XCH rr1
+  SRC r0
+  RDM
+  SB1
+  JMS nlzAndMSB                      # get shift values for normalization
+  LD rr2
+  JCN z, divMWxMW_normalized
+  FIM r0, 0x80
+  LD rr10
+  XCH rr1                            # XXX: shiftLeftVarFromMainMemory() would clear carry early
+  JMS shiftLeftVarFromMainMemory     # perform normalization for dividend
+  FIM r0, 0x90
+  LD rr15
+  XCH rr1                            # XXX: shiftLeftVarFromMainMemory() would clear carry early
+  JMS shiftLeftVarFromMainMemory     # perform normalization for divisor
+divMWxMW_normalized:
+  SB0
+  LD rr10
+  SUB rr15
+  CLC
+  XCH rr14                           # quotientDigitIdx = dividendLen - divisorLen
+divMWxMW_loop:
+  JMS divMWxMW_getQuotientDigit
+  LD rr14
+  DAC
+  CLC
+  XCH rr14
+  JCN nz, divMWxMW_loop
+  SB1
+  LD rr2
+  JCN z, divMWxMW_denormalized
+  FIM r0, 0x80
+  LD rr15
+  XCH rr7
+  JMS shiftRightVarFromMainMemory
+  FIM r0, 0x90
+  LD rr15
+  XCH rr7
+  JMS shiftRightVarFromMainMemory
+divMWxMW_denormalized:
+  SB0
+divMWxMW_return:
+  BBL 0
+
+# INPUT:
+#   memMainVar[0x08] - dividend
+#   memMainVar[0x09] - divisor
+#   rr14 - index of currently calculated quotient digit
+#   rr15 - MSW of divisor
+# OUTPUT:
+#   memMainVar[0x0A] - quotient
+# VARIABLES:
+#   r3 = rr6 / rr7 - register/character idx for dividend
+#   r4 = rr8 / rr9 - register/character idx for divisor
+#   rr3 - value of dividend[quotientDigit + divisorDigitsAmount]
+#   rr4 - estimated quotient
+#   rr0 - borrow for multiply-and-subtract step
+#   rr1 - carry for compensate step
+#   rr5 - loop iterator
+divMWxMW_getQuotientDigit:
+  FIM r3, 0x80
+  FIM r4, 0x90
+  JMS divMWxMW_getEstimatedQuotient
+  CLB
+  XCH rr9
+  LD rr14
+  XCH rr7
+  FIM r0, 0x00
+  LD rr15
+  CMA
+  XCH rr5
+  LD rr4
+  # XXX: we always multiply by estimatedQuotient and rr10 is not affected by anything, so we can load it once
+  XCH rr10
+divMWxMW_getQuotientDigit_mulsubLoop:
+  SRC r4
+  RDM
+  XCH rr11
+  # [rr12, rr13] = estimatedQuotient * divisor[divisorDigitIdx]
+  JMS mul4x4
+  SRC r3
+  # dividend[divisorDigitIdx + quotientDigit]
+  RDM
+  SUB rr0
+  # rr2 = dividend[divisorDigitIdx + quotientDigit] - borrow
+  XCH rr2
+  CMC
+  TCC
+  # borrow = borrow_from_first_sub
+  XCH rr0
+  LD rr2
+  SUB rr12
+  WRM
+  CMC
+  LD rr0
+  # borrow = borrow_from_first_sub + borrow_from_second_sub (rr1 === 0x00, so we are adding just carry flag)
+  ADD rr1
+  ADD rr13
+  XCH rr0
+  INC rr7
+  INC rr9
+  ISZ rr5, divMWxMW_getQuotientDigit_mulsubLoop
+  SRC r3
+  RDM
+  SUB rr0
+  WRM
+  JCN c, divMWxMW_getQuotientDigit_return
+  # now reminder is negative, so we need to decrease estimated quotient and add back one portion of divisor
+  LD rr15
+  CMA
+  XCH rr5
+  LDM 0x00
+  XCH rr9
+  LD rr14
+  XCH rr7
+divMWxMW_getQuotientDigit_compensateLoop:
+  SRC r4
+  RDM
+  ADD rr1
+  # rr2 = divisor[divisorDigitIdx] + carry
+  XCH rr2
+  TCC
+  # carry = carry_from_first_addition
+  XCH rr1
+  SRC r3
+  RDM
+  ADD rr2
+  WRM
+  TCC
+  ADD rr1
+  # carry = carry_from_first_addition + carry_from_second_addition
+  XCH rr1
+  INC rr7
+  INC rr9
+  ISZ rr5, divMWxMW_getQuotientDigit_compensateLoop
+  SRC r3
+  RDM
+  ADD rr1
+  WRM
+  LD rr4
+  DAC
+  # estimatedQuotient--;
+  XCH rr4
+divMWxMW_getQuotientDigit_return:
+  FIM r3, 0xA0
+  LD rr14
+  XCH rr7
+  SRC r3
+  LD rr4
+  # quotient[quotientDigit] = estimatedQuotient
+  WRM
+  CLC
+  BBL 0
+
+# INPUT:
+#   memMainVar[0x08] - dividend
+#   memMainVar[0x09] - divisor
+#   r3 = rr6 / rr7 - register/character idx for dividend
+#   r4 = rr8 / rr9 - register/character idx for divisor
+#   rr14 - index of currently calculated quotient digit
+#   rr15 - MSW of divisor
+# OUTPUT:
+#   rr3 - value of dividend[quotientDigit + divisorDigitsAmount]
+#   rr4 - estimated quotient
+divMWxMW_getEstimatedQuotient:
+  LD rr15
+  XCH rr9
+  SRC r4
+  RDM
+  # rr2 = divisor[divisorDigitsAmount - 1]
+  XCH rr2
+  LD rr9
+  ADD rr14
+  IAC
+  XCH rr7
+  SRC r3
+  RDM
+  # rr0, rr3 = dividend[quotientDigit + divisorDigitsAmount]
+  XCH rr0
+  LD rr0
+  XCH rr3
+  LD rr7
+  DAC
+  XCH rr7
+  SRC r3
+  RDM
+  # rr1 = dividend[quotientDigit + divisorDigitsAmount - 1]
+  XCH rr1
+  # XXX: carry from last DAC is cleared by that subroutine, so it's safe and don't need to use CLC
+  JMS div8x4
+  # REGISTERS ALLOCATION FOR CHECKS:
+  #   rr1  - reminder for estimated quotient
+  #   rr2  - divisor[divisorDigitsAmount - 1]
+  #   rr3  - dividend[quotientDigit + divisorDigitsAmount]
+  #   rr4  - low digit for estimated quotient
+  #   rr5  - high digit for estimated quotient
+  # NEED TO PREPARE:
+  #   rr0  - dividend[quotientDigit + divisorDigitsAmount - 2]
+  #   rr10 - divisor[divisorDigitsAmount - 2]
+  LD rr9
+  DAC
+  CLC
+  XCH rr9
+  SRC r4
+  RDM
+  # rr10 = divisor[divisorDigitsAmount - 2]
+  XCH rr10
+  LD rr9
+  ADD rr14
+  CLC
+  XCH rr7
+  SRC r3
+  RDM
+  # rr0 = dividend[quotientDigit + divisorDigitsAmount - 2]
+  XCH rr0
+divMWxMW_getEstimatedQuotient_checkIfCorrectionNecessary:
+  LD rr5
+  JCN nz, divMWxMW_getEstimatedQuotient_performCorrection
+  LD rr4
+  XCH rr11
+  # [rr12, rr13] = estimatedQuotient * divisor[divisorDigitsAmount - 2]
+  JMS mul4x4
+  LD rr0
+  SUB rr12
+  CMC
+  LD rr1
+  SUB rr13
+  JCN c, divMWxMW_getEstimatedQuotient_return
+divMWxMW_getEstimatedQuotient_performCorrection:
+  LD rr4
+  DAC
+  XCH rr4
+  JCN c, divMWxMW_getEstimatedQuotient_performCorrection_updateReminder
+  # estimated quotient is less than 0x20, so if borrow occurs, we can just set high digit to 0x0 from 0x1
+  LDM 0x00
+  XCH rr5
+divMWxMW_getEstimatedQuotient_performCorrection_updateReminder:
+  CLC
+  LD rr1
+  ADD rr2
+  XCH rr1
+  JCN nc, divMWxMW_getEstimatedQuotient_checkIfCorrectionNecessary
+divMWxMW_getEstimatedQuotient_return:
+  BBL 0
