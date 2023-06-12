@@ -6,6 +6,7 @@
 %include "../submodules/shiftMulti.i4040"
 %include "../submodules/addMod.i4040"
 %include "../submodules/addMulti.i4040"
+%include "../submodules/add16.i4040"
 
 __location(00:0x00)
 entrypoint:
@@ -13,9 +14,10 @@ entrypoint:
 
 # INPUT:
 #   MAIN_MEM_VARIABLE_CURRENT_PRIME
-#   STATUS_MEM_VARIABLE_N
 #   MAIN_MEM_VARIABLE_DOUBLED_N
+#   STATUS_MEM_VARIABLE_N
 #   STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
+#   STATUS_MEM_VARIABLE_CHUNKS_COUNT
 #   digits
 # OUTPUT:
 #   digits
@@ -30,25 +32,67 @@ updateDigits:
 # INPUT:
 #   STATUS_MEM_VARIABLE_F
 #   STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
+#   STATUS_MEM_VARIABLE_CHUNKS_COUNT
+# OUTPUT:
+#   digits
 updateDigits_computedF:
+  LDM $STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
+  JMS loadVarFromStatusCharMemory
+  LDM $STATUS_MEM_VARIABLE_DIGIT_POSITION
+  JMS storeVarToStatusCharMemory                           # digitPosition = startingPosition
+  FIM r0, $STATUS_MEM_VARIABLE_CHUNK_NO . 0
+  SRC r0
+  LD rr1
+  WR2
+  WR3                                                      # chunkNo = 0
+updateDigits_computedF_loop:
   JMS computeDi
-  JCN nz, updateDigits_computedF_return
-  FIM r0, 0x00
-  FIM r1, 0x00
-  JMS addMWxMW
+  JCN nz, updateDigits_computedF_updateChunkNo
+  FIM r0, $STATUS_MEM_VARIABLE_CHUNK_NO . 0
+  SRC r0
+  RD3
+  XCH rr2
+  RD2
+  XCH rr0
+  JMS addMWxMW                                             # chunks[chunkNo] = chunks[chunkNo] + Di
+  ISZ rr0, updateDigits_computedF_updateChunkNo
+  INC rr2
+updateDigits_computedF_updateChunkNo:
+  FIM r2, $STATUS_MEM_VARIABLE_CHUNK_NO . 0
+  SRC r2
+  LD rr2
+  WR3
+  LD rr0
+  WR2                                                      # chunkNo++
+  RD0
+  SUB rr0
+  CMC
+  RD1
+  SUB rr2
+  CMC
+  JCN c, updateDigits_computedF_return                         # if (chunkNo === chunksCount)
+  LDM $STATUS_MEM_VARIABLE_DIGIT_POSITION
+  JMS loadVarFromStatusCharMemory
+  FIM r2, 0x90
+  FIM r3, 0x00
+  JMS add16x16
+  LDM $STATUS_MEM_VARIABLE_DIGIT_POSITION
+  JMS storeVarToStatusCharMemory                           # digitPosition = digitPosition + 9
+  JUN updateDigits_computedF_loop
 updateDigits_computedF_return:
+  CLC
   BBL 0
 
 # INPUT:
-#   STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
+#   STATUS_MEM_VARIABLE_DIGIT_POSITION
 #   STATUS_MEM_VARIABLE_F
 #   MAIN_MEM_VARIABLE_M
 # OUTPUT:
 #   MAIN_MEM_VARIABLE_DI
 computeDi:
-  LDM 0x0A
+  LDM $MAIN_MEM_VARIABLE_DI
   JMS clearVarFromMainMemory
-  LDM $STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
+  LDM $STATUS_MEM_VARIABLE_DIGIT_POSITION
   JMS loadVarFromStatusCharMemory
   LDM $MAIN_MEM_VARIABLE_POWER_MOD_EXP
   JMS storeVarToMainMemory

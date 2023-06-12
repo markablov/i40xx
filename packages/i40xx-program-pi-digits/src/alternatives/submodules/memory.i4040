@@ -1,11 +1,14 @@
 %define STATUS_MEM_VARIABLE_VMAX                          0x6
 %define STATUS_MEM_VARIABLE_V                             0x6
+%define STATUS_MEM_VARIABLE_CHUNK_NO                      0x6
+%define STATUS_MEM_VARIABLE_CHUNKS_COUNT                  0x6
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_INV_A           0x7
 %define STATUS_MEM_VARIABLE_D                             0x7
 %define STATUS_MEM_VARIABLE_B_COMPUTATION_COEF            0x7
 %define STATUS_MEM_VARIABLE_A_COMPUTATION_COEF            0x7
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_FK              0x7
 %define STATUS_MEM_VARIABLE_F_COMPUTATION_A               0xA
+%define STATUS_MEM_VARIABLE_DIGIT_POSITION                0xA
 %define STATUS_MEM_VARIABLE_F                             0xB
 %define STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION   0xC
 %define STATUS_MEM_VARIABLE_POWER_MOD_POWER_BASE          0xD
