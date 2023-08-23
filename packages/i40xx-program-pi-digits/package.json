@@ -8,5 +8,6 @@
   "imports": {
     "#utilities/*": "./src/utilities/*",
     "#data/*": "./src/data/*"
-  }
+  },
+  "private": true
 }
