@@ -1,6 +1,6 @@
 {
   "name": "i40xx-emu-ui",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Javascript GUI for intel 4004/4040 emulator",
   "scripts": {
     "dev": "parcel ./src/index.html",

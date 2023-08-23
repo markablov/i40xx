@@ -1,6 +1,6 @@
 {
   "name": "i40xx-link",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "Mark Ablovatskii <mark.ablov@gmail.com>",
   "license": "MIT",
   "description": "Linker for Intel 4004/4040 CPUs from bytecode and symbols to ROM binary",
