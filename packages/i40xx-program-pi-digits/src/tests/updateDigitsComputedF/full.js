@@ -13,7 +13,7 @@ import {
 
 import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
-const CYCLES_PER_SECOND = 95000n;
+const CYCLES_PER_SECOND = 92500n;
 
 const WORKER_AMOUNT = 16;
 

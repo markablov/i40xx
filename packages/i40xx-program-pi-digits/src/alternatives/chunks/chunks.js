@@ -9,7 +9,7 @@ import { compileCodeForTest } from '#utilities/compile.js';
 import { updateCodeForUseInEmulator, generateMemoryBankSwitch } from '#utilities/codeGenerator.js';
 import { initMemoryWithInput } from './memory.js';
 
-const CYCLES_PER_SECOND = 95000n;
+const CYCLES_PER_SECOND = 92500n;
 
 const WORKER_AMOUNT = 16;
 

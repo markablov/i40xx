@@ -8,7 +8,7 @@ import { updateCodeForUseInEmulator } from '#utilities/codeGenerator.js';
 import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
 const PROLOGUE_CYCLES_COUNT = 5n;
-const CYCLES_PER_SECOND = 95000n;
+const CYCLES_PER_SECOND = 92500n;
 
 const runTest = (romDump) => {
   const system = new Emulator({ romDump });

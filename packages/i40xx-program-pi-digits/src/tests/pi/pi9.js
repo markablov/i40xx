@@ -4,7 +4,7 @@ import Emulator from 'i40xx-emu';
 
 import { compileCodeForTest } from '#utilities/compile.js';
 
-const CYCLES_PER_SECOND = 95000n;
+const CYCLES_PER_SECOND = 92500n;
 
 const PI = '3141592653';
 

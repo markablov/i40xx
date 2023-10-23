@@ -10,7 +10,7 @@ import { hwNumberToHex } from '#utilities/numbers.js';
 import { getMemoryBankFromAbsoluteAddr, VARIABLES } from '#utilities/memory.js';
 import { runWithProfiler } from '#utilities/profiling.js';
 
-const CYCLES_PER_SECOND = 95000n;
+const CYCLES_PER_SECOND = 92500n;
 const LABELS_FOR_CHECKS = ['computepidigits_initialprimesegment_loop', 'computepidigits_onevmax_loop'];
 
 const PROFILING = true;

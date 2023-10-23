@@ -2515,7 +2515,7 @@ const TESTS = [
   { input: { N: '0x1AC5', vmax: 1, m: '0x3581', a: '0x3581' }, expected: '0xFAA' },
 ];
 
-const CYCLES_PER_SECOND = 95000n;
+const CYCLES_PER_SECOND = 92500n;
 
 const WORKER_AMOUNT = 16;
 

@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-const CYCLES_PER_SECOND = 95000n;
+const CYCLES_PER_SECOND = 92500n;
 const REPORT_FREQ_IN_SECONDS = 100n;
 
 export const runWithProfiler = (system, symbolsPerRom) => {

@@ -12,7 +12,7 @@ import { VARIABLES, getMemoryBankFromAbsoluteAddr, writeValueToMainChars } from 
 import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
 const PROLOGUE_CYCLES_COUNT = 5n;
-const CYCLES_PER_SECOND = 95000n;
+const CYCLES_PER_SECOND = 92500n;
 
 const initMemoryWithInput = (memory, chunks) => {
   const [chunksCountLow, chunksCountHigh] = numToHWNumber(0x100 - chunks.length);

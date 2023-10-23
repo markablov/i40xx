@@ -13,7 +13,7 @@ import {
   generateMemoryStatusCharactersInitialization,
 } from '#utilities/codeGenerator.js';
 
-const CYCLES_PER_SECOND = 95000n;
+const CYCLES_PER_SECOND = 92500n;
 
 const WORKER_AMOUNT = 16;
 

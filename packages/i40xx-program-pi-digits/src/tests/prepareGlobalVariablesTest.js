@@ -13,7 +13,7 @@ import {
 import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
 const PROLOGUE_CYCLES_COUNT = 5n;
-const CYCLES_PER_SECOND = 95000n;
+const CYCLES_PER_SECOND = 92500n;
 
 const runSingleTest = (romDump, { digitsCount, startingPiDigitsPosition }) => {
   const system = new Emulator({ romDump, ramDump: RAM_DUMP });

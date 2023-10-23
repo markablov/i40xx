@@ -10,7 +10,7 @@ import { putModulusBasedDataIntoMemory } from '#data/multiplicationModulusData/m
 
 import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
 
-const CYCLES_PER_SECOND = 95000n;
+const CYCLES_PER_SECOND = 92500n;
 
 const STARTING_VALUES = { N: '0x1AC5', vmax: 3, m: '0x533', a: '0xB' };
 const EXPECTED_F = '0x3D5';
