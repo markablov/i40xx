@@ -33,7 +33,7 @@ mulMod_shiftedFactorLoaded:
   DCL
 
   FIM r2, 0x00
-  FIM r4, 0x00                           # res = 0
+  FIM r4, 0x00                           # multipliedFactor = 0
 
   LD rr10
   JCN nz, mulMod_factor4
@@ -89,8 +89,7 @@ mulMod_processNibble_2:                   # 0b0010
 
 __location(0x2:0x30)
 mulMod_processNibble_3:                   # 0b0011
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
   JMS mulMod_updateResult
   JUN mulMod_updateMultipliedFactor8
 
@@ -98,8 +97,7 @@ __location(0x2:0x40)
 mulMod_processNibble_4:                   # 0b0100
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
   JUN mulMod_updateMultipliedFactor
 
 __location(0x2:0x50)
@@ -107,100 +105,75 @@ mulMod_processNibble_5:                   # 0b0101
   JMS mulMod_updateResult
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
   JUN mulMod_updateMultipliedFactor
 
 __location(0x2:0x60)
 mulMod_processNibble_6:                   # 0b0110
   JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
+  JMS mulMod_updateResultAndFactor
   JUN mulMod_updateMultipliedFactor
 
 __location(0x2:0x70)
 mulMod_processNibble_7:                   # 0b0111
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
+  JMS mulMod_updateResultAndFactor
+  JMS mulMod_updateResultAndFactor
   JUN mulMod_updateMultipliedFactor
 
 __location(0x2:0x80)
 mulMod_processNibble_8:                   # 0b1000
   JMS mulMod_updateMultipliedFactor8
-  JMS mulMod_updateResult
-  JUN mulMod_updateMultipliedFactor
+  JUN mulMod_updateResultAndFactor
 
 __location(0x2:0x90)
 mulMod_processNibble_9:                   # 0b1001
   JMS mulMod_updateResult
   JMS mulMod_updateMultipliedFactor8
-  JMS mulMod_updateResult
-  JUN mulMod_updateMultipliedFactor
+  JUN mulMod_updateResultAndFactor
 
 __location(0x2:0xA0)
 mulMod_processNibble_A:                   # 0b1010
   JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
+  JMS mulMod_updateResultAndFactor
   JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JUN mulMod_updateMultipliedFactor
+  JUN mulMod_updateResultAndFactor
 
 __location(0x2:0xB0)
 mulMod_processNibble_B:                   # 0b1011
-  JMS mulMod_updateResult
+  JMS mulMod_updateResultAndFactor
+  JMS mulMod_updateResultAndFactor
   JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JUN mulMod_updateMultipliedFactor
+  JUN mulMod_updateResultAndFactor
 
 __location(0x2:0xC0)
 mulMod_processNibble_C:                   # 0b1100
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JUN mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
+  JUN mulMod_updateResultAndFactor
 
 __location(0x2:0xD0)
 mulMod_processNibble_D:                   # 0b1101
-  JMS mulMod_updateResult
+  JMS mulMod_updateResultAndFactor
   JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JUN mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
+  JUN mulMod_updateResultAndFactor
 
 __location(0x2:0xE0)
 mulMod_processNibble_E:                   # 0b1110
   JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JUN mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
+  JMS mulMod_updateResultAndFactor
+  JUN mulMod_updateResultAndFactor
 
 __location(0x2:0xF0)
 mulMod_processNibble_F:                   # 0b1111
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JUN mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
+  JMS mulMod_updateResultAndFactor
+  JMS mulMod_updateResultAndFactor
+  JUN mulMod_updateResultAndFactor
 
 __location(0x3:0x00)
 mulMod_processLastNibble_0:                   # 0b0000
@@ -227,8 +200,7 @@ mulMod_processLastNibble_2:                   # 0b0010
 
 __location(0x3:0x30)
 mulMod_processLastNibble_3:                   # 0b0011
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
   JUN mulMod_updateResultLast
 
 __location(0x3:0x40)
@@ -239,24 +211,20 @@ mulMod_processLastNibble_4:                   # 0b0100
 
 __location(0x3:0x50)
 mulMod_processLastNibble_5:                   # 0b0101
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
   JMS mulMod_updateMultipliedFactor
   JUN mulMod_updateResultLast
 
 __location(0x3:0x60)
 mulMod_processLastNibble_6:                   # 0b0110
   JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
   JUN mulMod_updateResultLast
 
 __location(0x3:0x70)
 mulMod_processLastNibble_7:                   # 0b0111
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
+  JMS mulMod_updateResultAndFactor
   JUN mulMod_updateResultLast
 
 __location(0x3:0x80)
@@ -273,17 +241,14 @@ mulMod_processLastNibble_9:                   # 0b1001
 __location(0x3:0xA0)
 mulMod_processLastNibble_A:                   # 0b1010
   JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
   JMS mulMod_updateMultipliedFactor
   JUN mulMod_updateResultLast
 
 __location(0x3:0xB0)
 mulMod_processLastNibble_B:                   # 0b1011
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
+  JMS mulMod_updateResultAndFactor
   JMS mulMod_updateMultipliedFactor
   JUN mulMod_updateResultLast
 
@@ -291,37 +256,100 @@ __location(0x3:0xC0)
 mulMod_processLastNibble_C:                   # 0b1100
   JMS mulMod_updateMultipliedFactor
   JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
   JUN mulMod_updateResultLast
 
 __location(0x3:0xD0)
 mulMod_processLastNibble_D:                   # 0b1101
-  JMS mulMod_updateResult
+  JMS mulMod_updateResultAndFactor
   JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
   JUN mulMod_updateResultLast
 
 __location(0x3:0xE0)
 mulMod_processLastNibble_E:                   # 0b1110
   JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
+  JMS mulMod_updateResultAndFactor
   JUN mulMod_updateResultLast
 
 __location(0x3:0xF0)
 mulMod_processLastNibble_F:                   # 0b1111
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
-  JMS mulMod_updateResult
-  JMS mulMod_updateMultipliedFactor
+  JMS mulMod_updateResultAndFactor
+  JMS mulMod_updateResultAndFactor
+  JMS mulMod_updateResultAndFactor
   JUN mulMod_updateResultLast
+
+# INPUT:
+#   [rr0, rr1, rr3, rr2] - multipliedFactor
+#   [rr4, rr5, rr9, rr8] - temporal result
+# OUTPUT:
+#   [rr4, rr5, rr9, rr8] - temporal result
+#   [rr0, rr1, rr3, rr2] - multipliedFactor
+mulMod_updateResultAndFactor:
+  LD rr4
+  ADD rr0
+  XCH rr4
+  LD rr5
+  ADD rr1
+  XCH rr5
+  LD rr9
+  ADD rr3
+  XCH rr9
+  LD rr8
+  ADD rr2                                           # res = res + multipliedFactor
+  XCH rr8
+  LD rr8
+  AN6
+  JCN z, mulMod_updateResultAndFactor_updateFactor  # if (res[3] < 0x8)
+
+  SRC r4
+  RD0
+  ADD rr4
+  XCH rr4
+  RD1
+  ADD rr5
+  XCH rr5
+  RD2
+  ADD rr9
+  XCH rr9
+  RD3
+  ADD rr8
+  XCH rr8                                           # res = res - m * floor((res[3] * 0x1000) / m)
+  CLC
+
+mulMod_updateResultAndFactor_updateFactor:
+  LD rr0
+  ADD rr0
+  XCH rr0
+  LD rr1
+  ADD rr1
+  XCH rr1
+  LD rr3
+  ADD rr3
+  XCH rr3
+  LD rr2
+  ADD rr2
+  XCH rr2                                           # multipliedFactor = multipliedFactor + multipliedFactor
+  AN7                                               # check if previous value of multipliedFactor[3] < 4, then new multipliedFactor[3] < 8
+  JCN z, mulMod_updateResultAndFactor_return        # if (multipliedFactor[3] < 0x8)
+
+  SRC r1
+  RD0
+  ADD rr0
+  XCH rr0
+  RD1
+  ADD rr1
+  XCH rr1
+  RD2
+  ADD rr3
+  XCH rr3
+  RD3
+  ADD rr2
+  XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
+  CLC
+mulMod_updateResultAndFactor_return:
+  BBL 0
 
 # INPUT:
 #   [rr0, rr1, rr3, rr2] - multipliedFactor

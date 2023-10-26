@@ -40,7 +40,12 @@ export default class TasksReader {
           return;
         }
 
-        this.#tasks.push(this.#lineParser(line));
+        try {
+          this.#tasks.push(this.#lineParser(line));
+        } catch {
+          // eslint-disable-next-line no-console
+          console.log(`Could not process line ${line}`);
+        }
       }
     } finally {
       this.#readingPromise = null;
