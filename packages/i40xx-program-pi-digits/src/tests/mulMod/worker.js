@@ -29,7 +29,7 @@ parentPort.on('message', ({ tests }) => {
 
     registersBank[12] = REGISTER_NUMBER_FOR_SECOND_FACTOR;
     registersBank[13] = 0x0;
-    registersBank[6] = 0x0;
+    registersBank[6] = 0x8;
     registersBank[7] = 0x4;
 
     const aNumHW = hexToHWNumber(a);

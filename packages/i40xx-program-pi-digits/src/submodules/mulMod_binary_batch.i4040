@@ -2,7 +2,7 @@
 
 # INPUT:
 #   [rr0, rr1, rr3, rr2] - first factor
-#   rr6 - 0x0
+#   rr6 - 0x8
 #   rr7 - 0x4
 #   rr12 - variable number for second term
 #   rr13 - 0x0
@@ -10,23 +10,23 @@
 # OUTPUT:
 #   [rr0, rr1, rr3, rr2] - result
 # VARIABLES:
-#   [rr12, rr11, rr14, rr15] - shiftedFactor
+#   [rr12, rr11, rr14, rr10] - shiftedFactor
 #   [rr4, rr5, rr9, rr8] - temporal result
 #   [rr0, rr1, rr3, rr2] - multipliedFactor
 # NOTES:
-#   - keeps rr13, rr6, rr7, rr10 unmodified
+#   - keeps rr13, rr6, rr7, rr15 unmodified
 #   - clears carry flag
 
 mulMod:
   SRC r6
   RD3
-  XCH rr15
+  XCH rr10
   RD0
   XCH rr12
   RD1
   XCH rr11
   RD2
-  XCH rr14                               # rr12 = b[0], rr11 = b[1], rr14 = b[2], rr15 = b[3]
+  XCH rr14                               # rr12 = b[0], rr11 = b[1], rr14 = b[2], rr10 = b[3]
 
 mulMod_shiftedFactorLoaded:
   CLB
@@ -35,7 +35,7 @@ mulMod_shiftedFactorLoaded:
   FIM r2, 0x00
   FIM r4, 0x00                           # res = 0
 
-  LD rr15
+  LD rr10
   JCN nz, mulMod_factor4
   LD rr14
   JCN nz, mulMod_factor3
@@ -49,7 +49,7 @@ mulMod_factor4:
   JMS mulMod_processNibble
   LD rr14
   JMS mulMod_processNibble
-  LD rr15
+  XCH rr10
   JUN mulMod_processLastNibble
 
 mulMod_factor3:
@@ -469,11 +469,11 @@ mulMod_updateResult:
   XCH rr9
   LD rr8
   ADD rr2                                           # res = res + multipliedFactor
-  RAL
-  JCN nc, mulMod_updateResult_return                # if (res[3] < 0x8)
-
-  RAR
   XCH rr8
+  LD rr8
+  AN6
+  JCN z, mulMod_updateResult_return                 # if (res[3] < 0x8)
+
   SRC r4
   RD0
   ADD rr4
@@ -488,11 +488,8 @@ mulMod_updateResult:
   ADD rr8
   XCH rr8                                           # res = res - m * floor((res[3] * 0x1000) / m)
   CLC
-  BBL 0
 
 mulMod_updateResult_return:
-  RAR
-  XCH rr8
   BBL 0
 
 # INPUT:
@@ -531,7 +528,7 @@ mulMod_updateResultLast:
   JCN z, mulMod_updateResultLast_returnRes_withHighWordInAccumulator           # if (res[3] === 0)
 
   XCH rr2
-  SRC r3
+  SRC r5
   RD0
   JCN z, mulMod_updateResultLast_returnRes                                     # if (m > 0x1000)
 

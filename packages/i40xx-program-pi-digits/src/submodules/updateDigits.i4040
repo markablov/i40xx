@@ -314,9 +314,9 @@ updateDigits_prepareModulusBasedVariables_modulus12Bit_safeM:
 #   STATUS_MEM_VARIABLE_UPDATE_DIGITS_CHUNK_COUNTER
 updateDigits_computedF:
   SB1
-  FIM r3, 0x04
+  FIM r3, 0x84
   SB0
-  FIM r3, 0x04
+  FIM r3, 0x84
   JMS power10
 
   LD rr0
@@ -623,9 +623,9 @@ updateDigits_computedF_updateChunks_divide:
   ADM
   WRM                                                      # digits[chunkNo] = digits[chunkNo] + Di
 
-  FIM r3, 0x04
+  FIM r3, 0x84
   SB0
-  FIM r3, 0x04
+  FIM r3, 0x84
 
   LDM $BANK_WITH_VARIABLES
   DCL

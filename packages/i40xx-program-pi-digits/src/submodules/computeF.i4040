@@ -46,7 +46,7 @@ updateB:
   RD3
   XCH rr2
   FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_K . 0
-  FIM r3, 0x04
+  FIM r3, 0x84
   JMS mulMod                                     # b = (b * k) % m
   DCL
   FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . 0
@@ -119,7 +119,7 @@ updateB_return:
   RD3
   XCH rr2
   FIM r6, $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF . 0
-  FIM r3, 0x04
+  FIM r3, 0x84
   JMS mulMod                                     # b = (b * bCoef) % m
   DCL
   FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . 0
@@ -253,7 +253,7 @@ updateA_return:
   RD3
   XCH rr2
   FIM r6, $STATUS_MEM_VARIABLE_A_COMPUTATION_COEF . 0
-  FIM r3, 0x04
+  FIM r3, 0x84
   JMS mulMod                                             # A = (A * ACoef) % m
   DCL
   FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_A . 0
@@ -289,7 +289,7 @@ updateF:
   # 0xA is necessary to let powerCurrentPrime work properly, because jump table is placed at addresses in form "03:*A"
   FIM r7, $STATUS_MEM_VARIABLE_V . A
   SRC r7
-  FIM r3, 0x04
+  FIM r3, 0x84
   RD3
   XCH rr8
   RD2
@@ -500,7 +500,7 @@ computeF_oneVMax:
   FIM r0, 0x20
   FIM r1, 0x00                                                       # multiplierForZeroV = 2
 
-  FIM r3, 0x04
+  FIM r3, 0x84
   FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_ZERO_V_MULTIPLIER_B_FACTOR . 0
   SRC r6
   LDM 0x3
@@ -1019,7 +1019,7 @@ computeF_oneVMax_updateF:
 
   JMS computeInvertedA                                               # fk = modularInverse(A, a)
 
-  FIM r3, 0x04
+  FIM r3, 0x84
   FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_B . 0
   JMS mulMod                                                         # fk = (fk * b) % a
   DCL
