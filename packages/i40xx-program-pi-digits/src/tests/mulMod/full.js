@@ -12,18 +12,6 @@ import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' a
 const WORKER_AMOUNT = 16;
 const TESTS_PER_WORKER = 1000;
 
-const wrapSourceCode = (sourceCode) => `
-entrypoint:
-  JCN z, regularCall 
-  JMS mulMod_withSwaps
-  HLT
-regularCall:
-  JMS mulMod
-  HLT
-
-${sourceCode}
-`;
-
 const getTestsSliceSpec = () => {
   const sliceStr = process.argv[2];
   if (!sliceStr) {
@@ -63,12 +51,12 @@ const getTestsBySlice = async (tasks, slice) => {
   const tasks = new TasksReader(
     path.resolve(dirname, './tests.dat'),
     (line) => {
-      const [, a, b, m, expected, allowSwaps] = line.match(/\s*\{ input: \{ a: '(0x[0-9A-F]+)', b: '(0x[0-9A-F]+)', m: '(0x[0-9A-F]+)' }, expected: '(0x[0-9A-F]+)', allowSwaps: (\w+) },/);
-      return { input: { a, b, m }, expected, allowSwaps: allowSwaps === 'true' };
+      const [, a, b, m, expected] = line.match(/\s*\{ input: \{ a: '(0x[0-9A-F]+)', b: '(0x[0-9A-F]+)', m: '(0x[0-9A-F]+)' }, expected: '(0x[0-9A-F]+)' },/);
+      return { input: { a, b, m }, expected };
     },
   );
 
-  const { rom } = compileCodeForTest('submodules/mulMod_binary_batch.i4040', 'mulMod', { wrapSourceCode });
+  const { roms } = compileCodeForTest('submodules/mulMod_binary_batch.i4040', 'mulMod');
 
   const stats = {};
   let processedTests = 0;
@@ -122,7 +110,7 @@ const getTestsBySlice = async (tasks, slice) => {
   for (let i = 0; i < WORKER_AMOUNT; i++) {
     const worker = new Worker(
       workerPath,
-      { workerData: { romDump: rom, ramDump: RAM_DUMP } },
+      { workerData: { romDump: roms.map(({ data }) => data), ramDump: RAM_DUMP } },
     );
 
     worker.on('message', (data) => onMessage(worker, data));

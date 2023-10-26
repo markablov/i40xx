@@ -2253,7 +2253,7 @@ const TESTS = [
     process.exit(0);
   }
 
-  const { sourceCode, rom, sourceMap, symbols } = compileCodeForTest(
+  const { sourceCode, roms } = compileCodeForTest(
     variant === 'standard' ? 'submodules/mulMod.i4040' : `submodules/mulMod_${variant}.i4040`,
     'mulMod',
   );
@@ -2261,7 +2261,7 @@ const TESTS = [
   let sum = 0n;
   for (const [idx, { input, expected }] of TESTS.entries()) {
     console.log(`Run test ${idx + 1} / ${TESTS.length} : ${JSON.stringify(input)}...`);
-    const { result, elapsed } = runSingleTest(rom, input, variant);
+    const { result, elapsed } = runSingleTest(roms.map(({ data }) => data), input, variant);
     if (parseInt(expected, 16) !== result) {
       console.log(`Test failed, expected = ${expected}, result = 0x${result.toString(16).toUpperCase()}`);
       console.log('Code to reproduce:');
@@ -2291,7 +2291,7 @@ const TESTS = [
         initializators.push(generateMemoryMainCharactersInitialization(0x7, hexToHWNumber(input.m)));
       }
 
-      console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators));
       process.exit(1);
     }
 

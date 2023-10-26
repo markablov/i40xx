@@ -2558,12 +2558,12 @@ const TESTS = [
 (function () {
   const variant = process.argv[2];
 
-  if (!['euler', 'euclid', 'binary'].includes(variant)) {
+  if (!['euclid', 'euler', 'binary'].includes(variant)) {
     console.log(`Unknown code variant "${variant}"!`);
     process.exit(0);
   }
 
-  const { rom, sourceCode, sourceMap, symbols } = compileCodeForTest(
+  const { roms, sourceCode } = compileCodeForTest(
     `submodules/computeInvertedA_${variant}.i4040`,
     'computeInvertedA',
   );
@@ -2573,7 +2573,7 @@ const TESTS = [
   let sum = 0n;
   for (const [idx, { input, expected }] of TESTS.entries()) {
     console.log(`Run test ${idx + 1} / ${TESTS.length} : ${JSON.stringify(input)}...`);
-    const { result, elapsed } = runSingleTest(rom, input, variant);
+    const { result, elapsed } = runSingleTest(roms.map(({ data }) => data), input, variant);
     if (parseInt(expected, 16) !== parseInt(result, 16)) {
       console.log(`Test failed, expected = ${expected}, result = ${result}`);
 
@@ -2591,7 +2591,7 @@ const TESTS = [
           ),
         ];
 
-        console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
+        console.log(updateCodeForUseInEmulator(sourceCode, initializators));
       }
       process.exit(1);
     }

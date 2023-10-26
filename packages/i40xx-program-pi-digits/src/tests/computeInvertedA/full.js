@@ -24,7 +24,7 @@ const TESTS_PER_WORKER = 1000;
     },
   );
 
-  const { rom } = compileCodeForTest('submodules/computeInvertedA_binary.i4040', 'computeInvertedA');
+  const { roms } = compileCodeForTest('submodules/computeInvertedA_binary.i4040', 'computeInvertedA');
 
   const stats = {};
   let processedTests = 0;
@@ -73,7 +73,7 @@ const TESTS_PER_WORKER = 1000;
   for (let i = 0; i < WORKER_AMOUNT; i++) {
     const worker = new Worker(
       workerPath,
-      { workerData: { romDump: rom, ramDump: RAM_DUMP } },
+      { workerData: { romDump: roms.map(({ data }) => data), ramDump: RAM_DUMP } },
     );
 
     worker.on('message', (data) => onMessage(worker, data));
