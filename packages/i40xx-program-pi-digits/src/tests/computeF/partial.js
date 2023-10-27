@@ -12,7 +12,7 @@ import {
 
 import {
   updateCodeForUseInEmulator, generateMemoryBankSwitch, generateMemoryStatusCharactersInitialization,
-  generateAccumulatorInitialization,
+  generateAccumulatorInitialization, generateMemoryMainCharactersInitialization,
 } from '#utilities/codeGenerator.js';
 
 import RAM_DUMP from '#data/multiplicationStaticData/ramWithLookupTables.json' assert { type: 'json' };
@@ -209,11 +209,29 @@ const testComputeF = () => {
       console.log('Code to reproduce:');
       const { N, m, a, vmax } = input;
       const negativeN = numToHWNumber(0x10000 - (parseInt(N, 16) + 1));
+      const expRegister2 = [];
+      const expRegister3 = [];
+      if (a !== m) {
+        const aNum = parseInt(a, 16);
+        expRegister2.push(...[
+          ...(aNum ** 2 < m ? numToHWNumber(aNum ** 2, 4) : [0, 0, 0, 0]),
+          ...(aNum ** 3 < m ? numToHWNumber(aNum ** 3, 4) : [0, 0, 0, 0]),
+          ...(aNum ** 4 < m ? numToHWNumber(aNum ** 4, 4) : [0, 0, 0, 0]),
+          ...(aNum ** 5 < m ? numToHWNumber(aNum ** 5, 4) : [0, 0, 0, 0]),
+        ]);
+        expRegister3.push(...[
+          ...(aNum ** 6 < m ? numToHWNumber(aNum ** 6, 4) : [0, 0, 0, 0]),
+          ...(aNum ** 7 < m ? numToHWNumber(aNum ** 7, 4) : [0, 0, 0, 0]),
+        ]);
+      }
+
       const initializators = [
         generateMemoryBankSwitch(0x7),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_V, [0x0, 0x0, vmax, 0x00]),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_N_NEG, negativeN),
         generateMemoryStatusCharactersInitialization(VARIABLES.STATUS_MEM_VARIABLE_CURRENT_PRIME, hexToHWNumber(a)),
+        ...(expRegister2.length ? [generateMemoryMainCharactersInitialization(0x2, expRegister2)] : []),
+        ...(expRegister3.length ? [generateMemoryMainCharactersInitialization(0x3, expRegister3)] : []),
         ...generateCodeToPrepareModulusBasedDataForEmulator(parseInt(m, 16)),
         generateAccumulatorInitialization(vmax === 1 ? 1 : 0),
       ];

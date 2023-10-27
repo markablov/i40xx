@@ -31,6 +31,7 @@ mulMod:
 mulMod_shiftedFactorLoaded:
   CLB
   DCL
+  XCH rr3
 
   FIM r4, 0x00
   FIM r5, 0x00                           # res = 0
@@ -355,6 +356,9 @@ mulMod_updateResultAndFactor_return:
 #   [rr0, rr1, rr4, rr2] - multipliedFactor
 # OUTPUT:
 #   [rr0, rr1, rr4, rr2] - multipliedFactor
+# NOTES:
+#   block size is 13 bytes
+__location(0x4:0x01)
 mulMod_updateMultipliedFactor:
   LD rr0
   ADD rr0
@@ -368,9 +372,42 @@ mulMod_updateMultipliedFactor:
   LD rr2
   ADD rr2
   XCH rr2                                           # multipliedFactor = multipliedFactor + multipliedFactor
-  AN7                                               # check if previous value of multipliedFactor[3] < 4, then new multipliedFactor[3] < 8
-  JCN z, mulMod_updateMultipliedFactor_return       # if (multipliedFactor[3] < 0x8)
+  JIN r1                                            # jump table, based on multipliedFactor[3], to check when multipliedFactor[3] >= 8
+                                                    # JIN takes 1 cycles, while AN7/JCN takes 3 cycles, so we save 2 cycles on every call!
+__location(0x4:0x00)
+mulMod_updateMultipliedFactor_factor0:
+  BBL 0
 
+__location(0x4:0x10)
+mulMod_updateMultipliedFactor_factor1:
+  BBL 0
+
+__location(0x4:0x20)
+mulMod_updateMultipliedFactor_factor2:
+  BBL 0
+
+__location(0x4:0x30)
+mulMod_updateMultipliedFactor_factor3:
+  BBL 0
+
+__location(0x4:0x40)
+mulMod_updateMultipliedFactor_factor4:
+  BBL 0
+
+__location(0x4:0x50)
+mulMod_updateMultipliedFactor_factor5:
+  BBL 0
+
+__location(0x4:0x60)
+mulMod_updateMultipliedFactor_factor6:
+  BBL 0
+
+__location(0x4:0x70)
+mulMod_updateMultipliedFactor_factor7:
+  BBL 0
+
+__location(0x4:0x80)
+mulMod_updateMultipliedFactor_factor8:
   SRC r1
   RD0
   ADD rr0
@@ -385,7 +422,139 @@ mulMod_updateMultipliedFactor:
   ADD rr2
   XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
   CLC
-mulMod_updateMultipliedFactor_return:
+  BBL 0
+
+
+__location(0x4:0x90)
+mulMod_updateMultipliedFactor_factor9:
+  SRC r1
+  RD0
+  ADD rr0
+  XCH rr0
+  RD1
+  ADD rr1
+  XCH rr1
+  RD2
+  ADD rr4
+  XCH rr4
+  RD3
+  ADD rr2
+  XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
+  CLC
+  BBL 0
+
+
+__location(0x4:0xA0)
+mulMod_updateMultipliedFactor_factorA:
+  SRC r1
+  RD0
+  ADD rr0
+  XCH rr0
+  RD1
+  ADD rr1
+  XCH rr1
+  RD2
+  ADD rr4
+  XCH rr4
+  RD3
+  ADD rr2
+  XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
+  CLC
+  BBL 0
+
+
+__location(0x4:0xB0)
+mulMod_updateMultipliedFactor_factorB:
+  SRC r1
+  RD0
+  ADD rr0
+  XCH rr0
+  RD1
+  ADD rr1
+  XCH rr1
+  RD2
+  ADD rr4
+  XCH rr4
+  RD3
+  ADD rr2
+  XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
+  CLC
+  BBL 0
+
+
+__location(0x4:0xC0)
+mulMod_updateMultipliedFactor_factorC:
+  SRC r1
+  RD0
+  ADD rr0
+  XCH rr0
+  RD1
+  ADD rr1
+  XCH rr1
+  RD2
+  ADD rr4
+  XCH rr4
+  RD3
+  ADD rr2
+  XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
+  CLC
+  BBL 0
+
+
+__location(0x4:0xD0)
+mulMod_updateMultipliedFactor_factorD:
+  SRC r1
+  RD0
+  ADD rr0
+  XCH rr0
+  RD1
+  ADD rr1
+  XCH rr1
+  RD2
+  ADD rr4
+  XCH rr4
+  RD3
+  ADD rr2
+  XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
+  CLC
+  BBL 0
+
+
+__location(0x4:0xE0)
+mulMod_updateMultipliedFactor_factorE:
+  SRC r1
+  RD0
+  ADD rr0
+  XCH rr0
+  RD1
+  ADD rr1
+  XCH rr1
+  RD2
+  ADD rr4
+  XCH rr4
+  RD3
+  ADD rr2
+  XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
+  CLC
+  BBL 0
+
+
+__location(0x4:0xF0)
+mulMod_updateMultipliedFactor_factorF:
+  SRC r1
+  RD0
+  ADD rr0
+  XCH rr0
+  RD1
+  ADD rr1
+  XCH rr1
+  RD2
+  ADD rr4
+  XCH rr4
+  RD3
+  ADD rr2
+  XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
+  CLC
   BBL 0
 
 # multipliedFactor = multipliedFactor * 16
