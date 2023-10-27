@@ -35,14 +35,14 @@ parentPort.on('message', ({ tests }) => {
     const aNumHW = hexToHWNumber(a);
     registersBank[0] = aNumHW[0] || 0;
     registersBank[1] = aNumHW[1] || 0;
-    registersBank[3] = aNumHW[2] || 0;
+    registersBank[4] = aNumHW[2] || 0;
     registersBank[2] = aNumHW[3] || 0;
 
     while (!system.isFinished()) {
       system.instruction();
     }
 
-    const result = hwNumberToNum([registersBank[0], registersBank[1], registersBank[3], registersBank[2]]);
+    const result = hwNumberToNum([registersBank[0], registersBank[1], registersBank[4], registersBank[2]]);
     if (parseInt(test.expected, 16) !== result) {
       failedTest = test;
       break;

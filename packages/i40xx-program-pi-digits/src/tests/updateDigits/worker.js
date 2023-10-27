@@ -37,7 +37,7 @@ parentPort.on('message', ({ test, testNo }) => {
       parentPort.postMessage({
         elapsed: system.instructionCycles,
         testNo,
-        status: `failed chunk #${idx}, f = ${f}`,
+        status: `failed chunk #${idx}, f = ${f}, result = ${result}, expected = ${expected}`,
       });
     }
   }

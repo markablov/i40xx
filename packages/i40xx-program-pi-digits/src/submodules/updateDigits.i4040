@@ -322,7 +322,7 @@ updateDigits_computedF:
   LD rr0
   ADD rr1
   ADD rr2
-  ADD rr3
+  ADD rr4
   JCN nz, updateDigits_computedF_updateChunks
   JCN c, updateDigits_computedF_updateChunks               # if (poweredL !== 0)
   BBL 0
@@ -353,7 +353,7 @@ updateDigits_computedF_updateChunks_loop:
   WR0
   LD rr1
   WR1
-  LD rr3
+  LD rr4
   WR2
   LD rr2
   WR3
@@ -371,7 +371,7 @@ updateDigits_computedF_updateChunks_loop:
   ADD rr1
   XCH rr11
   RD2
-  ADD rr3
+  ADD rr4
   XCH rr12
   RD3
   ADD rr2
@@ -383,7 +383,7 @@ updateDigits_computedF_updateChunks_loop:
   LD rr11
   XCH rr1
   LD rr12
-  XCH rr3
+  XCH rr4
   LD rr13
   XCH rr2                                                  # tmp = tmp - m
 
@@ -420,7 +420,7 @@ updateDigits_computedF_updateChunks_divide:
   RAR
   CLC
   XCH rr1
-  LD rr3
+  LD rr4
   RAL
   CLC
   RAL
@@ -429,18 +429,18 @@ updateDigits_computedF_updateChunks_divide:
   WRM
   INC rr15
   SRC r7
-  LD rr3
+  LD rr4
   RAR
   CLC
   RAR
   CLC
-  XCH rr3
+  XCH rr4
   LD rr2
   RAL
   CLC
   RAL
   CLC
-  ADD rr3
+  ADD rr4
   WRM
   INC rr15
   SRC r7
@@ -653,22 +653,25 @@ updateDigits_computedF_updateChunks_divide:
   RD1
   XCH rr1
   RD2
-  XCH rr3
+  XCH rr4
   RD3
   XCH rr2
 
   FIM r7, 0x30
-  FIM r5, 0x0E
+  LDM 0xE
+  XCH rr5
   FIM r6, 0x80
   JMS mulMod_shiftedFactorLoaded                           # powered = (poweredL * 1000) % m
 
   FIM r7, 0x30
-  FIM r5, 0x0E
+  LDM 0xE
+  XCH rr5
   FIM r6, 0x80
   JMS mulMod_shiftedFactorLoaded                           # powered = (poweredL * 1000) % m
 
   FIM r7, 0x30
-  FIM r5, 0x0E
+  LDM 0xE
+  XCH rr5
   FIM r6, 0x80
   JMS mulMod_shiftedFactorLoaded                           # powered = (poweredL * 1000) % m
   DCL

@@ -23,7 +23,11 @@ parentPort.on('message', ({ test, testNo }) => {
   for (const [idx, expected] of test.expected.entries()) {
     const result = hwNumberToHex(memory[getMemoryBankFromAbsoluteAddr(idx)].registers[idx % 16].main);
     if (result !== expected) {
-      parentPort.postMessage({ elapsed: system.instructionCycles, testNo, status: `failed chunk #${idx}` });
+      parentPort.postMessage({
+        elapsed: system.instructionCycles,
+        testNo,
+        status: `failed chunk #${idx}, result = ${result}, expected = ${expected}`,
+      });
     }
   }
 

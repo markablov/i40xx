@@ -2,18 +2,18 @@
 %include "mulMod_binary_batch.i4040"
 
 # INPUT:
-#   rr6 - 0x0
+#   rr6 - 0x8
 #   rr7 - 0x4
-#   rr6' - 0x0
+#   rr6' - 0x8
 #   rr7' - 0x4
 #   rr13 - 0x0
 #   STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION
 # OUTPUT:
-#   [rr0, rr1, rr3, rr2] - result
+#   [rr0, rr1, rr4, rr2] - result
 # VARIABLES:
 #   STATUS_MEM_VARIABLE_POWER_10_EXPONENT
-#   [rr0, rr1, rr3, rr2] - result
-#   [rr0', rr1', rr3', rr2'] - powerBase
+#   [rr0, rr1, rr4, rr2] - result
+#   [rr0', rr1', rr4', rr2'] - powerBase
 power10:
   FIM r5, $STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION . 0
   SRC r5
@@ -32,17 +32,25 @@ power10:
   JCN c, power10_nonZero
   JCN nz, power10_nonZero                                            # if (startingPiDigitsPosition !== 0)
 
+  XCH rr2
+  CLB
+  XCH rr4
   FIM r0, 0x10
-  FIM r1, 0x00
   BBL 0                                                              # return 1
 
 power10_nonZero:
   FIM r0, 0x10
-  FIM r1, 0x00                                                       # res = 1
+  CLB
+  XCH rr2
+  CLB
+  XCH rr4                                                            # res = 1
 
   SB1
   FIM r0, 0xA0
-  FIM r1, 0x00                                                       # powerBase = 10
+  CLB
+  XCH rr2
+  CLB
+  XCH rr4                                                            # powerBase = 10
 
   INC rr10
   SRC r5
@@ -73,13 +81,13 @@ power10_loop:
 
   LD rr0
   XCH rr12
-  LD rr1
-  XCH rr11
-  LD rr3
+  LD rr4
   XCH rr14
   LD rr2
   XCH rr15
+  LD rr1
   SB0
+  XCH rr5
   JMS mulMod_shiftedFactorLoaded                                     # res = (res * powerBase) % m
   DCL
   SB1
@@ -97,8 +105,8 @@ power10_updatePowerBase:
   LD rr0
   XCH rr12
   LD rr1
-  XCH rr11
-  LD rr3
+  XCH rr5
+  LD rr4
   XCH rr14
   LD rr2
   XCH rr15

@@ -5,7 +5,7 @@
 #   STATUS_MEM_VARIABLE_MODULUS_NEG
 #   STATUS_MEM_VARIABLE_F_COMPUTATION_A
 # OUTPUT:
-#   [rr0, rr1, rr3, rr2] - result
+#   [rr0, rr1, rr4, rr2] - result
 # VARIABLES:
 #   rr0..rr3 - rx
 #   rr4..rr7 - v
@@ -378,12 +378,13 @@ computeInvertedA_returnU:
   LD rr13
   XCH rr1
   LD rr14
-  XCH rr3
+  XCH rr4
   LD rr15
   XCH rr2
   BBL 0
 
 computeInvertedA_trivialA:
+  XCH rr4
   FIM r0, 0x10
   FIM r1, 0x00
   BBL 0                                                         # return 1

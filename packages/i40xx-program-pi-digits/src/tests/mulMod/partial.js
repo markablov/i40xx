@@ -42,7 +42,7 @@ const runSingleTest = (romDump, { a, b, m }, variant) => {
     const aNumHW = hexToHWNumber(a);
     registersBank[0] = aNumHW[0] || 0;
     registersBank[1] = aNumHW[1] || 0;
-    registersBank[3] = aNumHW[2] || 0;
+    registersBank[4] = aNumHW[2] || 0;
     registersBank[2] = aNumHW[3] || 0;
   } else {
     // for binary
@@ -60,7 +60,7 @@ const runSingleTest = (romDump, { a, b, m }, variant) => {
   }
 
   const result = variant === 'binary_batch'
-    ? hwNumberToNum([registersBank[0], registersBank[1], registersBank[3], registersBank[2]]) % mNum
+    ? hwNumberToNum([registersBank[0], registersBank[1], registersBank[4], registersBank[2]]) % mNum
     : hwNumberToNum(memory[7].registers[REGISTER_NUMBER_FOR_FIRST_FACTOR].status);
 
   return { result, elapsed: system.instructionCycles };

@@ -42,7 +42,7 @@ updateB:
   RD1
   XCH rr1
   RD2
-  XCH rr3
+  XCH rr4
   RD3
   XCH rr2
   FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_K . 0
@@ -55,7 +55,7 @@ updateB:
   WR0
   LD rr1
   WR1
-  LD rr3
+  LD rr4
   WR2
   LD rr2
   WR3
@@ -115,7 +115,7 @@ updateB_return:
   RD1
   XCH rr1
   RD2
-  XCH rr3
+  XCH rr4
   RD3
   XCH rr2
   FIM r6, $STATUS_MEM_VARIABLE_B_COMPUTATION_COEF . 0
@@ -128,7 +128,7 @@ updateB_return:
   WR0
   LD rr1
   WR1
-  LD rr3
+  LD rr4
   WR2
   LD rr2
   WR3
@@ -249,7 +249,7 @@ updateA_return:
   RD1
   XCH rr1
   RD2
-  XCH rr3
+  XCH rr4
   RD3
   XCH rr2
   FIM r6, $STATUS_MEM_VARIABLE_A_COMPUTATION_COEF . 0
@@ -262,7 +262,7 @@ updateA_return:
   WR0
   LD rr1
   WR1
-  LD rr3
+  LD rr4
   WR2
   LD rr2
   WR3
@@ -324,12 +324,12 @@ updateF_multiplyByB:
   SRC r4
   RD0
   ADD rr0
-  XCH rr4
+  XCH rr8
   RD1
   ADD rr1
   XCH rr5
   RD2
-  ADD rr3
+  ADD rr4
   XCH rr7
   RD3
   ADD rr2                                        # tmp = f + fk
@@ -340,8 +340,8 @@ updateF_multiplyByB:
   DCL
   SRC r3
   RD0
-  ADD rr4
-  XCH rr4
+  ADD rr8
+  XCH rr8
   RD1
   ADD rr5
   XCH rr5
@@ -358,7 +358,7 @@ updateF_multiplyByB:
 
 updateF_writeF:
   WR3
-  LD rr4
+  LD rr8
   WR0
   LD rr5
   WR1
@@ -497,9 +497,6 @@ computeF_oneVMax:
   RAR
   WR0                                                                # iterIdxForPositiveV = (a + 1) / 2
 
-  FIM r0, 0x20
-  FIM r1, 0x00                                                       # multiplierForZeroV = 2
-
   FIM r3, 0x84
   FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_ZERO_V_MULTIPLIER_B_FACTOR . 0
   SRC r6
@@ -509,6 +506,10 @@ computeF_oneVMax:
   WR1
   WR2
   WR3                                                                # factorOfMultiplierForZeroV = 3
+
+  XCH rr4
+  FIM r0, 0x20
+  FIM r1, 0x00                                                       # multiplierForZeroV = 2
 
 computeF_oneVMax_multiplierForZeroV_loop:
   JMS mulMod                                                         # multiplierForZeroV = (multiplierForZeroV * factorOfMultiplierForZeroV) % a
@@ -555,7 +556,7 @@ computeF_oneVMax_multiplierForZeroV_loop:
   WR0
   LD rr1
   WR1
-  LD rr3
+  LD rr4
   WR2
   LD rr2
   WR3
@@ -644,7 +645,7 @@ computeF_oneVMax_loop:
   RD1
   XCH rr1
   RD2
-  XCH rr3
+  XCH rr4
   RD3
   XCH rr2
 
@@ -694,7 +695,7 @@ computeF_zeroV_loop:
   RD1
   XCH rr1
   RD2
-  XCH rr3
+  XCH rr4
   RD3
   XCH rr2
   FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_ZERO_V_MULTIPLIER_B . 0
@@ -706,7 +707,7 @@ computeF_zeroV_loop:
   WR0
   LD rr1
   WR1
-  LD rr3
+  LD rr4
   WR2
   LD rr2
   WR3                                                                # b = (b * multiplierForZeroV) % a;
@@ -772,7 +773,7 @@ computeF_oneV_loop:
   RD1
   XCH rr1
   RD2
-  XCH rr3
+  XCH rr4
   RD3
   XCH rr2
   FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_REDUCED_COEF_A . 0
@@ -794,7 +795,7 @@ computeF_oneV_loop:
   WR0
   LD rr1
   WR1
-  LD rr3
+  LD rr4
   WR2
   LD rr2
   WR3                                                                # A = (A * reducedCoefA) % a
@@ -853,7 +854,7 @@ computeF_oneVMax_updateB_multiplier:
   RD1
   XCH rr1
   RD2
-  XCH rr3
+  XCH rr4
   RD3
   XCH rr2
   FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_MULTIPLIER_B . 0
@@ -861,7 +862,7 @@ computeF_oneVMax_updateB_multiplier:
   RD2
   XCH rr12
   RD3
-  XCH rr11
+  XCH rr5
   FIM r7, 0x00
   JMS mulMod_shiftedFactorLoaded
   DCL
@@ -879,7 +880,7 @@ computeF_oneVMax_updateB_multiplier:
   WR0
   LD rr1
   WR1
-  LD rr3
+  LD rr4
   WR2
   LD rr2
   WR3                                                                # b = (b * multiplierB) % a;
@@ -894,7 +895,7 @@ computeF_oneVMax_updateA_multiplier:
   RD1
   XCH rr1
   RD2
-  XCH rr3
+  XCH rr4
   RD3
   XCH rr2
   FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_MULTIPLIER_A . 0
@@ -902,7 +903,7 @@ computeF_oneVMax_updateA_multiplier:
   RD0
   XCH rr12
   RD1
-  XCH rr11
+  XCH rr5
   FIM r7, 0x00
   JMS mulMod_shiftedFactorLoaded
   DCL
@@ -921,7 +922,7 @@ computeF_oneVMax_updateA_multiplier:
   WR0
   LD rr1
   WR1
-  LD rr3
+  LD rr4
   WR2
   LD rr2
   WR3                                                                # A = (A * multiplierA) % a
@@ -957,7 +958,7 @@ computeF_oneVMax_updateA_reducedCoef:
   RD1
   XCH rr1
   RD2
-  XCH rr3
+  XCH rr4
   RD3
   XCH rr2
 computeF_oneVMax_updateA_reducedCoef_factorLoaded:
@@ -985,7 +986,7 @@ computeF_oneVMax_updateA_reducedCoef_factorLoaded:
   WR0
   LD rr1
   WR1
-  LD rr3
+  LD rr4
   WR2
   LD rr2
   WR3                                                                # A = (A * reducedCoefA) % a
@@ -999,7 +1000,7 @@ computeF_oneVMax_updateF:
   RD1
   XCH rr1
   RD2
-  XCH rr3
+  XCH rr4
   RD3
   XCH rr2
   FIM r6, $STATUS_MEM_VARIABLE_F_COMPUTATION_REDUCED_COEF_B . 0
@@ -1012,7 +1013,7 @@ computeF_oneVMax_updateF:
   WR0
   LD rr1
   WR1
-  LD rr3
+  LD rr4
   WR2
   LD rr2
   WR3                                                                # b = (b * reducedCoefB) % a
@@ -1032,12 +1033,12 @@ computeF_oneVMax_updateF:
   SRC r4
   RD0
   ADD rr0
-  XCH rr4
+  XCH rr8
   RD1
   ADD rr1
   XCH rr5
   RD2
-  ADD rr3
+  ADD rr4
   XCH rr11
   RD3
   ADD rr2                                                            # tmp = f + fk
@@ -1048,8 +1049,8 @@ computeF_oneVMax_updateF:
   DCL
   SRC r5
   RD0
-  ADD rr4
-  XCH rr4
+  ADD rr8
+  XCH rr8
   RD1
   ADD rr5
   XCH rr5
@@ -1066,7 +1067,7 @@ computeF_oneVMax_updateF:
 
 computeF_oneVMax_updateF_writeF:
   WR3
-  LD rr4
+  LD rr8
   WR0
   LD rr5
   WR1

@@ -1,67 +1,67 @@
 %include "memory.i4040"
 
 # INPUT:
-#   [rr0, rr1, rr3, rr2] - first factor
+#   [rr0, rr1, rr4, rr2] - first factor
 #   rr6 - 0x8
 #   rr7 - 0x4
 #   rr12 - variable number for second term
 #   rr13 - 0x0
 #   memStatusCharVar[rr12] - second factor (b)
 # OUTPUT:
-#   [rr0, rr1, rr3, rr2] - result
+#   [rr0, rr1, rr4, rr2] - result
 # VARIABLES:
-#   [rr12, rr11, rr14, rr10] - shiftedFactor
-#   [rr4, rr5, rr9, rr8] - temporal result
-#   [rr0, rr1, rr3, rr2] - multipliedFactor
+#   [rr12, rr5, rr14, rr15] - shiftedFactor
+#   [rr10, rr11, rr9, rr8] - temporal result
+#   [rr0, rr1, rr4, rr2] - multipliedFactor
 # NOTES:
-#   - keeps rr13, rr6, rr7, rr15 unmodified
+#   - keeps rr13, rr6, rr7 unmodified
 #   - clears carry flag
 
 mulMod:
   SRC r6
   RD3
-  XCH rr10
+  XCH rr15
   RD0
   XCH rr12
   RD1
-  XCH rr11
+  XCH rr5
   RD2
-  XCH rr14                               # rr12 = b[0], rr11 = b[1], rr14 = b[2], rr10 = b[3]
+  XCH rr14                               # rr12 = b[0], rr5 = b[1], rr14 = b[2], rr15 = b[3]
 
 mulMod_shiftedFactorLoaded:
   CLB
   DCL
 
-  FIM r2, 0x00
-  FIM r4, 0x00                           # multipliedFactor = 0
+  FIM r4, 0x00
+  FIM r5, 0x00                           # res = 0
 
-  LD rr10
+  LD rr15
   JCN nz, mulMod_factor4
   LD rr14
   JCN nz, mulMod_factor3
-  LD rr11
+  LD rr5
   JCN nz, mulMod_factor2
   JUN mulMod_processSingleNibble
 
 mulMod_factor4:
   JMS mulMod_processNibble_first
-  LD rr11
+  LD rr5
   JMS mulMod_processNibble
-  LD rr14
+  XCH rr14
   JMS mulMod_processNibble
-  XCH rr10
+  LD rr15
   JUN mulMod_processLastNibble
 
 mulMod_factor3:
   JMS mulMod_processNibble_first
-  LD rr11
+  LD rr5
   JMS mulMod_processNibble
-  LD rr14
+  XCH rr14
   JUN mulMod_processLastNibble
 
 mulMod_factor2:
   JMS mulMod_processNibble_first
-  LD rr11
+  LD rr5
   JUN mulMod_processLastNibble
 
 __location(0x2:0x00)
@@ -281,20 +281,20 @@ mulMod_processLastNibble_F:                   # 0b1111
   JUN mulMod_updateResultLast
 
 # INPUT:
-#   [rr0, rr1, rr3, rr2] - multipliedFactor
-#   [rr4, rr5, rr9, rr8] - temporal result
+#   [rr0, rr1, rr4, rr2] - multipliedFactor
+#   [rr10, rr11, rr9, rr8] - temporal result
 # OUTPUT:
-#   [rr4, rr5, rr9, rr8] - temporal result
-#   [rr0, rr1, rr3, rr2] - multipliedFactor
+#   [rr10, rr11, rr9, rr8] - temporal result
+#   [rr0, rr1, rr4, rr2] - multipliedFactor
 mulMod_updateResultAndFactor:
-  LD rr4
+  LD rr10
   ADD rr0
-  XCH rr4
-  LD rr5
+  XCH rr10
+  LD rr11
   ADD rr1
-  XCH rr5
+  XCH rr11
   LD rr9
-  ADD rr3
+  ADD rr4
   XCH rr9
   LD rr8
   ADD rr2                                           # res = res + multipliedFactor
@@ -305,11 +305,11 @@ mulMod_updateResultAndFactor:
 
   SRC r4
   RD0
-  ADD rr4
-  XCH rr4
+  ADD rr10
+  XCH rr10
   RD1
-  ADD rr5
-  XCH rr5
+  ADD rr11
+  XCH rr11
   RD2
   ADD rr9
   XCH rr9
@@ -325,9 +325,9 @@ mulMod_updateResultAndFactor_updateFactor:
   LD rr1
   ADD rr1
   XCH rr1
-  LD rr3
-  ADD rr3
-  XCH rr3
+  LD rr4
+  ADD rr4
+  XCH rr4
   LD rr2
   ADD rr2
   XCH rr2                                           # multipliedFactor = multipliedFactor + multipliedFactor
@@ -342,8 +342,8 @@ mulMod_updateResultAndFactor_updateFactor:
   ADD rr1
   XCH rr1
   RD2
-  ADD rr3
-  XCH rr3
+  ADD rr4
+  XCH rr4
   RD3
   ADD rr2
   XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
@@ -352,9 +352,9 @@ mulMod_updateResultAndFactor_return:
   BBL 0
 
 # INPUT:
-#   [rr0, rr1, rr3, rr2] - multipliedFactor
+#   [rr0, rr1, rr4, rr2] - multipliedFactor
 # OUTPUT:
-#   [rr0, rr1, rr3, rr2] - multipliedFactor
+#   [rr0, rr1, rr4, rr2] - multipliedFactor
 mulMod_updateMultipliedFactor:
   LD rr0
   ADD rr0
@@ -362,9 +362,9 @@ mulMod_updateMultipliedFactor:
   LD rr1
   ADD rr1
   XCH rr1
-  LD rr3
-  ADD rr3
-  XCH rr3
+  LD rr4
+  ADD rr4
+  XCH rr4
   LD rr2
   ADD rr2
   XCH rr2                                           # multipliedFactor = multipliedFactor + multipliedFactor
@@ -379,8 +379,8 @@ mulMod_updateMultipliedFactor:
   ADD rr1
   XCH rr1
   RD2
-  ADD rr3
-  XCH rr3
+  ADD rr4
+  XCH rr4
   RD3
   ADD rr2
   XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
@@ -400,7 +400,7 @@ mulMod_updateMultipliedFactor16:
 mulMod_updateMultipliedFactor16_shift:
   XCH rr0
   XCH rr1
-  XCH rr3
+  XCH rr4
   XCH rr2
   LD rr2
   RAL
@@ -415,8 +415,8 @@ mulMod_updateMultipliedFactor16_shift:
   ADD rr1
   XCH rr1
   RD2
-  ADD rr3
-  XCH rr3
+  ADD rr4
+  XCH rr4
   RD3
   ADD rr2
   XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
@@ -436,12 +436,12 @@ mulMod_updateMultipliedFactor8:
   JUN mulMod_updateMultipliedFactor
 
 mulMod_updateMultipliedFactor8_shift12:
-  LD rr3
+  LD rr4
   RAR
   XCH rr2
   LD rr1
   RAR
-  XCH rr3
+  XCH rr4
   LD rr0
   RAR
   XCH rr1
@@ -451,12 +451,12 @@ mulMod_updateMultipliedFactor8_shift12:
   BBL 0
 
 mulMod_updateMultipliedFactor8_shift16:
-  LD rr3
+  LD rr4
   RAR
   XCH rr2
   LD rr1
   RAR
-  XCH rr3
+  XCH rr4
   LD rr0
   RAR
   XCH rr1
@@ -472,8 +472,8 @@ mulMod_updateMultipliedFactor8_shift16:
   ADD rr1
   XCH rr1
   RD2
-  ADD rr3
-  XCH rr3
+  ADD rr4
+  XCH rr4
   RD3
   ADD rr2
   XCH rr2                                           # multipliedFactor = multipliedFactor - m * floor((multipliedFactor[3] * 0x1000) / m)
@@ -481,19 +481,19 @@ mulMod_updateMultipliedFactor8_shift16:
   BBL 0
 
 # INPUT:
-#   [rr0, rr1, rr3, rr2] - multipliedFactor
-#   [rr4, rr5, rr9, rr8] - temporal result
+#   [rr0, rr1, rr4, rr2] - multipliedFactor
+#   [rr10, rr11, rr9, rr8] - temporal result
 # OUTPUT:
-#   [rr4, rr5, rr9, rr8] - temporal result
+#   [rr10, rr11, rr9, rr8] - temporal result
 mulMod_updateResult:
-  LD rr4
+  LD rr10
   ADD rr0
-  XCH rr4
-  LD rr5
+  XCH rr10
+  LD rr11
   ADD rr1
-  XCH rr5
+  XCH rr11
   LD rr9
-  ADD rr3
+  ADD rr4
   XCH rr9
   LD rr8
   ADD rr2                                           # res = res + multipliedFactor
@@ -504,11 +504,11 @@ mulMod_updateResult:
 
   SRC r4
   RD0
-  ADD rr4
-  XCH rr4
+  ADD rr10
+  XCH rr10
   RD1
-  ADD rr5
-  XCH rr5
+  ADD rr11
+  XCH rr11
   RD2
   ADD rr9
   XCH rr9
@@ -521,20 +521,20 @@ mulMod_updateResult_return:
   BBL 0
 
 # INPUT:
-#   [rr0, rr1, rr3, rr2] - multipliedFactor
-#   [rr4, rr5, rr9, rr8] - temporal result
+#   [rr0, rr1, rr4, rr2] - multipliedFactor
+#   [rr10, rr11, rr9, rr8] - temporal result
 # OUTPUT:
-#   [rr0, rr1, rr3, rr2] - result
+#   [rr0, rr1, rr4, rr2] - result
 mulMod_updateResultLast:
-  LD rr4
+  LD rr10
   ADD rr0
   XCH rr0
-  LD rr5
+  LD rr11
   ADD rr1
   XCH rr1
   LD rr9
-  ADD rr3
-  XCH rr3
+  ADD rr4
+  XCH rr4
   LD rr8
   ADD rr2                                                                      # res = res + multipliedFactor
   JCN z, mulMod_updateResultLast_returnRes_withHighWordInAccumulator           # if (res[3] === 0)
@@ -548,15 +548,15 @@ mulMod_updateResultLast:
   ADD rr1
   XCH rr1
   RD2
-  ADD rr3
-  XCH rr3
+  ADD rr4
+  XCH rr4
   RD3
   ADD rr2                                                                      # res = res - m * floor((res[3] * 0x1000) / m)
   CLC
   JCN z, mulMod_updateResultLast_returnRes_withHighWordInAccumulator           # if (res[3] === 0)
 
   XCH rr2
-  SRC r5
+  SRC r7
   RD0
   JCN z, mulMod_updateResultLast_returnRes                                     # if (m > 0x1000)
 
@@ -567,8 +567,8 @@ mulMod_updateResultLast:
   ADD rr1
   XCH rr1
   RD3
-  ADD rr3                                                                      # res = res - m * (floor(0xF00 / m) || 1)
-  XCH rr3
+  ADD rr4                                                                     # res = res - m * (floor(0xF00 / m) || 1)
+  XCH rr4
   CLB
   XCH rr2
   BBL $BANK_WITH_VARIABLES

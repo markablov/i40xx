@@ -28,9 +28,9 @@ const runSingleTest = (romDump, { exp, m }, variant) => {
     putModulusBasedDataIntoMemory(memory, parseInt(m, 16));
     writeValueToStatusChars(hexToHWNumber(exp), memory, VARIABLES.STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION);
     registersBank[13] = 0x0;
-    registersBank[6] = 0x0;
+    registersBank[6] = 0x8;
     registersBank[7] = 0x4;
-    registers.indexBanks[1][6] = 0x0;
+    registers.indexBanks[1][6] = 0x8;
     registers.indexBanks[1][7] = 0x4;
   } else {
     writeValueToStatusChars(hexToHWNumber(m), memory, VARIABLES.STATUS_MEM_VARIABLE_MODULUS, 7);
@@ -48,7 +48,7 @@ const runSingleTest = (romDump, { exp, m }, variant) => {
   }
 
   const result = variant === 'fast'
-    ? hwNumberToNum([registersBank[0], registersBank[1], registersBank[3], registersBank[2]]) % parseInt(m, 16)
+    ? hwNumberToNum([registersBank[0], registersBank[1], registersBank[4], registersBank[2]]) % parseInt(m, 16)
     : hwNumberToNum(memory[7].registers[0x07].status);
 
   return { result, elapsed: system.instructionCycles };
@@ -1684,7 +1684,7 @@ const TESTS = [
     process.exit(0);
   }
 
-  const { sourceCode, rom, sourceMap, symbols } = compileCodeForTest(
+  const { sourceCode, roms } = compileCodeForTest(
     variant === 'standard' ? 'submodules/powerMod.i4040' : 'submodules/power10.i4040',
     variant === 'standard' ? 'powerMod' : 'power10',
   );
@@ -1692,7 +1692,7 @@ const TESTS = [
   let sum = 0n;
   for (const [idx, { input, expected }] of TESTS.entries()) {
     console.log(`Run test ${idx + 1} / ${TESTS.length} : ${JSON.stringify(input)}...`);
-    const { result, elapsed } = runSingleTest(rom, input, variant);
+    const { result, elapsed } = runSingleTest(roms.map(({ data }) => data), input, variant);
     if (parseInt(expected, 16) !== result) {
       console.log(`Test failed, expected = ${expected}, result = 0x${result.toString(16).toUpperCase()}`);
       console.log('Code to reproduce:');
@@ -1718,7 +1718,7 @@ const TESTS = [
         );
       }
 
-      console.log(updateCodeForUseInEmulator(sourceCode, initializators, sourceMap, symbols));
+      console.log(updateCodeForUseInEmulator(sourceCode, initializators));
       process.exit(1);
     }
 

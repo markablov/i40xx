@@ -11,7 +11,8 @@ export function initMemoryWithInput(memory, input) {
   const mNum = parseInt(m, 16);
 
   putModulusBasedDataIntoMemory(memory, mNum);
-  writeValueToStatusChars(numToHWNumber(0x100 - chunks.length), memory, VARIABLES.STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG);
+  const [chunksCountL, chunksCountH] = numToHWNumber(0x100 - chunks.length);
+  writeValueToStatusChars([0, 0, chunksCountL, chunksCountH], memory, VARIABLES.STATUS_MEM_VARIABLE_CHUNKS_COUNT_NEG);
   writeValueToStatusChars(startingDigitsPositionHW, memory, VARIABLES.STATUS_MEM_VARIABLE_STARTING_PI_DIGITS_POSITION);
   writeValueToStatusChars(hexToHWNumber(f), memory, VARIABLES.STATUS_MEM_VARIABLE_F);
   writeValueToMainChars(numToHWNumber(mNum), memory, VARIABLES.MAIN_MEM_VARIABLE_DIV_DIVISOR);

@@ -2523,10 +2523,12 @@ const SHOULD_PROFILE = true;
 
 const wrapSourceCode = (sourceCode) => `
 entrypoint:
-  JCN z, computeF_regular 
+  JCN z, computeF_regular
+  DB1
   JMS computeF_oneVMax
   HLT
 computeF_regular:
+  DB1
   JMS computeF
   HLT
 
