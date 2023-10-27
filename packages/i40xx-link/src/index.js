@@ -292,10 +292,7 @@ const placeCodeBlock = (blocks, attemptedBlockId, romBank, placementCache) => {
   const coupledBlocks = getCoupledBlocksIds(blocks, attemptedBlockId);
   if (placementCache && coupledBlocks.length >= MINIMAL_BLOCKS_SET_TO_CACHE) {
     const cachedPlacement = getCachedPlacementForCoupledBlocks(placementCache, blocks, coupledBlocks);
-    if (cachedPlacement) {
-      if (cachedPlacement.offset !== pageOffset) {
-        return false;
-      }
+    if (cachedPlacement?.offset === pageOffset) {
       for (const blockId of cachedPlacement.placement) {
         romBank.appendBlock(blocks[blockId]);
       }
